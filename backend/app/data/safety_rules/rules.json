@@ -1,0 +1,211 @@
+{
+  "ruleset_version": "0.1-draft",
+  "clinically_reviewed": false,
+  "review_note": "DRAFT. Rules have NOT been reviewed by a clinician. They must be reviewed against recognised triage guidance (e.g. WHO IMCI / ETAT, national guidelines) before being described as medically validated.",
+  "rules": [
+    {
+      "rule_id": "CHEST_PAIN",
+      "alert_level": "emergency",
+      "name_en": "Chest pain",
+      "name_bn": "বুকে ব্যথা",
+      "kind": "any_term",
+      "terms": [
+        "বুকে ব্যথা",
+        "বুকে ব্যাথা",
+        "বুক ব্যথা",
+        "বুকে চাপ",
+        "বুকে যন্ত্রণা",
+        "বুক চেপে",
+        "chest pain"
+      ],
+      "required_information": [
+        "Onset and duration",
+        "Spread to arm/jaw",
+        "Associated breathlessness or sweating"
+      ],
+      "explanation_en": "Chest pain was mentioned. This can be a sign of a serious condition.",
+      "explanation_bn": "বুকে ব্যথার কথা বলা হয়েছে। এটি গুরুতর অসুস্থতার লক্ষণ হতে পারে।",
+      "recommended_action_en": "Seek urgent medical care immediately. Clinician to assess without delay.",
+      "recommended_action_bn": "এখনই জরুরি চিকিৎসা নিন। চিকিৎসক যেন দেরি না করে দেখেন।"
+    },
+    {
+      "rule_id": "BREATHING_DIFFICULTY",
+      "alert_level": "emergency",
+      "name_en": "Difficulty breathing",
+      "name_bn": "শ্বাসকষ্ট",
+      "kind": "any_term",
+      "terms": [
+        "শ্বাসকষ্ট",
+        "শ্বাস কষ্ট",
+        "শ্বাস নিতে কষ্ট",
+        "নিঃশ্বাস নিতে কষ্ট",
+        "নিশ্বাস নিতে কষ্ট",
+        "দম বন্ধ",
+        "দম নিতে কষ্ট",
+        "শ্বাস নিতে পারছি না",
+        "breathing difficulty",
+        "shortness of breath"
+      ],
+      "required_information": [
+        "Onset",
+        "Whether at rest",
+        "Lip/face colour change"
+      ],
+      "explanation_en": "Difficulty breathing was mentioned.",
+      "explanation_bn": "শ্বাস নিতে কষ্টের কথা বলা হয়েছে।",
+      "recommended_action_en": "Seek urgent medical care immediately.",
+      "recommended_action_bn": "এখনই জরুরি চিকিৎসা নিন।"
+    },
+    {
+      "rule_id": "HEAVY_BLEEDING",
+      "alert_level": "emergency",
+      "name_en": "Heavy bleeding",
+      "name_bn": "অতিরিক্ত রক্তক্ষরণ",
+      "kind": "any_term",
+      "terms": [
+        "প্রচুর রক্ত",
+        "অনেক রক্ত",
+        "রক্ত বন্ধ হচ্ছে না",
+        "রক্তপাত বন্ধ",
+        "heavy bleeding"
+      ],
+      "required_information": [
+        "Source of bleeding",
+        "Amount and duration"
+      ],
+      "explanation_en": "Heavy or non-stopping bleeding was mentioned.",
+      "explanation_bn": "অতিরিক্ত বা বন্ধ না হওয়া রক্তক্ষরণের কথা বলা হয়েছে।",
+      "recommended_action_en": "Seek urgent medical care immediately.",
+      "recommended_action_bn": "এখনই জরুরি চিকিৎসা নিন।"
+    },
+    {
+      "rule_id": "VOMITING_BLOOD",
+      "alert_level": "emergency",
+      "name_en": "Vomiting blood",
+      "name_bn": "রক্তবমি",
+      "kind": "any_term",
+      "terms": [
+        "রক্তবমি",
+        "রক্ত বমি",
+        "বমিতে রক্ত",
+        "vomiting blood"
+      ],
+      "required_information": [
+        "Amount",
+        "Onset"
+      ],
+      "explanation_en": "Blood in vomit was mentioned.",
+      "explanation_bn": "বমিতে রক্তের কথা বলা হয়েছে।",
+      "recommended_action_en": "Seek urgent medical care immediately.",
+      "recommended_action_bn": "এখনই জরুরি চিকিৎসা নিন।"
+    },
+    {
+      "rule_id": "UNCONSCIOUSNESS",
+      "alert_level": "emergency",
+      "name_en": "Loss of consciousness",
+      "name_bn": "অজ্ঞান হওয়া",
+      "kind": "any_term",
+      "terms": [
+        "অজ্ঞান",
+        "জ্ঞান হারা",
+        "জ্ঞান নেই",
+        "সাড়া দিচ্ছে না",
+        "unconscious"
+      ],
+      "required_information": [
+        "When it happened",
+        "How long",
+        "Whether the person has recovered"
+      ],
+      "explanation_en": "Fainting or unresponsiveness was mentioned.",
+      "explanation_bn": "অজ্ঞান হওয়া বা সাড়া না দেওয়ার কথা বলা হয়েছে।",
+      "recommended_action_en": "Seek urgent medical care immediately.",
+      "recommended_action_bn": "এখনই জরুরি চিকিৎসা নিন।"
+    },
+    {
+      "rule_id": "SEIZURE",
+      "alert_level": "emergency",
+      "name_en": "Seizure / convulsion",
+      "name_bn": "খিঁচুনি",
+      "kind": "any_term",
+      "terms": [
+        "খিঁচুনি",
+        "খিচুনি",
+        "convulsion",
+        "seizure"
+      ],
+      "required_information": [
+        "Duration",
+        "First episode or recurrent"
+      ],
+      "explanation_en": "Seizure or convulsion was mentioned.",
+      "explanation_bn": "খিঁচুনির কথা বলা হয়েছে।",
+      "recommended_action_en": "Seek urgent medical care immediately.",
+      "recommended_action_bn": "এখনই জরুরি চিকিৎসা নিন।"
+    },
+    {
+      "rule_id": "STROKE_SIGNS",
+      "alert_level": "emergency",
+      "name_en": "Possible stroke warning signs",
+      "name_bn": "স্ট্রোকের সম্ভাব্য সতর্কতা লক্ষণ",
+      "kind": "any_term",
+      "terms": [
+        "মুখ বেঁকে",
+        "মুখ বেকে",
+        "একপাশ অবশ",
+        "হাত পা অবশ",
+        "কথা জড়িয়ে",
+        "কথা বলতে পারছে না",
+        "face drooping",
+        "slurred speech"
+      ],
+      "required_information": [
+        "Time of onset",
+        "Which side is affected"
+      ],
+      "explanation_en": "Facial droop, one-sided weakness or speech difficulty was mentioned.",
+      "explanation_bn": "মুখ বেঁকে যাওয়া, একপাশ অবশ বা কথা বলতে অসুবিধার কথা বলা হয়েছে।",
+      "recommended_action_en": "Seek urgent medical care immediately; note the time symptoms began.",
+      "recommended_action_bn": "এখনই জরুরি চিকিৎসা নিন; কখন শুরু হয়েছে তা মনে রাখুন।"
+    },
+    {
+      "rule_id": "INFANT_FEVER",
+      "alert_level": "emergency",
+      "name_en": "Fever in an infant",
+      "name_bn": "শিশুর জ্বর",
+      "kind": "co_occurrence",
+      "terms": [
+        "জ্বর",
+        "ফিভার",
+        "fever"
+      ],
+      "context_strict": [
+        "মাসের বাচ্চা",
+        "মাসের শিশু",
+        "দিনের বাচ্চা",
+        "দিনের শিশু",
+        "সপ্তাহের বাচ্চা",
+        "সপ্তাহের শিশু",
+        "নবজাতক",
+        "infant",
+        "newborn"
+      ],
+      "context_loose": [
+        "বাচ্চা",
+        "শিশু",
+        "খোকা",
+        "খুকি",
+        "বাচ্চার",
+        "শিশুর"
+      ],
+      "required_information": [
+        "Age of the child in days/weeks/months",
+        "Measured temperature"
+      ],
+      "explanation_en": "Fever was mentioned together with an infant. Fever in a young infant can be serious.",
+      "explanation_bn": "শিশুর সঙ্গে জ্বরের কথা বলা হয়েছে। অল্প বয়সী শিশুর জ্বর গুরুতর হতে পারে।",
+      "recommended_action_en": "Seek urgent medical care. Clinician to confirm the infant's age and temperature.",
+      "recommended_action_bn": "জরুরি চিকিৎসা নিন। চিকিৎসক শিশুর বয়স ও তাপমাত্রা নিশ্চিত করবেন।"
+    }
+  ]
+}

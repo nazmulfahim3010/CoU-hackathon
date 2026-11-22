@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  --color-deep: #0f4c5c;
+  --color-brand: #167d8d;
+  --color-soft: #f5f8f8;
+  --color-ink: #18343b;
+  --color-warn: #e5a000;
+  --color-danger: #c62828;
+  --color-ok: #21845b;
+  --font-sans: "Inter", "Hind Siliguri", system-ui, sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+  background: var(--color-soft);
+  color: var(--color-ink);
+  line-height: 1.7; /* roomy for Bangla conjuncts */
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-warn);
+  outline-offset: 2px;
+}
+
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.5); }
+  100% { box-shadow: 0 0 0 22px rgba(198, 40, 40, 0); }
+}
+.rec-pulse { animation: pulse-ring 1.4s ease-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .rec-pulse { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
+
+@media print {
+  html { background: #fff; }
+  .no-print { display: none !important; }
+  .print-card { box-shadow: none !important; border: 1px solid #999 !important; break-inside: avoid; }
+}

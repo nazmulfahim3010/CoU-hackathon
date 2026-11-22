@@ -1,0 +1,76 @@
+{
+  "dialect": "noakhali",
+  "status": "UNVERIFIED DRAFT - not reviewed by native speakers",
+  "entries": [
+    {
+      "regional": "বিষ",
+      "standard": "ব্যথা",
+      "english": "pain (note: 'বিষ' can also mean poison; context-dependent)",
+      "dialect": "noakhali",
+      "category": "pain_description",
+      "example": "পেটে বিষ",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "আঁই",
+      "standard": "আমি",
+      "english": "I",
+      "dialect": "noakhali",
+      "category": "common_medical",
+      "example": "আঁই খাইছি",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "মুই",
+      "standard": "আমি",
+      "english": "I",
+      "dialect": "noakhali",
+      "category": "common_medical",
+      "example": "মুই অসুস্থ",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "আইজ",
+      "standard": "আজ",
+      "english": "today",
+      "dialect": "noakhali",
+      "category": "time_expression",
+      "example": "আইজ সকাল থিকা",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "হারাদিন",
+      "standard": "সারাদিন",
+      "english": "all day",
+      "dialect": "noakhali",
+      "category": "time_expression",
+      "example": "হারাদিন শুইয়া",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "খাইছি",
+      "standard": "খেয়েছি",
+      "english": "I have eaten/taken",
+      "dialect": "noakhali",
+      "category": "common_medical",
+      "example": "ওষুধ খাইছি",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "ধরি",
+      "standard": "ধরে",
+      "english": "for (a duration)",
+      "dialect": "noakhali",
+      "category": "time_expression",
+      "example": "তিন দিন ধরি",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "dialect": "standard_bangla",
+  "note": "Reference standard terms and English meanings",
+  "entries": [
+    {
+      "term": "জ্বর",
+      "english": "fever",
+      "category": "fever_related"
+    },
+    {
+      "term": "মাথা ব্যথা",
+      "english": "headache",
+      "category": "symptom"
+    },
+    {
+      "term": "পেট ব্যথা",
+      "english": "stomach/abdominal pain",
+      "category": "symptom"
+    },
+    {
+      "term": "বুকে ব্যথা",
+      "english": "chest pain",
+      "category": "symptom"
+    },
+    {
+      "term": "শ্বাসকষ্ট",
+      "english": "difficulty breathing",
+      "category": "symptom"
+    },
+    {
+      "term": "কাশি",
+      "english": "cough",
+      "category": "symptom"
+    },
+    {
+      "term": "বমি",
+      "english": "vomiting",
+      "category": "symptom"
+    },
+    {
+      "term": "ডায়রিয়া",
+      "english": "diarrhoea",
+      "category": "symptom"
+    },
+    {
+      "term": "সারাদিন",
+      "english": "all day",
+      "category": "time_expression"
+    },
+    {
+      "term": "মাঝে মাঝে",
+      "english": "intermittently",
+      "category": "severity_expression"
+    },
+    {
+      "term": "খুব",
+      "english": "very / severe",
+      "category": "severity_expression"
+    }
+  ]
+}

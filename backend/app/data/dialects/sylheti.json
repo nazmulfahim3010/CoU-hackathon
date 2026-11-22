@@ -1,0 +1,86 @@
+{
+  "dialect": "sylheti",
+  "status": "UNVERIFIED DRAFT - not reviewed by native speakers",
+  "entries": [
+    {
+      "regional": "বিষ",
+      "standard": "ব্যথা",
+      "english": "pain (note: 'বিষ' can also mean poison; context-dependent)",
+      "dialect": "sylheti",
+      "category": "pain_description",
+      "example": "মাথাত বিষ",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "মাথাত",
+      "standard": "মাথায়",
+      "english": "on the head",
+      "dialect": "sylheti",
+      "category": "body_part",
+      "example": "মাথাত বিষ",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "গাও",
+      "standard": "শরীর",
+      "english": "body",
+      "dialect": "sylheti",
+      "category": "body_part",
+      "example": "গাও গরম",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "বহুত",
+      "standard": "অনেক",
+      "english": "a lot",
+      "dialect": "sylheti",
+      "category": "severity_expression",
+      "example": "বহুত বিষ",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "আইজ",
+      "standard": "আজ",
+      "english": "today",
+      "dialect": "sylheti",
+      "category": "time_expression",
+      "example": "আইজ থিকা",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "ধরি",
+      "standard": "ধরে",
+      "english": "for (a duration)",
+      "dialect": "sylheti",
+      "category": "time_expression",
+      "example": "দুই দিন ধরি",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "খাইছি",
+      "standard": "খেয়েছি",
+      "english": "I have eaten/taken",
+      "dialect": "sylheti",
+      "category": "common_medical",
+      "example": "ওষুধ খাইছি",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "নাই",
+      "standard": "নেই",
+      "english": "there is not",
+      "dialect": "sylheti",
+      "category": "common_medical",
+      "example": "জ্বর নাই",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    }
+  ]
+}

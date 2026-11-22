@@ -1,0 +1,136 @@
+{
+  "dialect": "chittagonian",
+  "status": "UNVERIFIED DRAFT - not reviewed by native speakers",
+  "entries": [
+    {
+      "regional": "মাতাত",
+      "standard": "মাথায়",
+      "english": "on the head",
+      "dialect": "chittagonian",
+      "category": "body_part",
+      "example": "মোর মাতাত ব্যতা",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "বুগত",
+      "standard": "বুকে",
+      "english": "in the chest",
+      "dialect": "chittagonian",
+      "category": "body_part",
+      "example": "বুগত ব্যতা অয়",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "ফেডে",
+      "standard": "পেটে",
+      "english": "in the stomach",
+      "dialect": "chittagonian",
+      "category": "body_part",
+      "example": "ফেডে ব্যতা",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "ব্যতা",
+      "standard": "ব্যথা",
+      "english": "pain",
+      "dialect": "chittagonian",
+      "category": "pain_description",
+      "example": "বুগত ব্যতা অয়",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "আইজ",
+      "standard": "আজ",
+      "english": "today",
+      "dialect": "chittagonian",
+      "category": "time_expression",
+      "example": "আইজ তিন দিন",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "হারাদিন",
+      "standard": "সারাদিন",
+      "english": "all day",
+      "dialect": "chittagonian",
+      "category": "time_expression",
+      "example": "হারাদিন ভাল লাগের না",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "ধরি",
+      "standard": "ধরে",
+      "english": "for (a duration)",
+      "dialect": "chittagonian",
+      "category": "time_expression",
+      "example": "তিন দিন ধরি",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "অয়",
+      "standard": "হয়",
+      "english": "happens",
+      "dialect": "chittagonian",
+      "category": "common_medical",
+      "example": "কষ্ট অয়",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "খাইছি",
+      "standard": "খেয়েছি",
+      "english": "I have eaten/taken",
+      "dialect": "chittagonian",
+      "category": "common_medical",
+      "example": "ওষুধ খাইছি",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "আছিল",
+      "standard": "ছিল",
+      "english": "was",
+      "dialect": "chittagonian",
+      "category": "common_medical",
+      "example": "জ্বর আছিল",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "মনে নাই",
+      "standard": "মনে নেই",
+      "english": "I do not remember",
+      "dialect": "chittagonian",
+      "category": "time_expression",
+      "example": "মনে নাই",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "বুঝি নাই",
+      "standard": "বুঝিনি",
+      "english": "I did not understand/notice",
+      "dialect": "chittagonian",
+      "category": "common_medical",
+      "example": "বুঝি নাই",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    },
+    {
+      "regional": "খাই নাই",
+      "standard": "খাইনি",
+      "english": "I did not eat/take",
+      "dialect": "chittagonian",
+      "category": "common_medical",
+      "example": "ওষুধ খাই নাই",
+      "verification": "unverified",
+      "source": "Team draft from general knowledge of Bangla dialects; awaiting native-speaker review"
+    }
+  ]
+}
