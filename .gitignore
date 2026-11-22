@@ -2,8 +2,14 @@
 *.env.local
 __pycache__/
 .pytest_cache/
+.pytest_tmp/
 backend/.venv/
 node_modules/
 frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
 *.tsbuildinfo
 .vscode/
+.agents/
+skills-lock.json
+kotha/

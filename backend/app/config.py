@@ -7,6 +7,13 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
+    # Application mode: demo | live
+    app_mode: str = "demo"
+
+    # Session configuration
+    session_ttl_minutes: int = 30
+    session_ttl_seconds: int = 1800
+
     # Speech-to-text. provider: none | hf_inference | openai_compatible
     speech_provider: str = "none"
     speech_model: str = "bangla-speech-processing/BanglaASR"
@@ -23,11 +30,20 @@ class Settings(BaseSettings):
     tts_provider: str = "gtts"
     tts_api_key: str = ""
 
-    # Limits and sessions
+    # Limits and uploads
+    max_audio_seconds: int = 90
+    max_upload_mb: int = 10
     max_audio_bytes: int = 10 * 1024 * 1024
-    session_ttl_seconds: int = 1800
     provider_timeout_seconds: float = 60.0
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+
+    @property
+    def effective_ttl_seconds(self) -> int:
+        return self.session_ttl_minutes * 60
+
+    @property
+    def effective_max_audio_bytes(self) -> int:
+        return self.max_upload_mb * 1024 * 1024
 
 
 @lru_cache

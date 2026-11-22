@@ -1,13 +1,23 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 import type { Mode, NormalizationResponse, SummaryCard, TranscriptionResponse } from '../types/api'
 
-export type Pending = { kind: 'audio'; blob: Blob } | { kind: 'demo'; scenarioId: string } | null
+export type AgeGroup = 'not_stated' | 'infant' | 'child' | 'adult' | 'older_adult'
+export type DialectHint = 'not_sure' | 'sylheti' | 'chittagonian' | 'noakhali' | 'standard'
+
+export type Pending =
+  | { kind: 'audio'; blob: Blob; ageGroup?: AgeGroup; dialectHint?: DialectHint }
+  | { kind: 'demo'; scenarioId: string }
+  | null
 
 interface Flow {
   mode: Mode
   setMode: (m: Mode) => void
   pending: Pending
   setPending: (p: Pending) => void
+  ageGroup: AgeGroup
+  setAgeGroup: (a: AgeGroup) => void
+  dialectHint: DialectHint
+  setDialectHint: (d: DialectHint) => void
   sessionId: string | null
   setSessionId: (id: string | null) => void
   transcription: TranscriptionResponse | null
@@ -25,6 +35,8 @@ const Ctx = createContext<Flow | null>(null)
 export interface FlowInitial {
   mode?: Mode
   pending?: Pending
+  ageGroup?: AgeGroup
+  dialectHint?: DialectHint
   sessionId?: string | null
   transcription?: TranscriptionResponse | null
   normalization?: NormalizationResponse | null
@@ -34,6 +46,8 @@ export interface FlowInitial {
 export function FlowProvider({ children, initial = {} }: { children: ReactNode; initial?: FlowInitial }) {
   const [mode, setMode] = useState<Mode>(initial.mode ?? 'live')
   const [pending, setPending] = useState<Pending>(initial.pending ?? null)
+  const [ageGroup, setAgeGroup] = useState<AgeGroup>(initial.ageGroup ?? 'not_stated')
+  const [dialectHint, setDialectHint] = useState<DialectHint>(initial.dialectHint ?? 'not_sure')
   const [sessionId, setSessionId] = useState<string | null>(initial.sessionId ?? null)
   const [transcription, setTranscription] = useState<TranscriptionResponse | null>(initial.transcription ?? null)
   const [normalization, setNormalization] = useState<NormalizationResponse | null>(initial.normalization ?? null)
@@ -45,12 +59,31 @@ export function FlowProvider({ children, initial = {} }: { children: ReactNode; 
     setTranscription(null)
     setNormalization(null)
     setSummary(null)
+    setAgeGroup('not_stated')
+    setDialectHint('not_sure')
   }, [])
 
   const value = useMemo(
-    () => ({ mode, setMode, pending, setPending, sessionId, setSessionId, transcription, setTranscription,
-      normalization, setNormalization, summary, setSummary, reset }),
-    [mode, pending, sessionId, transcription, normalization, summary, reset],
+    () => ({
+      mode,
+      setMode,
+      pending,
+      setPending,
+      ageGroup,
+      setAgeGroup,
+      dialectHint,
+      setDialectHint,
+      sessionId,
+      setSessionId,
+      transcription,
+      setTranscription,
+      normalization,
+      setNormalization,
+      summary,
+      setSummary,
+      reset,
+    }),
+    [mode, pending, ageGroup, dialectHint, sessionId, transcription, normalization, summary, reset],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

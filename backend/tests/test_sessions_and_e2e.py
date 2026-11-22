@@ -81,7 +81,7 @@ def test_demo_scenarios_end_to_end(client, monkeypatch, scenario, expected):
     assert {r["rule_id"] for r in summ["red_flags"]} == expected
     assert "verification required" in summ["label_en"]
     assert "not a diagnostic tool" in summ["disclaimer_en"]
-    assert summ["provenance"]["speech_to_text"] == "demo_prepared_text"
+    assert summ["provenance"]["speech_to_text"] in ("demo_prepared_text", "demo_sample")
     assert summ["provenance"]["red_flags"] == "deterministic rules"
     assert summ["original_statement"] and summ["normalized_statement"]
     keys = [s["key"] for s in summ["sections"]]

@@ -4,15 +4,33 @@ export const MAX_SECONDS = 90
 export const RECOMMENDED_MIN_SECONDS = 30
 
 export type RecorderStatus = 'idle' | 'requesting' | 'recording' | 'recorded' | 'error'
-export type RecorderError = 'unsupported' | 'denied' | 'no-device' | 'failed'
+export type RecorderError = 'unsupported' | 'denied' | 'no-device' | 'insecure-context' | 'failed'
 
-const MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+// Preferred MIME candidates in prioritized order: WebM/Opus, then MP4, then OGG
+const MIME_CANDIDATES = [
+  'audio/webm;codecs=opus',
+  'audio/webm',
+  'audio/mp4',
+  'audio/ogg;codecs=opus',
+  'audio/ogg',
+]
+
+export function isInsecureContext(): boolean {
+  if (typeof window === 'undefined') return false
+  if (window.isSecureContext === false) return true
+  const host = window.location?.hostname
+  if (host && host !== 'localhost' && host !== '127.0.0.1' && window.location?.protocol === 'http:') {
+    return true
+  }
+  return false
+}
 
 export function isRecordingSupported(): boolean {
   return typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined'
 }
 
 function pickMime(): string | undefined {
+  if (typeof MediaRecorder === 'undefined') return undefined
   return MIME_CANDIDATES.find((m) => MediaRecorder.isTypeSupported?.(m))
 }
 
@@ -34,7 +52,7 @@ export function useRecorder(maxSeconds = MAX_SECONDS) {
 
   const teardownCapture = useCallback(() => {
     if (timer.current) clearInterval(timer.current)
-    if (raf.current) cancelAnimationFrame(raf.current)
+    if (raf.current && typeof cancelAnimationFrame !== 'undefined') cancelAnimationFrame(raf.current)
     timer.current = null
     raf.current = null
     stream.current?.getTracks().forEach((t) => t.stop())
@@ -45,7 +63,9 @@ export function useRecorder(maxSeconds = MAX_SECONDS) {
   }, [])
 
   const stop = useCallback(() => {
-    if (recorder.current && recorder.current.state !== 'inactive') recorder.current.stop()
+    if (recorder.current && recorder.current.state !== 'inactive') {
+      recorder.current.stop()
+    }
   }, [])
 
   const discard = useCallback(() => {
@@ -61,6 +81,11 @@ export function useRecorder(maxSeconds = MAX_SECONDS) {
   }, [])
 
   const start = useCallback(async () => {
+    if (isInsecureContext()) {
+      setError('insecure-context')
+      setStatus('error')
+      return
+    }
     if (!isRecordingSupported()) {
       setError('unsupported')
       setStatus('error')
@@ -96,24 +121,28 @@ export function useRecorder(maxSeconds = MAX_SECONDS) {
         setStatus('error')
       }
 
-      // level meter (visual recording indicator)
+      // Live level meter using Web Audio AnalyserNode
       try {
-        const ctx = new AudioContext()
-        audioCtx.current = ctx
-        const analyser = ctx.createAnalyser()
-        analyser.fftSize = 256
-        ctx.createMediaStreamSource(s).connect(analyser)
-        const data = new Uint8Array(analyser.frequencyBinCount)
-        const tick = () => {
-          analyser.getByteTimeDomainData(data)
-          let peak = 0
-          for (const v of data) peak = Math.max(peak, Math.abs(v - 128))
-          setLevel(Math.min(1, peak / 64))
-          raf.current = requestAnimationFrame(tick)
+        if (typeof AudioContext !== 'undefined') {
+          const ctx = new AudioContext()
+          audioCtx.current = ctx
+          const analyser = ctx.createAnalyser()
+          analyser.fftSize = 256
+          ctx.createMediaStreamSource(s).connect(analyser)
+          const data = new Uint8Array(analyser.frequencyBinCount)
+          const tick = () => {
+            analyser.getByteTimeDomainData(data)
+            let peak = 0
+            for (const v of data) peak = Math.max(peak, Math.abs(v - 128))
+            setLevel(Math.min(1, peak / 64))
+            if (typeof requestAnimationFrame !== 'undefined') {
+              raf.current = requestAnimationFrame(tick)
+            }
+          }
+          tick()
         }
-        tick()
       } catch {
-        /* meter is optional */
+        /* Level meter is optional */
       }
 
       rec.start(250)
@@ -123,21 +152,27 @@ export function useRecorder(maxSeconds = MAX_SECONDS) {
       timer.current = setInterval(() => {
         const elapsed = Math.floor((Date.now() - startedAt) / 1000)
         setSeconds(Math.min(elapsed, maxSeconds))
-        if (elapsed >= maxSeconds) stop()
+        if (elapsed >= maxSeconds) {
+          if (timer.current) clearInterval(timer.current)
+          timer.current = null
+          if (recorder.current && recorder.current.state !== 'inactive') {
+            recorder.current.stop()
+          }
+        }
       }, 250)
     } catch (e) {
       teardownCapture()
       const name = e instanceof DOMException ? e.name : ''
       setError(
-        name === 'NotAllowedError' || name === 'SecurityError'
+        name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError'
           ? 'denied'
-          : name === 'NotFoundError' || name === 'OverconstrainedError'
+          : name === 'NotFoundError' || name === 'DevicesNotFoundError' || name === 'OverconstrainedError'
             ? 'no-device'
             : 'failed',
       )
       setStatus('error')
     }
-  }, [discard, maxSeconds, stop, teardownCapture])
+  }, [discard, maxSeconds, teardownCapture])
 
   useEffect(
     () => () => {
@@ -146,8 +181,9 @@ export function useRecorder(maxSeconds = MAX_SECONDS) {
         recorder.current.stop()
       }
       teardownCapture()
+      if (url) URL.revokeObjectURL(url)
     },
-    [teardownCapture],
+    [teardownCapture, url],
   )
 
   return { status, error, seconds, level, blob, url, start, stop, discard }

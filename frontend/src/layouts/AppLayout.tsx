@@ -1,14 +1,15 @@
-import { Mic } from 'lucide-react'
+import { FlaskConical, Mic, Radio } from 'lucide-react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { Disclaimer } from '../components/ui'
+import { useFlow } from '../state/FlowContext'
 
 export function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2 font-bold text-deep">
-      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white">
+    <Link to="/" className="flex items-center gap-2 font-bold text-deep shrink-0">
+      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand text-white shadow-sm">
         <Mic className="h-5 w-5" aria-hidden />
       </span>
-      <span className="text-xl">
+      <span className="text-xl tracking-tight">
         Kotha <span className="text-brand">কথা</span>
       </span>
     </Link>
@@ -16,30 +17,109 @@ export function Logo() {
 }
 
 export default function AppLayout() {
-  const link = ({ isActive }: { isActive: boolean }) =>
-    `rounded-lg px-3 py-2 text-sm font-medium ${isActive ? 'bg-deep/10 text-deep' : 'text-ink/70 hover:text-deep'}`
+  const { mode, setMode } = useFlow()
+
+  const linkClass = ({ isActive }: { isActive: boolean }) =>
+    `rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors ${
+      isActive ? 'bg-deep/10 text-deep font-semibold' : 'text-ink/70 hover:text-deep'
+    }`
+
   return (
-    <div className="flex min-h-screen flex-col">
-      <header className="no-print sticky top-0 z-20 border-b border-deep/10 bg-white/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+    <div className="flex min-h-screen flex-col bg-bg text-ink selection:bg-brand/20">
+      <header className="no-print sticky top-0 z-20 border-b border-deep/10 bg-white/95 backdrop-blur-sm">
+        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
           <Logo />
-          <nav className="flex items-center gap-1" aria-label="Main">
-            <NavLink to="/about" className={link}>About</NavLink>
-            <Link to="/intake" className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white hover:bg-deep">
-              Start
-            </Link>
+
+          <nav className="hidden md:flex items-center gap-1 text-sm" aria-label="Main navigation">
+            <a href="/#how-it-works" className="rounded-lg px-2.5 py-1.5 text-ink/70 hover:text-deep transition-colors">
+              How it works
+            </a>
+            <a href="/#dialects" className="rounded-lg px-2.5 py-1.5 text-ink/70 hover:text-deep transition-colors">
+              Dialects
+            </a>
+            <a href="/#privacy" className="rounded-lg px-2.5 py-1.5 text-ink/70 hover:text-deep transition-colors">
+              Privacy
+            </a>
+            <NavLink to="/about" className={linkClass}>
+              About
+            </NavLink>
           </nav>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {/* Live / Demo Mode Switch */}
+            <div
+              className="inline-flex rounded-xl border border-deep/20 bg-soft p-0.5 text-xs font-semibold"
+              role="group"
+              aria-label="System mode"
+            >
+              <button
+                type="button"
+                onClick={() => setMode('live')}
+                aria-pressed={mode === 'live'}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-all ${
+                  mode === 'live'
+                    ? 'bg-ok text-white shadow-sm font-bold'
+                    : 'text-ink/70 hover:text-deep'
+                }`}
+              >
+                <Radio className="h-3.5 w-3.5" aria-hidden />
+                <span>Live</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('demo')}
+                aria-pressed={mode === 'demo'}
+                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-all ${
+                  mode === 'demo'
+                    ? 'bg-amber-600 text-white shadow-sm font-bold'
+                    : 'text-ink/70 hover:text-deep'
+                }`}
+              >
+                <FlaskConical className="h-3.5 w-3.5" aria-hidden />
+                <span>Demo</span>
+              </button>
+            </div>
+
+            <Link
+              to="/intake"
+              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-3.5 sm:px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-deep transition-colors"
+            >
+              <span className="sm:hidden">Start</span>
+              <span className="hidden sm:inline">Start / শুরু করুন</span>
+            </Link>
+          </div>
         </div>
+
+        {/* Persistent Demo Mode Banner across all pages */}
+        {mode === 'demo' && (
+          <div
+            className="border-t border-amber-300 bg-amber-100/90 px-4 py-1.5 text-center text-xs sm:text-sm font-semibold text-amber-950 flex items-center justify-center gap-2"
+            role="status"
+            aria-live="polite"
+          >
+            <FlaskConical className="h-4 w-4 text-amber-800 shrink-0" aria-hidden />
+            <span>DEMO — prepared sample (লাইভ এআই নয় · Prepared synthetic sample data)</span>
+          </div>
+        )}
       </header>
+
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         <Outlet />
       </main>
+
       <footer className="border-t border-deep/10 bg-white">
-        <div className="mx-auto max-w-6xl space-y-2 px-4 py-5">
+        <div className="mx-auto max-w-6xl space-y-3 px-4 py-6">
           <Disclaimer />
-          <p className="text-xs text-ink/60">
-            Hackathon prototype. Not a certified medical system. No audio or transcripts are stored.
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink/60 border-t border-deep/5 pt-3">
+            <p>
+              Hackathon prototype. Not a certified medical system. Zero-storage architecture: no audio or transcripts are saved to disk.
+            </p>
+            <div className="flex items-center gap-3">
+              <NavLink to="/about" className="hover:underline">About Kotha</NavLink>
+              <span>·</span>
+              <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:underline">Documentation</a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>

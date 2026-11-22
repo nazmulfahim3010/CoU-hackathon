@@ -1,0 +1,437 @@
+{
+  "ruleset_version": "1.0-draft",
+  "clinically_reviewed": false,
+  "review_note": "DRAFT. Rules have NOT been reviewed by a qualified clinician. They must be reviewed against recognised clinical triage guidelines (e.g. WHO IMCI / ETAT, DGHS national guidelines) before being described as clinically validated.",
+  "rules": [
+    {
+      "rule_id": "CHEST_PAIN",
+      "name_en": "Chest pain",
+      "name_bn": "বুকে ব্যথা",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "National/WHO Cardiovascular Triage Guidelines (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "বুকে ব্যথা",
+          "বুকে ব্যাথা",
+          "বুক ব্যথা",
+          "বুকে চাপ",
+          "বুকে যন্ত্রণা",
+          "বুক চেপে",
+          "বুকে চিনচিন",
+          "বুকে জ্বালা",
+          "বুকে বিষ",
+          "ছাতিত বিষ",
+          "ছাতীত বিষ",
+          "হিনাত বিষ",
+          "সিনা বিষ",
+          "ছাতিত দরদ",
+          "সিনা দরদ"
+        ],
+        "terms_en": [
+          "chest pain",
+          "pain in chest",
+          "tightness in chest",
+          "chest pressure",
+          "pressure in chest"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "বুকে ব্যথা বা অস্বস্তির কথা বলা হয়েছে। এটি হার্টের সমস্যা বা গুরুতর অসুস্থতার লক্ষণ হতে পারে।",
+      "explanation_en": "Chest pain or pressure was reported. This may indicate a cardiovascular event or other urgent medical condition.",
+      "recommended_action_bn": "অবিলম্বে নিকটস্থ জরুরি চিকিৎসা কেন্দ্রে বা হাসপাতালে যান। কোনো বিলম্ব না করে চিকিৎসকের মূল্যায়ন নিন।",
+      "recommended_action_en": "Seek emergency medical care immediately at the nearest healthcare facility. Clinician must assess without delay."
+    },
+    {
+      "rule_id": "BREATHING_DIFFICULTY",
+      "name_en": "Difficulty breathing",
+      "name_bn": "শ্বাসকষ্ট",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "National/WHO Respiratory Distress Triage (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "শ্বাসকষ্ট",
+          "শ্বাস কষ্ট",
+          "শ্বাস নিতে কষ্ট",
+          "নিঃশ্বাস নিতে কষ্ট",
+          "নিশ্বাস নিতে কষ্ট",
+          "দম বন্ধ",
+          "দম নিতে কষ্ট",
+          "শ্বাস নিতে পারছি না",
+          "বুকে টান",
+          "হাঁপানি",
+          "দম আটকি যার",
+          "দম আটকায়",
+          "দম ফুরিয়ে যায়",
+          "নিশ্বাস আটকি যায়"
+        ],
+        "terms_en": [
+          "breathing difficulty",
+          "shortness of breath",
+          "difficulty breathing",
+          "cannot breathe",
+          "struggling to breathe"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "শ্বাস নিতে কষ্ট বা দম বন্ধ হওয়ার মতো অনুভূতির কথা বলা হয়েছে।",
+      "explanation_en": "Difficulty breathing or respiratory distress was reported.",
+      "recommended_action_bn": "অবিলম্বে জরুরি চিকিৎসা নিন এবং দ্রুত নিকটস্থ স্বাস্থ্যকেন্দ্রে পৌঁছান।",
+      "recommended_action_en": "Seek emergency medical attention immediately at the nearest clinic or hospital."
+    },
+    {
+      "rule_id": "HEAVY_BLEEDING",
+      "name_en": "Heavy bleeding",
+      "name_bn": "অতিরিক্ত রক্তক্ষরণ",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "WHO ETAT Hemorrhage Management Protocol (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "প্রচুর রক্ত",
+          "অনেক রক্ত",
+          "রক্ত বন্ধ হচ্ছে না",
+          "রক্তপাত বন্ধ হচ্ছে না",
+          "অতিরিক্ত রক্ত",
+          "প্রচুর রক্ত পড়ছে",
+          "বেশি রক্ত ঝরছে",
+          "মারাত্মক রক্তক্ষরণ",
+          "অতিরিক্ত রক্তপাত",
+          "লাহু ফরের",
+          "রক্ত ফরের",
+          "লাউড় ফরের"
+        ],
+        "terms_en": [
+          "heavy bleeding",
+          "severe bleeding",
+          "bleeding will not stop",
+          "uncontrolled bleeding",
+          "profuse bleeding"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "অতিরিক্ত বা বন্ধ না হওয়া রক্তপাতের কথা বলা হয়েছে। এটি জীবনঘাতী হতে পারে।",
+      "explanation_en": "Severe or uncontrolled bleeding was reported. This requires immediate clinical intervention.",
+      "recommended_action_bn": "অবিলম্বে জরুরি চিকিৎসা নিন। নিকটস্থ স্বাস্থ্য কমপ্লেক্স বা হাসপাতালে সরাসরি যান।",
+      "recommended_action_en": "Seek urgent medical care immediately. Proceed directly to the nearest emergency facility."
+    },
+    {
+      "rule_id": "INFANT_FEVER",
+      "name_en": "High fever in an infant",
+      "name_bn": "শিশুর উচ্চ জ্বর",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "WHO IMCI guidelines for young infants <2 months / <1 year (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "জ্বর",
+          "ফিভার",
+          "গা গরম",
+          "জর",
+          "গা পুড়ে যাচ্ছে"
+        ],
+        "terms_en": [
+          "fever",
+          "high fever",
+          "temperature"
+        ],
+        "required_context": {
+          "field": "age_group",
+          "value": "infant"
+        },
+        "co_occurrence": {
+          "context_strict": [
+            "মাসের বাচ্চা",
+            "মাসের শিশু",
+            "দিনের বাচ্চা",
+            "দিনের শিশু",
+            "সপ্তাহের বাচ্চা",
+            "সপ্তাহের শিশু",
+            "নবজাতক",
+            "দুধের বাচ্চা",
+            "infant",
+            "newborn"
+          ],
+          "context_loose": [
+            "বাচ্চা",
+            "শিশু",
+            "খোকা",
+            "খুকি",
+            "বাচ্চার",
+            "শিশুর",
+            "child",
+            "baby"
+          ]
+        }
+      },
+      "explanation_bn": "অল্পবয়সী শিশু বা নবজাতকের জ্বরের কথা বলা হয়েছে। শিশুদের ক্ষেত্রে জ্বর দ্রুত গুরুতর ইনফেকশনে রূপ নিতে পারে।",
+      "explanation_en": "Fever was reported in an infant under 1 year. Fever in early infancy requires rapid clinical evaluation.",
+      "recommended_action_bn": "জরুরিভাবে শিশুকে চিকিৎসকের কাছে বা স্বাস্থ্যকেন্দ্রে নিয়ে যান। চিকিৎসকের পরামর্শ ছাড়া নিজে কোনো ওষুধ দেবেন না।",
+      "recommended_action_en": "Take the infant to a healthcare professional or hospital immediately for formal assessment."
+    },
+    {
+      "rule_id": "UNCONSCIOUSNESS",
+      "name_en": "Loss of consciousness / fainting",
+      "name_bn": "অজ্ঞান হওয়া / সংজ্ঞাহীনতা",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "WHO ETAT Impaired Consciousness Guidelines (pending clinical review)",
+      "aliases": ["LOSS_OF_CONSCIOUSNESS"],
+      "trigger": {
+        "terms_bn": [
+          "অজ্ঞান",
+          "জ্ঞান হারা",
+          "জ্ঞান নেই",
+          "সাড়া দিচ্ছে না",
+          "জ্ঞান হারিয়ে",
+          "সংজ্ঞাহীন",
+          "মুর্ছা",
+          "চোখ উল্টে",
+          "বেহুঁশ",
+          "বেহুশ",
+          "বেহুঁশ হয়ে",
+          "আজ্ঞান"
+        ],
+        "terms_en": [
+          "loss of consciousness",
+          "unconscious",
+          "fainted",
+          "passing out",
+          "unresponsive",
+          "blacked out"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "রোগী অজ্ঞান হয়ে যাওয়া বা সাড়া না দেওয়ার কথা বলা হয়েছে।",
+      "explanation_en": "Loss of consciousness, fainting, or unresponsiveness was reported.",
+      "recommended_action_bn": "অবিলম্বে জরুরি চিকিৎসা নিন। রোগীকে নিরাপদ স্থানে শুইয়ে দ্রুত নিকটস্থ হাসপাতালে নিয়ে যান।",
+      "recommended_action_en": "Seek emergency medical care immediately at the nearest hospital."
+    },
+    {
+      "rule_id": "SEIZURE",
+      "name_en": "Seizure / convulsion",
+      "name_bn": "খিঁচুনি",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "WHO ETAT Convulsion Management Guidelines (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "খিঁচুনি",
+          "খিচুনি",
+          "খিচুনী",
+          "হাত পা শক্ত হয়ে কাঁপছে",
+          "মৃগীর টান",
+          "মৃগী",
+          "খেঁচুনি",
+          "তাণ",
+          "টান ধরছে"
+        ],
+        "terms_en": [
+          "seizure",
+          "convulsion",
+          "fits",
+          "spasms"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "খিঁচুনি বা শরীর শক্ত হয়ে কাঁপার কথা বলা হয়েছে।",
+      "explanation_en": "Seizure or convulsion was reported.",
+      "recommended_action_bn": "জরুরি চিকিৎসা সহায়তা নিন। রোগীকে দ্রুত নিকটস্থ স্বাস্থ্যকেন্দ্রে নিয়ে যান।",
+      "recommended_action_en": "Seek immediate medical attention at an emergency health facility."
+    },
+    {
+      "rule_id": "SEVERE_DEHYDRATION",
+      "name_en": "Severe dehydration signs",
+      "name_bn": "মারাত্মক পানিশূন্যতার লক্ষণ",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "WHO IMCI Diarrhea and Dehydration Protocol (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "চোখ দেবে গেছে",
+          "চোখ ভেতরে ঢুকে গেছে",
+          "চোখ গর্তে ঢুকে গেছে",
+          "চোখ গর্তে",
+          "প্রস্রাব বন্ধ",
+          "প্রস্রাব হচ্ছে না",
+          "পানি খেতে পারছে না",
+          "চরম পানিশূন্যতা",
+          "জিভ একদম শুকিয়ে গেছে",
+          "চামড়া টেনে ধরলে উঠছে না",
+          "পেশাব বন্ধ",
+          "পানি গিলতে পারে না",
+          "পানি খাইতে পারের না"
+        ],
+        "terms_en": [
+          "severe dehydration",
+          "sunken eyes",
+          "no urine",
+          "unable to drink",
+          "dry tongue",
+          "not urinating"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "চোখ গর্তে ঢোকা, প্রস্রাব বন্ধ থাকা বা পানি খেতে না পারার মতো মারাত্মক পানিশূন্যতার লক্ষণ রয়েছে।",
+      "explanation_en": "Signs of severe dehydration (e.g. sunken eyes, lack of urination, unable to drink) were reported.",
+      "recommended_action_bn": "দেরি না করে অবিলম্বে নিকটস্থ স্বাস্থ্যকেন্দ্রে যান। জরুরি ক্লিনিক্যাল মূল্যায়ন প্রয়োজন।",
+      "recommended_action_en": "Proceed immediately to the nearest health facility for clinical hydration assessment."
+    },
+    {
+      "rule_id": "STROKE_SIGNS",
+      "name_en": "Stroke-like warning signs",
+      "name_bn": "স্ট্রোকের লক্ষণ",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "FAST Stroke Protocol (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "মুখ বেঁকে গেছে",
+          "মুখ বেঁকে",
+          "মুখ বেকে",
+          "মুখ বাঁকা",
+          "একপাশ অবশ",
+          "হাত পা অবশ",
+          "কথা জড়িয়ে গেছে",
+          "কথা জড়িয়ে",
+          "কথা বলতে পারছে না",
+          "একপাশ দুর্বল",
+          "হঠাৎ অবশ",
+          "মুখ ত্যাড়া",
+          "কথা আউলাই যার",
+          "একপাশ লড়াইতে পারে না"
+        ],
+        "terms_en": [
+          "stroke",
+          "face drooping",
+          "slurred speech",
+          "facial droop",
+          "arm weakness",
+          "one side weakness",
+          "sudden paralysis"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "হঠাৎ মুখ বেঁকে যাওয়া, একপাশ অবশ হওয়া বা কথা জড়িয়ে যাওয়ার মতো স্ট্রোকের লক্ষণ রয়েছে।",
+      "explanation_en": "Sudden facial droop, one-sided weakness, or slurred speech was reported.",
+      "recommended_action_bn": "অবিলম্বে রোগীকে স্ট্রোক সেবায় সক্ষম এমন নিকটস্থ হাসপাতালে নিয়ে যান। লক্ষণ শুরুর সময় মনে রাখুন।",
+      "recommended_action_en": "Seek emergency medical care immediately at a hospital equipped for stroke care. Note the exact time symptoms started."
+    },
+    {
+      "rule_id": "BLOOD_IN_VOMIT_STOOL",
+      "name_en": "Blood in vomit or stool",
+      "name_bn": "বমিতে রক্ত বা পায়খানায় রক্ত",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "Gastrointestinal Bleeding Emergency Protocol (pending clinical review)",
+      "aliases": ["VOMITING_BLOOD"],
+      "trigger": {
+        "terms_bn": [
+          "রক্তবমি",
+          "রক্ত বমি",
+          "রক্ত বমি করেছে",
+          "বমিতে রক্ত",
+          "পায়খানার সাথে রক্ত",
+          "পায়খানায় রক্ত",
+          "কালো পায়খানা",
+          "পায়খানা দিয়ে রক্ত",
+          "রক্ত আমাশয়",
+          "লাহু বমি",
+          "লাউ বমি"
+        ],
+        "terms_en": [
+          "vomiting blood",
+          "blood in vomit",
+          "blood in stool",
+          "black stool",
+          "bloody stool",
+          "hematemesis",
+          "melena"
+        ],
+        "required_context": null,
+        "co_occurrence": null
+      },
+      "explanation_bn": "বমিতে রক্ত বা পায়খানায় রক্তের কথা বলা হয়েছে। এটি পরিপাকতন্ত্রের রক্তক্ষরণের লক্ষণ হতে পারে।",
+      "explanation_en": "Blood in vomit or stool was reported. This indicates gastrointestinal bleeding requiring urgent assessment.",
+      "recommended_action_bn": "অবিলম্বে নিকটস্থ জরুরি চিকিৎসা কেন্দ্রে বা হাসপাতালে যান।",
+      "recommended_action_en": "Seek urgent medical care immediately at the nearest healthcare facility."
+    },
+    {
+      "rule_id": "PREGNANCY_BLEEDING",
+      "name_en": "Pregnancy with bleeding",
+      "name_bn": "গর্ভাবস্থায় রক্তপাত",
+      "alert_level": "emergency",
+      "negation_window": 3,
+      "review_status": "pending_clinical_review",
+      "reviewed_against": "WHO Obstetric Emergency Triage Protocol (pending clinical review)",
+      "aliases": [],
+      "trigger": {
+        "terms_bn": [
+          "গর্ভবতী অবস্থায় রক্ত",
+          "গর্ভাবস্থায় রক্ত",
+          "প্রেগন্যান্ট রক্তক্ষরণ",
+          "গর্ভে বাচ্চা রক্ত",
+          "পেটে বাচ্চা রক্তপাত",
+          "গর্ভবতী রক্ত পড়ছে",
+          "গর্ভাবস্থায় রক্তপাত",
+          "গর্ভবতী রক্তপাত",
+          "গর্ভত রক্ত"
+        ],
+        "terms_en": [
+          "pregnancy bleeding",
+          "bleeding in pregnancy",
+          "pregnant and bleeding",
+          "vaginal bleeding in pregnancy"
+        ],
+        "required_context": null,
+        "co_occurrence": {
+          "pregnancy_terms": [
+            "গর্ভবতী",
+            "গর্ভাবস্থা",
+            "গর্ভে",
+            "প্রেগন্যান্ট",
+            "পেটে বাচ্চা",
+            "pregnant",
+            "pregnancy"
+          ],
+          "bleeding_terms": [
+            "রক্ত",
+            "রক্তপাত",
+            "রক্তক্ষরণ",
+            "লাহু",
+            "bleeding",
+            "blood"
+          ]
+        }
+      },
+      "explanation_bn": "গর্ভবতী অবস্থায় রক্তপাতের কথা বলা হয়েছে। এটি মা ও গর্ভস্থ শিশুর জন্য অত্যন্ত ঝুঁকিপূর্ণ।",
+      "explanation_en": "Bleeding during pregnancy was reported. This is an obstetric emergency requiring immediate hospital evaluation.",
+      "recommended_action_bn": "দেরি না করে অবিলম্বে নিকটস্থ জরুরি প্রসূতি সেবা বা হাসপাতালে যান।",
+      "recommended_action_en": "Seek emergency obstetric care immediately at the nearest hospital."
+    }
+  ]
+}

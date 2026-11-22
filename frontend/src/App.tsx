@@ -18,6 +18,7 @@ export default function App() {
             <Route path="/" element={<Landing />} />
             <Route path="/intake" element={<Intake />} />
             <Route path="/transcribe" element={<Transcribe />} />
+            <Route path="/review" element={<Confirm />} />
             <Route path="/confirm" element={<Confirm />} />
             <Route path="/processing" element={<Processing />} />
             <Route path="/summary" element={<Summary />} />

@@ -23,7 +23,8 @@ export function summaryToText(s: SummaryCard, lang: Lang): string {
   }
   lines.push('')
   lines.push(`${bn ? 'রোগীর মূল বক্তব্য' : 'Original patient statement'}: ${s.original_statement}`)
-  lines.push(`${bn ? 'সাধারণ বাংলায়' : 'Normalized statement'}: ${s.normalized_statement}`)
+  lines.push(`${bn ? 'প্রমিত বাংলায়' : 'Normalized statement'}: ${s.normalized_statement}`)
+  lines.push(`${bn ? 'নিশ্চিতকৃত বক্তব্য' : 'Confirmed statement'}: ${s.confirmed_statement || s.normalized_statement}`)
   lines.push('')
   lines.push(bn ? s.disclaimer_bn : s.disclaimer_en)
   return lines.join('\n')

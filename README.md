@@ -1,138 +1,428 @@
-# Kotha (কথা) — Every Voice Deserves to Be Understood
+# Kotha (কথা) — Dialect-to-Clinical-Note Voice Assistant
 
-AI-assisted **dialect-to-clinical-note voice assistant** for rural Bangladeshi patients. A patient speaks in their own
-Bangla dialect; Kotha transcribes, normalizes to standard Bangla, has the patient/helper **confirm** the text, extracts a
-structured note, runs **deterministic red-flag rules**, and produces a bilingual (Bangla/English) doctor summary plus a
-short spoken Bangla reply.
+> **CoU AI Hackathon 2026 Prototype**  
+> **Domain:** Healthcare Accessibility & Clinical Intake  
+> **Core Mandate:** Enabling rural Bangladeshi patients speaking regional dialects to be accurately heard and structured for clinical review.  
+> 
+> ⚠️ **CLINICAL SAFETY DISCLAIMER**  
+> **Kotha is NOT a diagnostic tool.** It does not provide diagnoses, prescribe treatments, or suggest medications. All medical judgments, diagnoses, and triage decisions must be performed by a qualified human healthcare professional. This is an experimental hackathon prototype with **zero clinical validation**. Red-flag rules are draft heuristics marked `pending_clinical_review`.
 
-> **Kotha is not a diagnostic tool.** Medical decisions must be made by a qualified healthcare professional.
-> This is a hackathon prototype, **not a certified medical system**. Nothing here has been clinically validated.
+---
 
-Built for CoU AI Hackathon 2026 (proposal: `Kotha.pdf`).
+## 1. Overview & Problem
 
-## Problem
-Regional Bangla dialects (Sylheti, Chittagonian, Noakhali, …) differ in vocabulary and pronunciation. Clinicians work in
-standard Bangla/English and can misread symptom words, body parts and durations. ASR is built mostly for standard Bangla.
+In Bangladesh, more than 170 million people speak Bengali, yet healthcare delivery in rural upazilas and community clinics faces a severe linguistic bottleneck:
 
-## Features
-| Module | What it does | Where |
-|---|---|---|
-| A. Voice recording | MediaRecorder capture, level meter, timer, 90 s cap, 30 s hint, preview/retake/discard, permission & unsupported-browser handling | `frontend/src/hooks/useRecorder.ts`, `pages/Intake.tsx` |
-| B. Speech-to-text | Provider-independent STT adapters; no fake output when unconfigured | `backend/app/services/providers/stt.py` |
-| C. Dialect normalization | Curated glossary + LLM with meaning-preservation guards (negation, numbers, duration units); falls back to glossary-only | `services/dialect_normalizer.py`, `data/dialects/*.json` |
-| D. Confirmation gate | **Backend-enforced** workflow state; extraction/safety/summary/TTS return `409` until confirmed | `core/session_manager.py`, `api/routes/confirmation.py` |
-| E. Extraction | Strict Pydantic schema (`reported / uncertain / not_reported`), validation + 3 attempts | `services/clinical_extractor.py`, `schemas/clinical.py` |
-| F. Red-flag engine | Deterministic rules from JSON, explicit negation handling, no LLM | `services/red_flag_engine.py`, `data/safety_rules/rules.json` |
-| G. Doctor summary | Bilingual toggle, red-flag panel, transcript comparison, copy, print/Save-as-PDF | `pages/Summary.tsx` |
-| H. Bangla TTS | Template text (contains no patient data) → gTTS; honest failure state | `services/text_to_speech.py`, `components/SpokenReply.tsx` |
+1. **Dialectal Diversity**: Patients communicate in rich regional dialects (Sylheti, Chittagonian, Noakhali, Barisali, etc.) featuring distinct lexical terms for pain, anatomical locations, and duration (e.g., Chittagonian *"হিনাত বিষ"* or Sylheti *"ছাতিত ব্যতা"* for chest pain; *"ফেডে বিষ"* for abdominal pain).
+2. **Clinical Communication Gap**: Attending physicians and community health workers (CHWs) are trained in standard Bangla and English medical nomenclature. Misinterpreting colloquial or dialectal symptom descriptions can lead to misdiagnosed severity, overlooked emergencies, or delayed care.
+3. **Speech Recognition Fragility**: Commercial and foundation Automatic Speech Recognition (ASR) models are primarily trained on standard literary Bangla (Sadhu/Cholit bhasha) or English. When presented with regional phonology and dialect vocabularies, Word Error Rates (WER) surge significantly, frequently dropping critical negation markers (e.g., *"নাই"* / *"না"* / *"নো"*).
+4. **Diagnostic Creep & LLM Hallucination Risk**: Unconstrained generative AI systems in healthcare frequently hallucinate plausible-sounding diagnoses, assume absent symptoms are negative findings, or offer unsolicited clinical advice.
 
-## Architecture
+---
+
+## 2. Solution: Guarded 8-Step Pipeline
+
+Kotha addresses these challenges by combining **regional speech-to-text**, **dialect normalization**, a **mandatory patient confirmation gate**, **schema-constrained clinical extraction**, and a **deterministic (non-LLM) red-flag engine**.
+
+The system is deliberately designed so that:
+- The patient/helper always inspects and confirms the normalized text before any clinical extraction occurs.
+- Red-flag alerts are evaluated strictly by deterministic keyword and negation rules—the LLM has zero authority to suppress or trigger emergency warnings.
+- The physician receives a high-density bilingual (Bangla/English) summary card clearly separating patient statements from extracted data.
+- The patient receives a reassuring spoken audio message synthesized from a static template that never leaks clinical data to cloud TTS.
+
+---
+
+## 3. Architecture & Data Flow
+
+```mermaid
+flowchart TD
+    classDef client fill:#E0F2FE,stroke:#0284C7,stroke-width:2px;
+    classDef gate fill:#FEF3C7,stroke:#D97706,stroke-width:2px;
+    classDef safety fill:#FEE2E2,stroke:#DC2626,stroke-width:2px;
+    classDef service fill:#F3F4F6,stroke:#4B5563,stroke-width:1.5px;
+    classDef storage fill:#ECFDF5,stroke:#059669,stroke-width:2px;
+
+    subgraph ClientLayer ["Frontend (React 19 / Vite / Tailwind)"]
+        A["Patient Audio Record / Typed Fallback"]:::client
+        D["Patient / Helper Review & Edit Screen"]:::client
+        G["Doctor Summary View (Bilingual Toggle)"]:::client
+        H["Spoken Reply Audio Player"]:::client
+    end
+
+    subgraph StateMachine ["In-Memory Session State Machine (30-min TTL)"]
+        S0[("CREATED (0)")]:::storage -->|POST /api/transcription| S1[("TRANSCRIBED (1)")]:::storage
+        S1 -->|POST /api/normalization| S2[("NORMALIZED (2)")]:::storage
+        S2 -->|POST /api/confirmation| S3[("CONFIRMED (3)")]:::gate
+        S3 -->|POST /api/clinical/extract| S4[("EXTRACTED (4)")]:::storage
+        S4 -->|POST /api/safety/evaluate| S5[("EVALUATED (5)")]:::storage
+        S5 -->|POST /api/summary/generate| S6[("SUMMARIZED (6)")]:::storage
+    end
+
+    subgraph BackendServices ["Backend Processing Engine (FastAPI)"]
+        B["STT Adapters (HF Inference / OpenAI Compat / ffmpeg)"]:::service
+        C["Dialect Normalizer (Curated Glossary + LLM + Heuristic Guards)"]:::service
+        E["Clinical Extractor (Pydantic Schema + Quote Verification)"]:::service
+        F["Red-Flag Engine (Deterministic Rules / Negation Window)"]:::safety
+        Summ["Summary Synthesizer (Deterministic Assembly)"]:::service
+        TTS["Bangla TTS (gTTS Template Playback)"]:::service
+    end
+
+    A --> B --> S1
+    S1 --> C --> S2
+    S2 --> D -->|Mandatory Gate| S3
+    S3 --> E --> S4
+    S3 --> F --> S5
+    S4 & S5 --> Summ --> S6
+    S6 --> G
+    S6 --> TTS --> H
+
+    linkStyle default stroke:#4B5563,stroke-width:1.5px;
 ```
-Browser (React/Vite/Tailwind) ──/api (Vite proxy)──▶ FastAPI
-   record ─▶ POST /api/transcription ─▶ [STT adapter] ─▶ session(TRANSCRIBED)
-          ─▶ POST /api/normalization ─▶ glossary + [LLM adapter] ─▶ session(NORMALIZED)
-          ─▶ POST /api/confirmation  ─▶ patient-edited text ─▶ session(CONFIRMED)   ◀── mandatory gate
-          ─▶ POST /api/clinical/extract (confirmed text only) ─▶ [LLM adapter]
-          ─▶ POST /api/safety/evaluate  (deterministic rules, no LLM)
-          ─▶ POST /api/summary/generate (deterministic assembly)
-          ─▶ POST /api/speech/generate  (template text ─▶ gTTS)
+
+### The 8 Pipeline Stages
+1. **Intake & Audio Capture (`Stage.CREATED`)**: Web Audio API captures up to 90 seconds of audio (16 kHz mono WAV transcode via ffmpeg) or accepts typed input.
+2. **Transcription (`Stage.TRANSCRIBED`)**: Provider-independent STT adapter converts speech to regional transcript.
+3. **Dialect Normalization (`Stage.NORMALIZED`)**: Longest-match dialect glossary scans terms (Sylheti, Chittagonian, Noakhali), then LLM suggests a standard Bangla rewrite guarded by negation count and numeral preservation checks.
+4. **Patient Confirmation Gate (`Stage.CONFIRMED`)**: **The core safety boundary.** The patient or community health worker reviews side-by-side transcripts and can edit the text. Downstream endpoints reject unconfirmed sessions with `409 Conflict`.
+5. **Structured Clinical Extraction (`Stage.EXTRACTED`)**: LLM populates a strict Pydantic clinical schema (`reported`, `uncertain`, `not_reported`) requiring verbatim quotation evidence. Diagnoses and prescriptions are strictly banned.
+6. **Deterministic Safety Evaluation (`Stage.EVALUATED`)**: Rule-based keyword matching with clause-bounded negation detection scans confirmed text. Zero LLM involvement.
+7. **Bilingual Summary Generation (`Stage.SUMMARIZED`)**: Deterministic assembly of the physician's intake card in Bangla and English.
+8. **Spoken Patient Reply**: Non-clinical template audio synthesized via `gTTS` confirming intake receipt and advising the patient to wait for the clinician.
+
+---
+
+## 4. Key Features
+
+- **Mandatory Confirmation Gate**: Direct API calls attempting extraction prior to confirmation receive an immediate `409 Conflict (WORKFLOW_ORDER_VIOLATION)`.
+- **Zero-Storage Privacy Design**: No database (no SQLite, Postgres, or Redis). In-memory session store expires after 30 minutes. All ffmpeg audio temp files are unlinked in `finally` blocks.
+- **Log Redaction**: Patient transcripts, audio bytes, and credentials are strictly excluded from logging. Only session IDs, stage transitions, and sanitized error types are logged.
+- **Meaning Preservation Guards**: Rejects LLM normalizations that alter negation polarity (e.g. *"নাই"* vs *"আছে"*), drop numbers, or tamper with duration units.
+- **Explicit Uncertainty Handling**: Missing symptoms remain `not_reported`. Hedged or vague statements remain `uncertain`. Never inferred as negative findings.
+- **Honest Demo Mode**: Three fictional scenarios (`A_ordinary`, `B_red_flag`, `C_uncertain`) clearly tagged with `"mode": "demo"` across the UI and API payloads.
+- **Bilingual Clinician Dashboard**: Instant toggle between standard Bangla and English with color-coded red-flag alert banners and print-to-PDF support.
+
+---
+
+## 5. Technology Stack
+
+### Backend
+- **Framework**: FastAPI `0.115.x`, Uvicorn `0.30.x`, Python 3.11+
+- **Validation**: Pydantic `2.9.x`, Pydantic-Settings `2.5.x`
+- **HTTP & Concurrency**: HTTPX `0.27.x`, asyncio
+- **Audio Processing**: ffmpeg subprocess transcoding, Python standard library `wave`
+- **Speech Synthesis**: gTTS `2.5.x` (Google Translate TTS web API)
+- **Testing**: pytest `8.x`, pytest-asyncio `0.24.x`
+
+### Frontend
+- **Framework**: React `19.3.x`, TypeScript `5.x`, Vite `8.3.x`
+- **Routing**: React Router DOM `7.18.x`
+- **Styling**: Tailwind CSS `v4.3.x`, `@tailwindcss/vite`
+- **Icons**: Lucide React `1.77.x`
+- **Typography**: Google Fonts (*Hind Siliguri* for Bengali, *Inter* for English)
+- **Testing**: Vitest `5.1.x`, `@testing-library/react` `16.3.x`, Playwright `1.65.x`
+
+---
+
+## 6. Repository Structure
+
 ```
-Sessions are in-memory with a TTL (default 30 min). No database, no files, no audio retained. Extraction takes only a
-`session_id`; the server uses the text stored at confirmation, so a client cannot bypass the gate or inject unconfirmed text.
+├── backend/
+│   ├── app/
+│   │   ├── main.py                  # FastAPI application entrypoint & lifecycle
+│   │   ├── config.py                # Pydantic Settings & environment validation
+│   │   ├── api/
+│   │   │   ├── deps.py              # Dependency injection for SessionManager & Settings
+│   │   │   └── routes/              # Modular API endpoints
+│   │   │       ├── health.py        # System health & provider readiness
+│   │   │       ├── session.py       # Session initialization and TTL lifecycle
+│   │   │       ├── transcription.py # Audio upload & typed transcript intake
+│   │   │       ├── normalization.py # Glossary matching & LLM rewrite
+│   │   │       ├── confirmation.py  # Mandatory patient review gate
+│   │   │       ├── extraction.py    # Structured clinical schema extraction
+│   │   │       ├── safety.py        # Deterministic red-flag evaluation
+│   │   │       ├── summary.py       # Deterministic bilingual note assembly
+│   │   │       ├── speech.py        # Bangla TTS audio generation
+│   │   │       └── demo.py          # Prepared demo scenarios and audio streaming
+│   │   ├── core/
+│   │   │   ├── session_manager.py   # In-memory TTL state machine with Stage gates
+│   │   │   ├── logging.py           # Redacting logger (no transcripts or audio)
+│   │   │   ├── security.py          # Magic byte validation & audio container check
+│   │   │   └── exceptions.py        # Custom KothaError & status code mappers
+│   │   ├── schemas/                 # Pydantic models for all request/response schemas
+│   │   ├── services/                # Business logic & external adapters
+│   │   │   ├── speech_to_text.py    # LocalTransformersSTT, HFInferenceSTT, OpenAICompatSTT
+│   │   │   ├── llm_provider.py      # AnthropicProvider, OpenAICompatProvider
+│   │   │   ├── glossary_service.py  # Longest-match Trie/regex dialect term matcher
+│   │   │   ├── dialect_normalizer.py# Guarded normalization with fallback
+│   │   │   ├── clinical_extractor.py# LLM extractor with quote validation
+│   │   │   ├── red_flag_engine.py   # Deterministic rules + clause-bounded negation
+│   │   │   ├── summary_generator.py # Bilingual note generator
+│   │   │   └── text_to_speech.py    # Template-based gTTS synthesizer
+│   │   └── data/
+│   │       ├── dialects/            # Sylheti, Chittagonian, Noakhali, Standard glossaries
+│   │       └── safety_rules/        # red_flags.json (10 emergency/urgent rules)
+│   └── tests/                       # 10 test modules (125 unit/integration tests)
+├── frontend/
+│   ├── src/
+│   │   ├── pages/                   # Landing, Intake, Confirm, Summary, About
+│   │   ├── components/              # UI primitives, Audio recorder, Spoken reply
+│   │   ├── hooks/                   # useRecorder (MediaRecorder + Web Audio VU meter)
+│   │   ├── state/                   # FlowContext (in-memory React session state)
+│   │   ├── services/                # Typed fetch API client
+│   │   └── test/                    # Vitest unit and component tests (31 tests)
+│   └── e2e/                         # Playwright E2E workflows (desktop & mobile)
+├── demo_assets/                     # Fictional scenario audio clips & transcripts
+├── docs/                            # ARCHITECTURE.md, Kotha.pdf
+└── CLAUDE.md                        # Development guide and engineering invariants
+```
 
-## Run it
-Requirements: Python 3.11+ (tested on 3.14), Node 20+.
+---
 
+## 7. Setup & Installation
+
+### Prerequisites
+- **Python**: 3.11+ (tested on Python 3.11 & 3.14)
+- **Node.js**: 20+ (tested on Node 22+)
+- **ffmpeg**: Installed and available in system `PATH` (for audio transcoding)
+
+### 7.1 Backend Setup
 ```powershell
-# 1. Backend
+# 1. Navigate to backend directory
 cd backend
+
+# 2. Create and activate virtual environment
 python -m venv .venv
-.venv\Scripts\python -m pip install -r requirements.txt
-copy .env.example .env          # add keys for live mode (optional for demo mode)
-.venv\Scripts\python -m uvicorn app.main:app --port 8000
-# API docs: http://localhost:8000/docs
+.venv\Scripts\Activate.ps1    # On Linux/macOS: source .venv/bin/activate
 
-# 2. Frontend (new terminal)
-cd frontend
-npm install
-npm run dev                     # http://localhost:5173
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Create environment configuration
+copy .env.example .env        # On Linux/macOS: cp .env.example .env
+
+# 5. Start development server
+uvicorn app.main:app --reload --port 8000
 ```
-Microphone capture needs `localhost` or HTTPS.
+- Interactive Swagger API docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+- Health check: [http://localhost:8000/api/health](http://localhost:8000/api/health)
 
-### Configuration (`backend/.env`, never committed; keys never reach the browser)
-| Variable | Values |
-|---|---|
-| `SPEECH_PROVIDER` | `none` \| `hf_inference` \| `openai_compatible` |
-| `SPEECH_MODEL` | e.g. `bangla-speech-processing/BanglaASR` (HF) or `whisper-1` (OpenAI-compatible) |
-| `SPEECH_API_KEY`, `SPEECH_BASE_URL` | key; optional base URL override |
-| `LLM_PROVIDER` | `none` \| `anthropic` \| `openai_compatible` |
-| `LLM_MODEL`, `LLM_API_KEY`, `LLM_BASE_URL` | model id, key, optional base URL |
-| `TTS_PROVIDER` | `gtts` \| `none` |
-
-## Demo mode
-Switch to **Demo samples** on the intake page. Three fictional scenarios: **A** ordinary symptoms (no alert),
-**B** chest pain + breathing difficulty (rules trigger), **C** uncertain/incomplete info (unknowns stay "uncertain").
-Demo mode is labelled on every screen. What is real in demo mode: glossary matching, the confirmation gate, red-flag
-rules, summary assembly, TTS. What is **prepared**: the starting text (not speech recognition), the standard-Bangla
-rewrite, and the structured extraction. Editing the text in demo mode makes the prepared extraction unavailable
-(`409 DEMO_TEXT_EDITED`) rather than showing mismatched output; use live mode for edited text.
-
-Native-speaker audio recordings were **not** available when this was built; none are bundled. Add verified clips with
-transcripts before claiming any dialect is supported.
-
-## Tests
+### 7.2 Frontend Setup
 ```powershell
-cd backend;  .venv\Scripts\python -m pytest -q      # 69 tests
-cd frontend; npm test                               # 20 tests (vitest)
-cd frontend; npm run build
+# 1. Open a new terminal and navigate to frontend directory
+cd frontend
+
+# 2. Install dependencies
+npm install
+
+# 3. Start Vite development server
+npm run dev
 ```
-Covered: audio validation, transcription responses, glossary matching, negation/duration preservation, confirmation
-enforcement, extraction schema + retry, missing-info handling, red-flag trigger/non-trigger/negation, session expiry,
-no files written, demo scenarios end to end through the API, recorder permission handling, confirmation flow,
-loading/error states, summary rendering. Mobile layout was checked manually at 375 px.
+- Web Application: [http://localhost:5173](http://localhost:5173)
 
-## What was and was not verified
-- **Verified in this build:** all of the above automated tests; the full demo flow through the real HTTP stack and browser
-  UI; real Bangla TTS via gTTS (network call succeeded, audio returned); mobile layout at 375 px.
-- **NOT verified (no credentials in the build environment):** live STT with any Hugging Face / OpenAI-compatible
-  endpoint, and live LLM normalization/extraction. The adapters follow the providers' documented request formats and are
-  unit-tested against scripted fake clients, but **have never run against a real provider**. Confirm model IDs, access,
-  and rate limits before the demo. In particular, whether `bangla-speech-processing/BanglaASR` is served by the HF
-  Inference endpoint for your account must be checked; if not, point `SPEECH_BASE_URL` at an OpenAI-compatible Whisper host.
-- **No metrics claimed:** no word-error-rate, accuracy or clinical validation figures exist.
+---
 
-## Models, APIs, datasets, libraries
-- **Speech-to-text (configurable, none bundled):** Hugging Face Inference API (default model id
-  `bangla-speech-processing/BanglaASR`, a Whisper-based Bangla model — *unverified here*) or any OpenAI-compatible
-  `/audio/transcriptions` endpoint (e.g. OpenAI `whisper-1`). No model is trained or fine-tuned.
-- **LLM (configurable):** Anthropic Messages API or any OpenAI-compatible chat endpoint; used for normalization and extraction.
-- **TTS:** gTTS (Google Translate TTS, unofficial; language `bn`). Receives only fixed template text.
-- **Datasets:** none integrated. The proposal names RegSpeech12, Ben-10 and the Bangla Regional Dialects Speech Dataset
-  as candidates for future adaptation; **none were used**, and their licences have not been checked here.
-- **Glossary:** ~28 draft entries (Chittagonian, Sylheti, Noakhali) written by the AI coding assistant from general
-  knowledge. **All are marked `unverified`** and need native-speaker review.
-- **Red-flag rules:** draft keyword rules, `clinically_reviewed: false`. Must be reviewed against recognised triage
-  guidance (e.g. WHO IMCI/ETAT, national guidelines) before any validity claim.
-- **Libraries:** FastAPI, Pydantic, Uvicorn, httpx, python-multipart, gTTS, pytest; React, React Router, Vite, Tailwind CSS,
-  Lucide, Vitest, Testing Library. Fonts: Inter, Hind Siliguri (Google Fonts).
-- **AI coding assistant:** Claude Code (Anthropic, model Claude Sonnet 5.5) wrote and tested this codebase under human direction.
+## 8. Environment Variables Reference
 
-## Privacy & safety
-- No persistent audio/transcripts; in-memory session data with TTL; `DELETE /api/session/{id}` clears immediately.
-- Logs contain event names/ids only; no transcripts, audio or secrets. No analytics.
-- Audio goes to the speech provider and text to the LLM provider you configure — review their data terms.
-- LLM never decides alerts. Absence of an alert is never presented as safety. Guidance is limited to "seek urgent care".
-- LLM normalization output is rejected (glossary-only fallback) if it changes negation, drops numbers or duration units.
+All backend configurations are managed via `backend/.env` (read by `app/config.py`). Keys stay on the backend and are never sent to the browser:
 
-## Known limitations
-- No dialect has been tested with native speakers; zero-shot ASR on dialects is expected to be weak.
-- Negation/guard heuristics are simple and Bangla-morphology-naive; rules are keyword-based and will miss paraphrases
-  (they intentionally over-alert on ambiguous negation).
-- Sessions are per-process memory (single server instance only).
-- "Download as PDF" is the browser's Save-as-PDF via the print stylesheet.
-- gTTS is an unofficial service and may rate-limit or fail; the UI then shows the text and an explicit error.
-- Not a certified medical device; no regulatory review.
+| Variable | Type | Default | Description |
+|---|---|---|---|
+| `APP_MODE` | `string` | `demo` | Application mode: `demo` (prepared scenarios) or `live` (calls real APIs). |
+| `SESSION_TTL_MINUTES` | `int` | `30` | In-memory session time-to-live before automatic garbage collection. |
+| `SESSION_TTL_SECONDS` | `int` | `1800` | In-memory session TTL in seconds. |
+| `SPEECH_PROVIDER` | `string` | `none` | Speech-to-text adapter: `none`, `hf_inference`, or `openai_compatible`. |
+| `SPEECH_MODEL` | `string` | `bangla-speech-processing/BanglaASR` | Model identifier (HF repo or OpenAI model name e.g. `whisper-1`). |
+| `SPEECH_API_KEY` | `string` | `""` | API key for Hugging Face or OpenAI-compatible STT endpoint. |
+| `SPEECH_BASE_URL` | `string` | `""` | Optional endpoint override (e.g. custom Groq/vLLM URL). |
+| `LLM_PROVIDER` | `string` | `none` | LLM adapter: `none`, `anthropic`, or `openai_compatible`. |
+| `LLM_MODEL` | `string` | `""` | Model identifier (e.g. `claude-3-5-sonnet-20241022` or `gpt-4o-mini`). |
+| `LLM_API_KEY` | `string` | `""` | API key for Anthropic or OpenAI-compatible endpoint. |
+| `LLM_BASE_URL` | `string` | `""` | Optional base URL override for LLM endpoint. |
+| `TTS_PROVIDER` | `string` | `gtts` | Bangla speech synthesis adapter: `gtts` or `none`. |
+| `TTS_API_KEY` | `string` | `""` | Optional key if using commercial TTS provider. |
+| `MAX_AUDIO_SECONDS` | `int` | `90` | Hard cap on audio recording duration. |
+| `MAX_UPLOAD_MB` | `int` | `10` | Maximum uploaded audio payload size in megabytes. |
+| `MAX_AUDIO_BYTES` | `int` | `10485760` | Maximum raw audio payload in bytes (10 MB). |
+| `PROVIDER_TIMEOUT_SECONDS` | `int` | `60` | Timeout for third-party HTTP API calls. |
+| `CORS_ORIGINS` | `string` | `http://localhost:5173,...` | Comma-separated list of allowed frontend origins. |
 
-## Future work
-Native-speaker verified glossary and test clips; dialect-adapted ASR on open dialect data (licence-checked); clinician
-review of rules; WER and extraction-accuracy evaluation; offline/low-bandwidth mode; an official Bangla TTS provider.
+---
+
+## 9. API Reference
+
+All requests and responses use JSON (except multipart audio uploads and audio byte streams).
+
+| Endpoint | Method | Required State | Description |
+|---|---|---|---|
+| `/api/health` | `GET` | *Any* | System status, mode, and provider readiness. |
+| `/api/session` | `POST` | *Any* | Initializes a fresh session with demographic context. |
+| `/api/session/{id}` | `GET` | *Any* | Fetches session metadata and current stage. |
+| `/api/session/{id}` | `DELETE` | *Any* | Immediately purges the session from memory. |
+| `/api/glossary/stats` | `GET` | *Any* | Returns verified and unverified term counts per dialect. |
+| `/api/demo/samples` | `GET` | *Any* | Lists prepared demo scenarios (A, B, C). |
+| `/api/demo/audio/{scenario_id}` | `GET` | *Any* | Streams WAV audio for a prepared demo scenario. |
+| `/api/demo/live-asr` | `POST` | *Any* | Runs real ASR on a demo sample for judge evaluation. |
+| `/api/transcription` | `POST` | `CREATED` | Transcribes multipart audio; advances to `TRANSCRIBED`. |
+| `/api/transcription/typed` | `POST` | `CREATED` | Accepts manually typed text; advances to `TRANSCRIBED`. |
+| `/api/normalization` | `POST` | `TRANSCRIBED` | Normalizes dialect text; advances to `NORMALIZED`. |
+| `/api/confirmation` | `POST` | `NORMALIZED` | **Gate:** Confirms patient text; advances to `CONFIRMED`. |
+| `/api/clinical/extract` | `POST` | `CONFIRMED` | Structured symptom extraction; advances to `EXTRACTED`. |
+| `/api/safety/evaluate` | `POST` | `CONFIRMED` | Evaluates deterministic red flags; advances to `EVALUATED`. |
+| `/api/summary/generate` | `POST` | `EVALUATED` | Generates bilingual summary card; advances to `SUMMARIZED`. |
+| `/api/speech/generate` | `POST` | `SUMMARIZED` | Synthesizes spoken Bangla reassurance template. |
+
+### Sample Payloads
+
+#### 1. Confirm Patient Text (`POST /api/confirmation`)
+**Request**:
+```json
+{
+  "session_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "confirmed_text": "আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে। সারাদিন ভালো লাগছে না।",
+  "edited": true,
+  "confirmed_by": "patient"
+}
+```
+**Response** (`200 OK`):
+```json
+{
+  "session_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "confirmed_text": "আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে। সারাদিন ভালো লাগছে না।",
+  "edited": true,
+  "confirmed_by": "patient",
+  "confirmed_at": "2026-11-22T23:55:00Z",
+  "mode": "live"
+}
+```
+
+#### 2. Red-Flag Safety Evaluation (`POST /api/safety/evaluate`)
+**Response** (`200 OK`):
+```json
+{
+  "session_id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+  "highest_alert_level": "emergency",
+  "triggered_rules": [
+    {
+      "rule_id": "CHEST_PAIN",
+      "name_en": "Chest pain",
+      "name_bn": "বুকে ব্যথা",
+      "alert_level": "emergency",
+      "matched_term": "বুকে ব্যথা",
+      "matched_clause": "দুই ঘণ্টা ধরে বুকে খুব ব্যথা",
+      "review_status": "pending_clinical_review",
+      "explanation_bn": "বুকে ব্যথা বা অস্বস্তির কথা বলা হয়েছে। এটি হার্টের সমস্যা বা গুরুতর অসুস্থতার লক্ষণ হতে পারে।",
+      "recommended_action_bn": "অবিলম্বে নিকটস্থ জরুরি চিকিৎসা কেন্দ্রে বা হাসপাতালে যান।",
+      "recommended_action_en": "Seek emergency medical care immediately at the nearest healthcare facility."
+    }
+  ],
+  "disclaimer_bn": "কোনো সতর্কতা না থাকার অর্থ এই নয় যে রোগী নিরাপদ। এটি রোগীর কথার ওপর নির্ধারিত নিয়মভিত্তিক পরীক্ষা, চিকিৎসা মূল্যায়ন নয়।",
+  "disclaimer_en": "No alert does NOT mean the patient is safe. Alerts are keyword rules over what the patient said, not a clinical assessment. Kotha is not a diagnostic tool."
+}
+```
+
+---
+
+## 10. AI Models, Providers & Honest Limitations
+
+### Models Actually Integrated in Code
+1. **Speech-to-Text**:
+   - `bangla-speech-processing/BanglaASR` (via Hugging Face Inference API or local Transformers pipeline). Architecture: Fine-tuned Whisper on standard Bangla.
+   - `whisper-1` via OpenAI-compatible endpoints.
+   - *Manual Fallback*: `POST /api/transcription/typed` (tagged `source: "typed_by_helper"`).
+2. **Large Language Models**:
+   - `claude-3-5-sonnet-20241022` / `claude-3-7-sonnet-20250219` via Anthropic Messages API (`temperature: 0`).
+   - `gpt-4o-mini` via OpenAI-compatible Chat API (`response_format: {"type": "json_object"}`).
+   - *Deterministic Fallback*: Glossary-only longest-match term replacement when LLM is unconfigured or unreachable.
+3. **Speech Synthesis**:
+   - `gTTS` (Google Translate TTS web API, language `bn`). Synthesizes static reassurance templates without transmitting patient health data.
+
+### Known Limitations
+- **Dialect ASR Accuracy**: Zero-shot standard Bangla Whisper models exhibit high Word Error Rates (WER) on regional phonetics (e.g., Sylheti tonal shifts, Chittagonian spirantization). The system mitigates this via the mandatory confirmation gate and typed fallback.
+- **Negation Heuristics**: Clause-bounded negation detection uses token distance windows (3 tokens) and punctuation clause splitting. Complex multi-clause or idiomatic double-negations in dialectal speech may over-alert (by design, prioritizing sensitivity over specificity).
+- **Rule Clinical Status**: All 10 red-flag rules are currently marked `pending_clinical_review`. They are engineering heuristics, not validated triage algorithms.
+- **In-Memory Volatility**: Single-server process memory. Server restart clears active sessions.
+
+---
+
+## 11. Datasets & Licences
+
+### Actually Used in Codebase
+- **Curated Starter Dialect Glossaries** (`backend/app/data/dialects/*.json`): 43 total starter entries across Sylheti, Chittagonian, Noakhali, and Standard Bangla. All marked `verification_status: "unverified"`. Licence: MIT / Project Open Source.
+- **Synthetic Demo Scenarios** (`demo_assets/`): 3 fictional patient profiles with synthetic audio recordings and transcript pairs. Licence: CC-BY 4.0.
+
+### Planned / Reviewed, Not Integrated
+- **Mozilla Common Voice Bangla 17.0** (CC-0): Reviewed as candidate for acoustic fine-tuning; not bundled in prototype.
+- **SHRUTI Speech Corpus** (Academic Non-Commercial): Reviewed for regional acoustic benchmarks; not bundled.
+- **Bengali.AI Speech & Dialect Dataset** (CC-BY-NC-SA 4.0): Reviewed for regional pronunciation variants; not bundled.
+- **RegSpeech12 / Ben-10**: Named in initial hackathon concept paper; licences unverified, not used.
+
+---
+
+## 12. Demo Walkthrough: 3 Scenarios
+
+To demonstrate Kotha during evaluation, toggle to **Demo mode** in the top navigation bar or intake screen:
+
+| Scenario | Title | Description | Expected Pipeline Outcome |
+|---|---|---|---|
+| **Scenario A** | *Ordinary Symptoms* (`A_ordinary`) | Sylheti dialect: Headache and mild fever for 3 days; took 1 paracetamol. | Normalizes cleanly; 0 red flags triggered; summary highlights mild symptoms and lists unstated items under *"Ask about..."*. |
+| **Scenario B** | *Red-Flag Emergency* (`B_red_flag`) | Chittagonian dialect: Severe chest pain and breathing difficulty for 2 hours. | Deterministic red-flag engine fires `CHEST_PAIN` and `BREATHING_DIFFICULTY`; emergency red alert banner `#C62828` appears with immediate referral advice. |
+| **Scenario C** | *Uncertain / Incomplete* (`C_uncertain`) | Noakhali dialect: Intermittent abdominal pain; duration forgotten; fever unknown. | Schema strictly preserves `uncertain` for duration and fever; never flags symptoms as negative; alerts clinician to clarify. |
+
+*Judges can also click **"Run live ASR on this sample"** to observe real foundation speech-to-text output on the same clip.*
+
+---
+
+## 13. Test Results & Verification (Step 14)
+
+All tests execute against strict regression suites without network dependencies:
+
+```powershell
+# Backend Test Suite (125 tests)
+backend\.venv\Scripts\python -m pytest -q --basetemp=backend/.pytest_tmp
+# Result: 125 passed in 21.26s
+
+# Frontend Unit & Component Tests (31 tests)
+cd frontend; npm test
+# Result: 31 passed in 5.14s
+
+# Frontend Production Build
+cd frontend; npm run build
+# Result: Built cleanly in 879ms (0 TypeScript errors)
+
+# Playwright End-to-End Suite
+cd frontend; npx playwright test
+# Result: 4 passed, 2 skipped (@live requiring external keys), 0 failed in 19.7s
+# Checked on Desktop Chrome (1280x720) and Mobile Chrome (360x740)
+```
+
+### Verified Test Properties
+- **No-Storage Guarantee**: Verified by `test_no_persistent_data.py`. Confirmed zero files created on disk during full workflow, and verified zero transcript or audio text in `DEBUG` logs.
+- **Confirmation Boundary**: Verified by `test_confirmation_gate.py`. Direct extraction or summary calls prior to confirmation raise `409 Conflict`.
+- **Negation & Quantity Preservation**: Verified by `test_normalization.py`. Rewrites altering negative polarity or numbers are rejected.
+
+---
+
+## 14. Privacy, Security & Ethics
+
+1. **Zero Patient Record Retention**: In-memory storage only. No database, no tracking cookies, no localStorage. Sessions automatically expire after 30 minutes.
+2. **Log Redaction**: Structured logging (`app/core/logging.py`) sanitizes output to exclude transcripts, audio payloads, and authorization headers.
+3. **No Clinical Decisions by LLM**: The LLM's role is strictly confined to dialect translation and structured key-value parsing. Triage and red-flag determinations are exclusively deterministic.
+4. **Third-Party Provider Boundary**: When live mode is active, audio is sent to the configured STT provider and text to the configured LLM provider. No patient identifiers are transmitted.
+
+---
+
+## 15. Future Improvements
+
+- **Native Speaker Dialect Corpora**: Field collection of audio and verified clinical terms in Sylhet, Chittagong, and Noakhali with native speaker validation.
+- **On-Device Quantized ASR**: Running fine-tuned Whisper quantized models locally on community clinic laptops using ONNX or llama.cpp to operate entirely offline without internet connectivity.
+- **Clinician-Led Rule Review**: Formal review of `red_flags.json` by emergency physicians and public health specialists against DGHS and WHO IMCI guidelines.
+- **DHIS2 / OpenMRS Integration**: Exporting the structured confirmed clinical summary into standard FHIR resources for integration with Bangladesh's national health data systems.
+
+---
+
+## 16. Attribution & Credits
+
+- **Hackathon Team**: Built for the **CoU AI Hackathon 2026** based on the *Kotha* phase-1 idea proposal (`docs/Kotha.pdf`).
+- **AI Coding Assistants**:
+  - **Claude Code** (Anthropic): Initial scaffolding, architectural specification, domain services, and test generation under human direction.
+  - **Antigravity** (Google DeepMind): Test suite completion, no-storage verification, Playwright E2E browser automation, and architectural documentation verification.

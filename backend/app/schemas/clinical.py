@@ -51,16 +51,23 @@ class ExtractionResponse(BaseModel):
     provider: str
     extraction: ClinicalExtraction
     note: str
+    mode: str = "live"
 
 
 class ConfirmationRequest(BaseModel):
     session_id: str
-    original_text: str = Field(min_length=1, max_length=5000)
     confirmed_text: str = Field(min_length=1, max_length=5000)
-    confirmed: bool
+    original_text: str | None = Field(default=None, max_length=5000)
+    edited: bool | None = None
+    confirmed_by: Literal["patient", "helper"] = "patient"
+    confirmed: bool = True
 
 
 class ConfirmationResponse(BaseModel):
     session_id: str
     stage: str
+    confirmed_text: str
     edited_by_patient: bool
+    confirmed_by: Literal["patient", "helper"] = "patient"
+    warnings: list[str] = Field(default_factory=list)
+    mode: str = "live"

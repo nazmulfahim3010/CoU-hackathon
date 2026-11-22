@@ -18,11 +18,40 @@ export interface Health {
   live_mode_ready: boolean
 }
 
+export type TranscriptionSource =
+  | 'speech_recognition'
+  | 'speech_model'
+  | 'demo_prepared_text'
+  | 'demo_sample'
+  | 'typed_by_user'
+
+export interface DemoSample {
+  id: string
+  scenario: string
+  audio_file: string
+  audio_url: string
+  title: string
+  purpose: string
+  dialect: string
+  speaker: string
+  original_transcript: string
+  standard_bangla: string
+  verified_by: string
+}
+
+export interface GlossaryStats {
+  total: number
+  verified: number
+  unverified: number
+  by_dialect: Record<string, { total: number; verified: number; unverified: number }>
+  by_category: Record<string, number>
+}
+
 export interface TranscriptionResponse {
   session_id: string
   mode: Mode
   transcript: string
-  source: 'speech_model' | 'demo_prepared_text'
+  source: TranscriptionSource
   provider: string
   model: string | null
   confidence: number | null
@@ -86,6 +115,7 @@ export interface SummarySection {
   en: string[]
   bn: string[]
   status: string
+  evidence?: string | null
 }
 
 export interface SummaryCard {
@@ -97,6 +127,7 @@ export interface SummaryCard {
   needs_information: RuleResult[]
   original_statement: string
   normalized_statement: string
+  confirmed_statement: string
   provenance: Record<string, string>
   label_en: string
   label_bn: string

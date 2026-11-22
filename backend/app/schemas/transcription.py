@@ -1,8 +1,8 @@
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
-Source = Literal["speech_model", "demo_prepared_text"]
+Source = Literal["speech_recognition", "speech_model", "demo_prepared_text", "demo_sample", "typed_by_user"]
 
 
 class TranscriptionResponse(BaseModel):
@@ -12,8 +12,15 @@ class TranscriptionResponse(BaseModel):
     source: Source
     provider: str
     model: str | None = None
-    confidence: float | None = None  # only when the model genuinely reports it
+    duration_seconds: float | None = None
+    confidence: float | None = None  # only when genuinely reported by the provider
     disclaimer: str
+
+
+class TypedTranscriptionRequest(BaseModel):
+    session_id: str
+    text: str = Field(min_length=1)
+    dialect_hint: str | None = None
 
 
 class DemoScenario(BaseModel):

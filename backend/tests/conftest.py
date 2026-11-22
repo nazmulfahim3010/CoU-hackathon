@@ -11,7 +11,8 @@ from app.config import Settings, get_settings  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.services.providers.stt import STTResult  # noqa: E402
 
-WEBM = b"\x1a\x45\xdf\xa3" + b"\x00" * 2000
+_webm_file = Path(__file__).parent / "data" / "valid_sample.webm"
+WEBM = _webm_file.read_bytes() if _webm_file.exists() else (b"\x1a\x45\xdf\xa3" + b"\x00" * 2000)
 
 
 class FakeLLM:

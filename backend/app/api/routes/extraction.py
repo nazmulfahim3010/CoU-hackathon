@@ -33,4 +33,11 @@ async def extract(
     session.data["extraction"] = extraction
     session.data["extraction_source"] = source
     session.stage = max(session.stage, Stage.EXTRACTED)
-    return ExtractionResponse(session_id=session.id, source=source, provider=provider, extraction=extraction, note=note)
+    return ExtractionResponse(
+        session_id=session.id,
+        source=source,
+        provider=provider,
+        extraction=extraction,
+        note=note,
+        mode=session.mode,
+    )

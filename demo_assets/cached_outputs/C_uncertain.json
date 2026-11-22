@@ -1,0 +1,377 @@
+{
+  "scenario_id": "C_uncertain",
+  "title": "Scenario C — Uncertain / incomplete information",
+  "purpose": "Patient is unsure about duration and fever; unknowns must stay 'uncertain', never become 'absent'.",
+  "dialect_label": "Chittagonian-style (illustrative, not native-speaker verified)",
+  "timestamp": "2026-11-22T16:07:59+00:00",
+  "provider": "cached_demo_output",
+  "model": "pre-saved-demo-fallback",
+  "transcript": {
+    "text": "ফেডে মাঝে মাঝে বিষ করে, কয়দিন ধরি মনে নাই। জ্বর আছিল কিনা বুঝি নাই। ওষুধ খাই নাই।",
+    "source": "demo_sample"
+  },
+  "normalization": {
+    "original": "ফেডে মাঝে মাঝে বিষ করে, কয়দিন ধরি মনে নাই। জ্বর আছিল কিনা বুঝি নাই। ওষুধ খাই নাই।",
+    "normalized": "পেটে মাঝে মাঝে ব্যথা করে, কয়দিন ধরে মনে নেই। জ্বর ছিল কিনা বুঝিনি। ওষুধ খাইনি।",
+    "source": "demo_prepared",
+    "glossary_matches": [
+      {
+        "regional": "ফেডে",
+        "standard": "পেটে",
+        "english": "in the stomach",
+        "dialect": "chittagonian",
+        "category": "body_part",
+        "verification": "unverified",
+        "start": 0,
+        "end": 4
+      },
+      {
+        "regional": "বিষ",
+        "standard": "ব্যথা",
+        "english": "pain (note: 'বিষ' can also mean poison; context-dependent)",
+        "dialect": "sylheti+noakhali",
+        "category": "pain_description",
+        "verification": "unverified",
+        "start": 15,
+        "end": 18
+      },
+      {
+        "regional": "ধরি",
+        "standard": "ধরে",
+        "english": "for (a duration)",
+        "dialect": "sylheti+chittagonian+noakhali",
+        "category": "time_expression",
+        "verification": "unverified",
+        "start": 31,
+        "end": 34
+      },
+      {
+        "regional": "মনে নাই",
+        "standard": "মনে নেই",
+        "english": "I do not remember",
+        "dialect": "chittagonian",
+        "category": "time_expression",
+        "verification": "unverified",
+        "start": 35,
+        "end": 42
+      },
+      {
+        "regional": "আছিল",
+        "standard": "ছিল",
+        "english": "was",
+        "dialect": "chittagonian",
+        "category": "common_medical",
+        "verification": "unverified",
+        "start": 49,
+        "end": 53
+      },
+      {
+        "regional": "বুঝি নাই",
+        "standard": "বুঝিনি",
+        "english": "I did not understand/notice",
+        "dialect": "chittagonian",
+        "category": "common_medical",
+        "verification": "unverified",
+        "start": 59,
+        "end": 67
+      },
+      {
+        "regional": "খাই নাই",
+        "standard": "খাইনি",
+        "english": "I did not eat/take",
+        "dialect": "chittagonian",
+        "category": "common_medical",
+        "verification": "unverified",
+        "start": 74,
+        "end": 81
+      }
+    ],
+    "uncertain_spans": [],
+    "warnings": [
+      "Demo mode: this normalization was pre-verified for this sample."
+    ],
+    "provider": "cached_demo_output"
+  },
+  "extraction": {
+    "chief_complaint": {
+      "status": "reported",
+      "bn": "পেটে মাঝে মাঝে ব্যথা",
+      "en": "Intermittent stomach pain"
+    },
+    "symptoms": [
+      {
+        "bn": "পেটে ব্যথা (মাঝে মাঝে)",
+        "en": "Stomach pain (intermittent)"
+      }
+    ],
+    "duration": {
+      "status": "uncertain",
+      "bn": "কয়েকদিন; সঠিক সময় মনে নেই",
+      "en": "A few days; patient does not remember exactly"
+    },
+    "severity": {
+      "status": "not_reported"
+    },
+    "relevant_history": {
+      "status": "not_reported"
+    },
+    "current_medications": {
+      "status": "reported",
+      "bn": "ওষুধ খাননি",
+      "en": "Reports not taking any medicine"
+    },
+    "allergies": {
+      "status": "not_reported"
+    },
+    "associated_symptoms": [],
+    "negative_symptoms": [],
+    "uncertain_or_missing": [
+      {
+        "bn": "জ্বর ছিল কিনা রোগী নিশ্চিত নন",
+        "en": "Patient is unsure whether there was fever"
+      },
+      {
+        "bn": "ব্যথার তীব্রতা বলা হয়নি",
+        "en": "Severity not stated"
+      }
+    ],
+    "model_noted_red_flag_indicators": []
+  },
+  "safety": {
+    "session_id": "demo_cache_C_uncertain",
+    "triggered": [],
+    "explicitly_denied": [],
+    "insufficient_information": [],
+    "not_mentioned": [
+      {
+        "rule_id": "CHEST_PAIN",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Chest pain",
+        "name_bn": "বুকে ব্যথা",
+        "explanation_en": "Chest pain or pressure was reported. This may indicate a cardiovascular event or other urgent medical condition.",
+        "explanation_bn": "বুকে ব্যথা বা অস্বস্তির কথা বলা হয়েছে। এটি হার্টের সমস্যা বা গুরুতর অসুস্থতার লক্ষণ হতে পারে।",
+        "recommended_action_en": "Seek emergency medical care immediately at the nearest healthcare facility. Clinician must assess without delay.",
+        "recommended_action_bn": "অবিলম্বে নিকটস্থ জরুরি চিকিৎসা কেন্দ্রে বা হাসপাতালে যান। কোনো বিলম্ব না করে চিকিৎসকের মূল্যায়ন নিন।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Onset and duration",
+          "Radiation to arm or jaw",
+          "Associated breathlessness or sweating"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "National/WHO Cardiovascular Triage Guidelines (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      },
+      {
+        "rule_id": "BREATHING_DIFFICULTY",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Difficulty breathing",
+        "name_bn": "শ্বাসকষ্ট",
+        "explanation_en": "Difficulty breathing or respiratory distress was reported.",
+        "explanation_bn": "শ্বাস নিতে কষ্ট বা দম বন্ধ হওয়ার মতো অনুভূতির কথা বলা হয়েছে।",
+        "recommended_action_en": "Seek emergency medical attention immediately at the nearest clinic or hospital.",
+        "recommended_action_bn": "অবিলম্বে জরুরি চিকিৎসা নিন এবং দ্রুত নিকটস্থ স্বাস্থ্যকেন্দ্রে পৌঁছান।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Onset",
+          "Whether at rest",
+          "Lip or face colour change"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "National/WHO Respiratory Distress Triage (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      },
+      {
+        "rule_id": "HEAVY_BLEEDING",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Heavy bleeding",
+        "name_bn": "অতিরিক্ত রক্তক্ষরণ",
+        "explanation_en": "Severe or uncontrolled bleeding was reported. This requires immediate clinical intervention.",
+        "explanation_bn": "অতিরিক্ত বা বন্ধ না হওয়া রক্তপাতের কথা বলা হয়েছে। এটি জীবনঘাতী হতে পারে।",
+        "recommended_action_en": "Seek urgent medical care immediately. Proceed directly to the nearest emergency facility.",
+        "recommended_action_bn": "অবিলম্বে জরুরি চিকিৎসা নিন। নিকটস্থ স্বাস্থ্য কমপ্লেক্স বা হাসপাতালে সরাসরি যান।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Source of bleeding",
+          "Amount and duration",
+          "Estimated gestational age"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "WHO ETAT Hemorrhage Management Protocol (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      },
+      {
+        "rule_id": "INFANT_FEVER",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "High fever in an infant",
+        "name_bn": "শিশুর উচ্চ জ্বর",
+        "explanation_en": "Fever was reported in an infant under 1 year. Fever in early infancy requires rapid clinical evaluation.",
+        "explanation_bn": "অল্পবয়সী শিশু বা নবজাতকের জ্বরের কথা বলা হয়েছে। শিশুদের ক্ষেত্রে জ্বর দ্রুত গুরুতর ইনফেকশনে রূপ নিতে পারে।",
+        "recommended_action_en": "Take the infant to a healthcare professional or hospital immediately for formal assessment.",
+        "recommended_action_bn": "জরুরিভাবে শিশুকে চিকিৎসকের কাছে বা স্বাস্থ্যকেন্দ্রে নিয়ে যান। চিকিৎসকের পরামর্শ ছাড়া নিজে কোনো ওষুধ দেবেন না।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Age in days/weeks/months",
+          "Measured temperature"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "WHO IMCI guidelines for young infants <2 months / <1 year (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      },
+      {
+        "rule_id": "UNCONSCIOUSNESS",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Loss of consciousness / fainting",
+        "name_bn": "অজ্ঞান হওয়া / সংজ্ঞাহীনতা",
+        "explanation_en": "Loss of consciousness, fainting, or unresponsiveness was reported.",
+        "explanation_bn": "রোগী অজ্ঞান হয়ে যাওয়া বা সাড়া না দেওয়ার কথা বলা হয়েছে।",
+        "recommended_action_en": "Seek emergency medical care immediately at the nearest hospital.",
+        "recommended_action_bn": "অবিলম্বে জরুরি চিকিৎসা নিন। রোগীকে নিরাপদ স্থানে শুইয়ে দ্রুত নিকটস্থ হাসপাতালে নিয়ে যান।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Time of onset",
+          "Duration of unresponsiveness",
+          "Recovery status"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "WHO ETAT Impaired Consciousness Guidelines (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": [
+          "LOSS_OF_CONSCIOUSNESS"
+        ]
+      },
+      {
+        "rule_id": "SEIZURE",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Seizure / convulsion",
+        "name_bn": "খিঁচুনি",
+        "explanation_en": "Seizure or convulsion was reported.",
+        "explanation_bn": "খিঁচুনি বা শরীর শক্ত হয়ে কাঁপার কথা বলা হয়েছে।",
+        "recommended_action_en": "Seek immediate medical attention at an emergency health facility.",
+        "recommended_action_bn": "জরুরি চিকিৎসা সহায়তা নিন। রোগীকে দ্রুত নিকটস্থ স্বাস্থ্যকেন্দ্রে নিয়ে যান।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Duration of seizure",
+          "First episode or recurrent history"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "WHO ETAT Convulsion Management Guidelines (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      },
+      {
+        "rule_id": "SEVERE_DEHYDRATION",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Severe dehydration signs",
+        "name_bn": "মারাত্মক পানিশূন্যতার লক্ষণ",
+        "explanation_en": "Signs of severe dehydration (e.g. sunken eyes, lack of urination, unable to drink) were reported.",
+        "explanation_bn": "চোখ গর্তে ঢোকা, প্রস্রাব বন্ধ থাকা বা পানি খেতে না পারার মতো মারাত্মক পানিশূন্যতার লক্ষণ রয়েছে।",
+        "recommended_action_en": "Proceed immediately to the nearest health facility for clinical hydration assessment.",
+        "recommended_action_bn": "দেরি না করে অবিলম্বে নিকটস্থ স্বাস্থ্যকেন্দ্রে যান। জরুরি ক্লিনিক্যাল মূল্যায়ন প্রয়োজন।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Urine output in last 12 hours",
+          "Fluid intake ability",
+          "Sunken fontanelle/eyes"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "WHO IMCI Diarrhea and Dehydration Protocol (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      },
+      {
+        "rule_id": "STROKE_SIGNS",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Stroke-like warning signs",
+        "name_bn": "স্ট্রোকের লক্ষণ",
+        "explanation_en": "Sudden facial droop, one-sided weakness, or slurred speech was reported.",
+        "explanation_bn": "হঠাৎ মুখ বেঁকে যাওয়া, একপাশ অবশ হওয়া বা কথা জড়িয়ে যাওয়ার মতো স্ট্রোকের লক্ষণ রয়েছে।",
+        "recommended_action_en": "Seek emergency medical care immediately at a hospital equipped for stroke care. Note the exact time symptoms started.",
+        "recommended_action_bn": "অবিলম্বে রোগীকে স্ট্রোক সেবায় সক্ষম এমন নিকটস্থ হাসপাতালে নিয়ে যান। লক্ষণ শুরুর সময় মনে রাখুন।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Exact time symptoms started",
+          "Side affected",
+          "Speech impairment progression"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "FAST Stroke Protocol (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      },
+      {
+        "rule_id": "BLOOD_IN_VOMIT_STOOL",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Blood in vomit or stool",
+        "name_bn": "বমিতে রক্ত বা পায়খানায় রক্ত",
+        "explanation_en": "Blood in vomit or stool was reported. This indicates gastrointestinal bleeding requiring urgent assessment.",
+        "explanation_bn": "বমিতে রক্ত বা পায়খানায় রক্তের কথা বলা হয়েছে। এটি পরিপাকতন্ত্রের রক্তক্ষরণের লক্ষণ হতে পারে।",
+        "recommended_action_en": "Seek urgent medical care immediately at the nearest healthcare facility.",
+        "recommended_action_bn": "অবিলম্বে নিকটস্থ জরুরি চিকিৎসা কেন্দ্রে বা হাসপাতালে যান।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Amount of blood",
+          "Color (bright red vs dark coffee-ground)",
+          "Associated dizziness"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "Gastrointestinal Bleeding Emergency Protocol (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": [
+          "VOMITING_BLOOD"
+        ]
+      },
+      {
+        "rule_id": "PREGNANCY_BLEEDING",
+        "status": "not_mentioned",
+        "alert_level": "emergency",
+        "name_en": "Pregnancy with bleeding",
+        "name_bn": "গর্ভাবস্থায় রক্তপাত",
+        "explanation_en": "Bleeding during pregnancy was reported. This is an obstetric emergency requiring immediate hospital evaluation.",
+        "explanation_bn": "গর্ভবতী অবস্থায় রক্তপাতের কথা বলা হয়েছে। এটি মা ও গর্ভস্থ শিশুর জন্য অত্যন্ত ঝুঁকিপূর্ণ।",
+        "recommended_action_en": "Seek emergency obstetric care immediately at the nearest hospital.",
+        "recommended_action_bn": "দেরি না করে অবিলম্বে নিকটস্থ জরুরি প্রসূতি সেবা বা হাসপাতালে যান।",
+        "matched_text": [],
+        "matched_span": null,
+        "required_information": [
+          "Source of bleeding",
+          "Amount and duration",
+          "Estimated gestational age"
+        ],
+        "review_status": "pending_clinical_review",
+        "reviewed_against": "WHO Obstetric Emergency Triage Protocol (pending clinical review)",
+        "clinically_reviewed": false,
+        "aliases": []
+      }
+    ],
+    "negated": [],
+    "needs_information": [],
+    "rules_evaluated": 10,
+    "ruleset_version": "1.0-draft",
+    "engine": "deterministic-keyword-rules (no LLM)",
+    "notice_en": "No alert does not mean the patient is safe. Clinician assessment is required.",
+    "notice_bn": "কোনো সতর্কতা না থাকার অর্থ এই নয় যে রোগী নিরাপদ। চিকিৎসকের সরাসরি পর্যবেক্ষণ ও মূল্যায়ন আবশ্যক।"
+  }
+}

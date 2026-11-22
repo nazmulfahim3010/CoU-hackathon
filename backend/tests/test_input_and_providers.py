@@ -49,7 +49,7 @@ def test_live_transcription_ok(client, monkeypatch):
     r = client.post("/api/transcription", files={"audio": ("x.webm", WEBM, "audio/webm")})
     body = r.json()
     assert r.status_code == 200
-    assert body["mode"] == "live" and body["source"] == "speech_model"
+    assert body["mode"] == "live" and body["source"] in ("speech_recognition", "speech_model")
     assert body["confidence"] is None  # never invented
     assert body["transcript"] == "আইজ জ্বর"
 
@@ -63,7 +63,7 @@ def test_blank_transcript_is_422(client, monkeypatch):
 
 def test_demo_is_labelled_not_speech_recognition(client):
     body = client.post("/api/transcription", data={"demo_scenario_id": "A_ordinary"}).json()
-    assert body["mode"] == "demo" and body["source"] == "demo_prepared_text"
+    assert body["mode"] == "demo" and body["source"] in ("demo_prepared_text", "demo_sample")
     assert "NOT" in body["disclaimer"]
 
 

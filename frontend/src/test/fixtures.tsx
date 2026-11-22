@@ -26,7 +26,7 @@ export const summary = (flags = true): SummaryCard => ({
     { key: 'severity', title_en: 'Severity', title_bn: 'তীব্রতা', en: ['Not reported'], bn: ['বলা হয়নি'], status: 'not_reported' },
   ],
   red_flags: flags ? [rule] : [], needs_information: [],
-  original_statement: 'বুগত ব্যতা', normalized_statement: 'বুকে ব্যথা',
+  original_statement: 'বুগত ব্যতা', normalized_statement: 'বুকে ব্যথা', confirmed_statement: 'বুকে ব্যথা',
   provenance: { speech_to_text: 'demo_prepared_text', normalization: 'demo_prepared', extraction: 'demo_prepared', red_flags: 'deterministic rules', patient_edited_text: 'no' },
   label_en: 'AI-assisted patient intake summary — clinician verification required.', label_bn: 'এআই-সহায়তায় তৈরি…',
   disclaimer_en: 'Kotha is not a diagnostic tool. Medical decisions must be made by a qualified healthcare professional.', disclaimer_bn: 'কথা …',

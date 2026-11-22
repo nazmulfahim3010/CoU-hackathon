@@ -1,4 +1,4 @@
-import { Pencil } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, HelpCircle, Info, Mic, Pencil, RotateCcw, UserCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Button, ErrorBox, ModeBadge, Spinner, StepDots } from '../components/ui'
@@ -10,13 +10,16 @@ export default function Confirm() {
   const nav = useNavigate()
   const [original, setOriginal] = useState(normalization?.original ?? '')
   const [standard, setStandard] = useState(normalization?.normalized ?? '')
+  const [reviewed, setReviewed] = useState(true)
+  const [confirmedBy, setConfirmedBy] = useState<'patient' | 'helper'>('patient')
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!sessionId || !normalization || !transcription) return <Navigate to="/intake" replace />
 
   const edited = original !== normalization.original || standard !== normalization.normalized
-  const canConfirm = standard.trim().length > 0 && original.trim().length > 0 && !busy
+  const canConfirm = reviewed && standard.trim().length > 0 && original.trim().length > 0 && !busy
 
   const confirm = async () => {
     setBusy(true)
@@ -32,80 +35,239 @@ export default function Confirm() {
 
   const unverified = normalization.glossary_matches.filter((m) => m.verification !== 'verified')
 
+  const sourceDisplayMap: Record<string, { label: string; badge: string }> = {
+    speech_recognition: { label: 'Speech recognition (কথা বলা থেকে লেখা)', badge: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+    speech_model: { label: 'Speech recognition (কথা বলা থেকে লেখা)', badge: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
+    demo_prepared_text: { label: 'Demo sample (ডেমো নমুনা)', badge: 'bg-blue-100 text-blue-900 border-blue-300' },
+    demo_sample: { label: 'Demo sample (ডেমো নমুনা)', badge: 'bg-blue-100 text-blue-900 border-blue-300' },
+    typed_by_user: { label: 'Typed by helper (হাতে টাইপ করা)', badge: 'bg-purple-100 text-purple-900 border-purple-300' },
+  }
+  const sourceDisplay = sourceDisplayMap[transcription.source] ?? {
+    label: 'Speech recognition (কথা বলা থেকে লেখা)',
+    badge: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+  }
+
   return (
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl space-y-6">
       <StepDots step={1} />
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold text-deep" lang="bn">আপনার কথা যাচাই করুন</h1>
-        <ModeBadge mode={mode} />
+
+      {/* Header & Badges */}
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-deep font-bangla" lang="bn">
+            আপনার কথা যাচাই ও নিশ্চিতকরণ
+          </h1>
+          <p className="text-sm text-ink/70">Review and verify the patient note before clinical analysis.</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${sourceDisplay.badge}`}>
+            <Mic className="h-3.5 w-3.5" aria-hidden />
+            {sourceDisplay.label}
+          </span>
+          <ModeBadge mode={mode} />
+        </div>
       </div>
-      <p className="mb-5 rounded-2xl bg-white p-4 text-xl" lang="bn" data-testid="instruction">
-        আপনার কথাগুলো আমরা বুঝে লিখেছি। অনুগ্রহ করে ভালোভাবে পড়ে দেখুন। কোনো ভুল থাকলে সংশোধন করুন।
-      </p>
 
-      {transcription.source === 'demo_prepared_text' && (
-        <p className="mb-3 rounded-xl bg-warn/15 p-3 text-sm text-amber-900">{transcription.disclaimer}</p>
+      {/* Prominent Patient Instruction */}
+      <div className="rounded-2xl border-2 border-brand/30 bg-white p-5 shadow-sm" data-testid="instruction">
+        <p className="text-xl font-medium leading-relaxed text-deep font-bangla" lang="bn">
+          আপনার কথাগুলো আমরা বুঝে লিখেছি। অনুগ্রহ করে ভালোভাবে পড়ে দেখুন। কোনো ভুল থাকলে সংশোধন করুন।
+        </p>
+      </div>
+
+      {/* Prominent Normalization Warnings */}
+      {normalization.warnings.length > 0 && (
+        <div className="rounded-xl border border-warn/40 bg-amber-50 p-4 text-amber-950" role="alert">
+          <div className="flex items-start gap-2.5 font-semibold text-amber-900">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-warn" aria-hidden />
+            <span>সতর্কবার্তা / Normalization Notice:</span>
+          </div>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
+            {normalization.warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+        </div>
       )}
-      {normalization.warnings.map((w) => (
-        <p key={w} className="mb-3 rounded-xl bg-warn/15 p-3 text-sm text-amber-900">{w}</p>
-      ))}
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <label className="block rounded-2xl bg-white p-4">
-          <span className="flex items-center gap-2 font-semibold"><Pencil className="h-4 w-4" aria-hidden /> আপনি যা বলেছেন (মূল কথা)</span>
-          <span className="text-sm text-ink/60">Original transcript (editable)</span>
+      {/* Side-by-Side (Stacked on Mobile) Comparison */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* Original Dialect Transcript */}
+        <div className="flex flex-col rounded-2xl border border-deep/15 bg-white p-5 shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <span className="flex items-center gap-2 text-lg font-bold text-deep font-bangla" lang="bn">
+                <Pencil className="h-4 w-4 text-ink/60" aria-hidden />
+                আপনার কথা (মূল)
+              </span>
+              <span className="text-xs text-ink/60">Original transcript as spoken</span>
+            </div>
+            <span className="rounded bg-soft px-2 py-0.5 text-xs text-ink/60">Editable</span>
+          </div>
           <textarea
-            className="mt-2 min-h-40 w-full rounded-xl border border-deep/20 p-3 text-xl leading-9"
+            className="mt-2 min-h-48 w-full flex-1 rounded-xl border border-deep/20 p-4 font-bangla text-xl leading-loose text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
             lang="bn"
             value={original}
             onChange={(e) => setOriginal(e.target.value)}
             aria-label="Original transcript"
           />
-        </label>
-        <label className="block rounded-2xl bg-white p-4 ring-2 ring-brand/30">
-          <span className="flex items-center gap-2 font-semibold"><Pencil className="h-4 w-4" aria-hidden /> সাধারণ বাংলায়</span>
-          <span className="text-sm text-ink/60">Standard Bangla (editable) — this is what will be used</span>
+        </div>
+
+        {/* Standard Bangla Transcript */}
+        <div className="flex flex-col rounded-2xl border-2 border-brand/40 bg-white p-5 shadow-sm ring-1 ring-brand/20">
+          <div className="mb-2 flex items-center justify-between">
+            <div>
+              <span className="flex items-center gap-2 text-lg font-bold text-deep font-bangla" lang="bn">
+                <Pencil className="h-4 w-4 text-brand" aria-hidden />
+                প্রমিত বাংলা (সংশোধনযোগ্য)
+              </span>
+              <span className="text-xs text-brand/80 font-medium">Standard Bangla — used for clinical extraction</span>
+            </div>
+            <span className="rounded bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand">Clinical Note</span>
+          </div>
           <textarea
-            className="mt-2 min-h-40 w-full rounded-xl border border-deep/20 p-3 text-xl leading-9"
+            className="mt-2 min-h-48 w-full flex-1 rounded-xl border border-brand/40 p-4 font-bangla text-xl leading-loose text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
             lang="bn"
             value={standard}
             onChange={(e) => setStandard(e.target.value)}
             aria-label="Standard Bangla transcript"
           />
-        </label>
+        </div>
       </div>
 
+      {/* Interactive Glossary Words & Uncertain Segments */}
       {normalization.glossary_matches.length > 0 && (
-        <details className="mt-4 rounded-2xl bg-white p-4" open={unverified.length > 0}>
-          <summary className="cursor-pointer font-semibold">
-            Dialect words changed ({normalization.glossary_matches.length})
-            {unverified.length > 0 && <span className="ml-2 rounded-full bg-warn/25 px-2 text-sm text-amber-900">unverified glossary — please check</span>}
-          </summary>
-          <ul className="mt-3 flex flex-wrap gap-2">
-            {normalization.glossary_matches.map((m, i) => (
-              <li key={i} className="rounded-lg border border-warn/50 bg-warn/10 px-3 py-1" lang="bn" title={`${m.english} (${m.dialect}, ${m.verification})`}>
-                {m.regional} → <strong>{m.standard}</strong>
-              </li>
-            ))}
-          </ul>
-        </details>
+        <div className="rounded-2xl border border-deep/15 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-bold text-deep">
+              <Info className="h-4 w-4 text-brand" aria-hidden />
+              আঞ্চলিক শব্দের অর্থ ও রূপান্তর (Glossary Changes: {normalization.glossary_matches.length})
+            </h2>
+            {unverified.length > 0 && (
+              <span className="rounded-full bg-warn/25 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
+                পরীক্ষাধীন / unverified glossary
+              </span>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-ink/70">
+            নিচের যে কোনো শব্দে ট্যাপ করে তার সাধারণ অর্থ ও তথ্য জানুন (Tap to inspect dialect meaning):
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            {normalization.glossary_matches.map((m, i) => {
+              const isOpen = activeTooltip === `${m.regional}-${i}`
+              return (
+                <div key={i} className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTooltip(isOpen ? null : `${m.regional}-${i}`)}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-brand/30 bg-brand/5 px-3 py-1.5 font-bangla text-base transition-colors hover:bg-brand/15 focus:outline-none focus:ring-2 focus:ring-brand/30"
+                  >
+                    <span className="text-ink">{m.regional}</span>
+                    <span className="text-ink/40">→</span>
+                    <strong className="text-brand">{m.standard}</strong>
+                    <HelpCircle className="h-3 w-3 text-ink/40" />
+                  </button>
+                  {isOpen && (
+                    <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-xl border border-deep/20 bg-deep p-3 text-xs text-white shadow-xl">
+                      <p className="font-semibold text-emerald-300 font-bangla">{m.regional} → {m.standard}</p>
+                      <p className="mt-0.5 text-white/80">{m.english}</p>
+                      <div className="mt-2 flex items-center justify-between border-t border-white/15 pt-1.5 text-[11px] text-white/60">
+                        <span>ডায়ালেক্ট: {m.dialect}</span>
+                        <span>ধরণ: {m.category}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
       )}
-      <p className="mt-3 text-sm text-ink/70">
-        Source: {normalization.source.replace(/_/g, ' ')} ({normalization.provider}). {normalization.disclaimer}
-      </p>
 
-      {error && <div className="mt-4"><ErrorBox title="Could not confirm" message={error} /></div>}
+      {/* Mandatory Checkbox & Confirmed-By Selector */}
+      <div className="rounded-2xl border border-deep/15 bg-white p-5 shadow-sm space-y-4">
+        <label className="flex items-start gap-3 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            id="reviewed-checkbox"
+            checked={reviewed}
+            onChange={(e) => setReviewed(e.target.checked)}
+            className="mt-1 h-5 w-5 rounded border-deep/30 text-brand focus:ring-brand"
+            aria-label="আমি পড়েছি এবং এটি সঠিক"
+          />
+          <div>
+            <span className="text-lg font-bold text-deep font-bangla" lang="bn">
+              আমি পড়েছি এবং এটি সঠিক
+            </span>
+            <p className="text-xs text-ink/70">
+              I have read the transcript and verify that it accurately reflects the symptoms and duration.
+            </p>
+          </div>
+        </label>
 
-      <div className="mt-6 flex flex-wrap items-center gap-3">
+        {/* Confirmed-by toggle */}
+        <div className="flex items-center gap-4 border-t border-deep/10 pt-3 text-sm">
+          <span className="flex items-center gap-1.5 font-semibold text-deep">
+            <UserCheck className="h-4 w-4 text-brand" aria-hidden />
+            যাচাইকারী (Confirmed by):
+          </span>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="radio"
+              name="confirmed_by"
+              value="patient"
+              checked={confirmedBy === 'patient'}
+              onChange={() => setConfirmedBy('patient')}
+              className="text-brand focus:ring-brand"
+            />
+            <span className="font-bangla" lang="bn">রোগী নিজে (Patient)</span>
+          </label>
+          <label className="flex items-center gap-1.5 cursor-pointer">
+            <input
+              type="radio"
+              name="confirmed_by"
+              value="helper"
+              checked={confirmedBy === 'helper'}
+              onChange={() => setConfirmedBy('helper')}
+              className="text-brand focus:ring-brand"
+            />
+            <span className="font-bangla" lang="bn">স্বাস্থ্যকর্মী / সহকারী (Helper)</span>
+          </label>
+        </div>
+      </div>
+
+      {error && <ErrorBox title="Could not confirm" message={error} />}
+
+      {/* Action Buttons */}
+      <div className="flex flex-wrap items-center gap-4 pt-2">
         <Button big onClick={confirm} disabled={!canConfirm}>
-          {busy ? <Spinner label="…" /> : <span lang="bn">ঠিক আছে, নিশ্চিত করছি</span>}
+          {busy ? <Spinner label="নিশ্চিত হচ্ছে…" /> : (
+            <span className="flex items-center gap-2 font-bangla text-lg" lang="bn">
+              <CheckCircle2 className="h-5 w-5" aria-hidden />
+              ঠিক আছে, নিশ্চিত করছি
+            </span>
+          )}
         </Button>
-        <Link to="/intake" className="inline-flex min-h-16 items-center rounded-xl border border-deep/30 bg-white px-6 text-lg font-semibold text-deep" onClick={() => api.endSession(sessionId)}>
+
+        <Link
+          to="/intake"
+          className="inline-flex min-h-16 items-center gap-2 rounded-xl border border-deep/30 bg-white px-6 font-bangla text-lg font-semibold text-deep transition-colors hover:bg-soft"
+          onClick={() => api.endSession(sessionId)}
+        >
+          <RotateCcw className="h-5 w-5" aria-hidden />
           <span lang="bn">আবার রেকর্ড করুন</span>
         </Link>
-        {edited && <span className="text-sm text-ink/70" lang="bn">আপনি লেখা সংশোধন করেছেন।</span>}
+
+        {edited && (
+          <span className="text-sm font-medium text-brand font-bangla" lang="bn">
+            ✓ আপনি লেখা সংশোধন করেছেন (Edited)
+          </span>
+        )}
       </div>
-      <p className="mt-3 text-sm text-ink/70">Nothing is analysed further until you confirm.</p>
+
+      <p className="text-xs text-ink/60">
+        Kotha Safety Gate: No symptoms are extracted and no clinical summaries are created until you explicitly confirm the standard Bangla text.
+      </p>
     </div>
   )
 }
