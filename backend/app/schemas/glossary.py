@@ -57,7 +57,7 @@ class GlossaryEntry(BaseModel):
             example_sentence=data.get("example_sentence") or data.get("example") or "",
             verification_status=v_status,  # type: ignore[arg-type]
             source=data.get("source", "Team draft"),
-            contributor=data.get("contributor"),
+            contributor=data.get("contributor") or None,
         )
 
     def to_dict(self) -> dict:
