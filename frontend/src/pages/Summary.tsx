@@ -76,6 +76,7 @@ const PROV: Record<string, string> = {
   demo_sample: 'Demo prepared transcript (sample)',
   typed_by_user: 'Manually typed by user/helper',
   demo_prepared: 'Demo prepared clinical note',
+  cached_demo_output: 'cached demo output (pre-saved fallback)',
   llm_with_glossary: 'LLM + Dialect Glossary',
   glossary_only: 'Glossary only (no LLM)',
   llm: 'LLM structured extraction',

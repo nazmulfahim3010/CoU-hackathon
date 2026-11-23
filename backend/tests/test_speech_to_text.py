@@ -149,13 +149,13 @@ def test_real_audio_transcription_comparison(monkeypatch):
     assert audio_path.exists(), "demo_assets audio file must exist"
     audio_bytes = audio_path.read_bytes()
 
-    # Load verified transcript
+    # Load sample transcript
     transcripts_path = Path("c:/Users/ASUS/Desktop/CoU/CoU-hackathon/demo_assets/transcripts.json")
     with open(transcripts_path, encoding="utf-8") as f:
         meta = json.load(f)[0]
 
-    verified_orig = meta["original_transcript"]
-    verified_std = meta["standard_bangla"]
+    sample_orig = meta["original_transcript"]
+    sample_std = meta["standard_bangla"]
 
     # Process audio via process_audio to verify ffmpeg 16kHz mono conversion & duration
     wav_proc, duration = process_audio(audio_bytes, max_bytes=10 * 1024 * 1024)

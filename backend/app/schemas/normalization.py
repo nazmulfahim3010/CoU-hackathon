@@ -34,7 +34,7 @@ class NormalizationResponse(BaseModel):
     session_id: str
     original: str
     normalized: str
-    source: Literal["llm_with_glossary", "glossary_only", "demo_prepared"]
+    source: Literal["llm_with_glossary", "glossary_only", "demo_prepared", "cached_demo_output"]
     glossary_matches: list[GlossaryMatch] = Field(default_factory=list)
     changes: list[NormalizationChange] = Field(default_factory=list)
     uncertain_segments: list[UncertainSegment] = Field(default_factory=list)

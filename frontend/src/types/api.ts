@@ -71,7 +71,7 @@ export interface NormalizationResponse {
   session_id: string
   original: string
   normalized: string
-  source: 'llm_with_glossary' | 'glossary_only' | 'demo_prepared'
+  source: 'llm_with_glossary' | 'glossary_only' | 'demo_prepared' | 'cached_demo_output'
   glossary_matches: GlossaryMatch[]
   uncertain_spans: string[]
   warnings: string[]

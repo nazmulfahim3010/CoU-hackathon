@@ -130,7 +130,7 @@ def test_llm_invalid_json_falls_back(monkeypatch):
 def test_normalization_route_keeps_original(client):
     sid = demo_session(client, "A_ordinary")
     body = client.post("/api/normalization", json={"session_id": sid}).json()
-    assert body["source"] == "demo_prepared"
+    assert body["source"] in ("cached_demo_output", "demo_prepared", "llm")
     assert body["original"] != body["normalized"]
     assert body["glossary_matches"]  # glossary matching is real, even in demo
     assert "changes" in body

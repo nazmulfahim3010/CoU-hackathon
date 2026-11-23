@@ -271,7 +271,7 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
           <FlaskConical className="h-5 w-5" aria-hidden /> Demo Mode — Prepared Dialect Scenarios
         </p>
         <p className="text-sm text-text/80 mt-1">
-          These 3 fictional scenarios let you evaluate Kotha without audio hardware or live API keys. Audio clips can be played directly in your browser. The baseline transcript is verified by the team (labelled as <code>demo_sample</code>, never speech recognition). You can also run live ASR on the clip to compare actual model performance.
+          These 3 fictional scenarios let you evaluate Kotha without audio hardware or live API keys. Audio clips can be played directly in your browser. The baseline transcript is a prepared sample (labelled as <code>demo_sample</code>, never speech recognition; unverified by native speakers). You can also run live ASR on the clip to compare actual model performance.
         </p>
       </div>
 
@@ -313,7 +313,7 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
               <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="font-bold text-blue-900 text-[11px] uppercase tracking-wide">
-                    Team-Verified Dialect Transcript
+                    Sample / Unverified Dialect Transcript
                   </p>
                   <span className="text-[10px] text-blue-700 bg-blue-100 rounded px-1.5 py-0.2">
                     Source: demo_sample
@@ -428,7 +428,7 @@ export default function Intake() {
         <div>
           <ErrorBox
             title="Live processing is not fully configured on this server"
-            message={`Speech provider configured: ${health.providers.speech.configured ? 'yes' : 'no'}. Language model configured: ${health.providers.llm.configured ? 'yes' : 'no'}. Recording will work, but live processing needs API keys in backend/.env. You can use Demo samples meanwhile.`}
+            message={`Speech provider configured: ${health.providers.speech.configured ? 'yes' : 'no'}. Language model configured: ${health.providers.llm.configured ? 'yes' : 'no'}. For live processing, configure a local model (download only) or API credentials in backend/.env (configurable via LLM_PROVIDER / LLM_MODEL / LLM_BASE_URL). You can use Demo samples meanwhile.`}
           >
             <Button variant="secondary" onClick={() => setMode('demo')}>
               Switch to Demo samples

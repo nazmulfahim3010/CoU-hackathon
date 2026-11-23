@@ -87,39 +87,39 @@ const DIALECT_CARDS: DialectCardData[] = [
     key: 'sylheti',
     name_en: 'Sylheti',
     name_bn: 'সিলেটি',
-    sample_phrase: 'মোর মাতাত ব্যতা, হারাদিন ভাল লাগের না',
-    standard_bn: 'আমার মাথায় ব্যথা, সারাদিন ভালো লাগছে না',
-    english_meaning: 'My head hurts, feeling unwell all day',
+    sample_phrase: 'আইজ তিন দিন ধরি মোর মাতাত ব্যতা, অল্প জ্বর আছে',
+    standard_bn: 'আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে',
+    english_meaning: 'Headache and mild fever for the past three days',
     default_vocab: 12,
-    verified_status: 'Awaiting native review',
+    verified_status: 'unverified / example',
   },
   {
     key: 'chittagonian',
     name_en: 'Chittagonian',
     name_bn: 'চাঁটগাঁইয়া',
-    sample_phrase: 'বুগত খুব ব্যতা, নিঃশ্বাস ফালান কষ্ট অয়',
-    standard_bn: 'বুকে খুব ব্যথা, নিঃশ্বাস নেওয়া কষ্ট হয়',
+    sample_phrase: 'দুই ঘণ্টা ধরি বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়',
+    standard_bn: 'দুই ঘণ্টা ধরে বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়',
     english_meaning: 'Severe chest pain, difficult to breathe',
     default_vocab: 12,
-    verified_status: 'Awaiting native review',
+    verified_status: 'unverified / example',
   },
   {
     key: 'noakhali',
     name_en: 'Noakhali',
     name_bn: 'নোয়াখাইল্লা',
-    sample_phrase: 'ফেডে বিষ করে, কয়দিন ধরি মনে নাই',
-    standard_bn: 'পেটে ব্যথা করে, কয়দিন ধরে মনে নেই',
-    english_meaning: 'Stomach hurts, cannot recall for how many days',
+    sample_phrase: 'ফেডে মাঝে মাঝে বিষ করে, কয়দিন ধরি মনে নাই',
+    standard_bn: 'পেটে মাঝে মাঝে ব্যথা করে, কয়দিন ধরে মনে নেই',
+    english_meaning: 'Intermittent stomach pain, duration uncertain',
     default_vocab: 11,
-    verified_status: 'Awaiting native review',
+    verified_status: 'unverified / example',
   },
   {
     key: 'standard_bangla',
     name_en: 'Standard Bangla',
     name_bn: 'প্রমিত বাংলা',
-    sample_phrase: 'বুকে ব্যথা ও শ্বাসকষ্ট অনুভব করছি',
-    standard_bn: 'বুকে ব্যথা ও শ্বাসকষ্ট অনুভব করছি',
-    english_meaning: 'Experiencing chest pain and shortness of breath',
+    sample_phrase: 'আজ তিন দিন ধরে মাথায় ব্যথা ও অল্প জ্বর আছে',
+    standard_bn: 'আজ তিন দিন ধরে মাথায় ব্যথা ও অল্প জ্বর আছে',
+    english_meaning: 'Headache and mild fever for the past three days',
     default_vocab: 8,
     verified_status: 'Baseline standard',
   },
@@ -185,7 +185,7 @@ export default function Landing() {
               <p className="mt-1 text-lg sm:text-xl font-bangla text-white" lang="bn">
                 “…বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়”
               </p>
-              <span className="text-xs text-white/70">Sylheti / Chittagonian dialect expression</span>
+              <span className="text-xs text-white/70">Chittagonian sample expression (unverified / example)</span>
             </div>
 
             <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm border border-white/10">
@@ -195,7 +195,7 @@ export default function Landing() {
               <p className="mt-1 text-lg sm:text-xl font-bangla text-white" lang="bn">
                 “…বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়”
               </p>
-              <span className="text-xs text-white/70">Normalized & verified by patient before clinical extraction</span>
+              <span className="text-xs text-white/70">Normalized & confirmed by patient before clinical extraction</span>
             </div>
 
             <div className="rounded-2xl bg-white/15 p-4 backdrop-blur-sm border border-white/20">
@@ -332,7 +332,7 @@ export default function Landing() {
                 </div>
 
                 <div className="rounded-xl bg-soft p-3 text-xs space-y-1.5 flex-1">
-                  <p className="font-semibold text-ink/60 uppercase tracking-wide">Sample Expression</p>
+                  <p className="font-semibold text-ink/60 uppercase tracking-wide">Sample Expression (unverified / example)</p>
                   <p className="font-bangla text-sm text-deep" lang="bn">"{card.sample_phrase}"</p>
                   <p className="text-ink/70"><strong>Std:</strong> <span lang="bn">{card.standard_bn}</span></p>
                   <p className="text-ink/60 italic">"{card.english_meaning}"</p>

@@ -103,7 +103,7 @@ def check_meaning_preservation(original: str, normalized: str, glossary: Glossar
 
 
 def _load_few_shot_examples() -> str:
-    """Build few-shot examples taken strictly from verified pairs in demo_assets/transcripts.json."""
+    """Build few-shot examples taken strictly from unverified demo sample pairs in demo_assets/transcripts.json."""
     transcripts_path = Path(__file__).resolve().parent.parent.parent.parent / "demo_assets" / "transcripts.json"
     if transcripts_path.exists():
         try:
@@ -113,7 +113,7 @@ def _load_few_shot_examples() -> str:
                 orig = first.get("original_transcript", "")
                 std = first.get("standard_bangla", "")
                 return (
-                    f"Verified few-shot example from verified transcripts:\n"
+                    f"Sample few-shot example from demo transcripts (sample / unverified):\n"
                     f"Input: {orig}\n"
                     f'Output: {{"normalized_text": "{std}", "changes": [{{"original": "আইজ", "normalized": "আজ", "reason": "Standard time word", "source": "glossary"}}, {{"original": "ধরি", "normalized": "ধরে", "reason": "Standard postposition", "source": "glossary"}}, {{"original": "মাতাত ব্যতা", "normalized": "মাথায় ব্যথা", "reason": "Standard medical phrase", "source": "glossary"}}], "uncertain_segments": []}}'
                 )
@@ -121,7 +121,7 @@ def _load_few_shot_examples() -> str:
             log.warning("failed to load demo transcripts: %s", e)
 
     return (
-        'Verified few-shot example:\n'
+        'Sample few-shot example (sample / unverified):\n'
         'Input: আইজ তিন দিন ধরি মোর মাতাত ব্যতা, অল্প জ্বর আছে। হারাদিন ভাল লাগের না। প্যারাসিটামল একবার খাইছি।\n'
         'Output: {"normalized_text": "আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে। সারাদিন ভালো লাগছে না। প্যারাসিটামল একবার খেয়েছি。", "changes": [{"original": "মাতাত ব্যতা", "normalized": "মাথায় ব্যথা", "reason": "Standard head pain phrase", "source": "glossary"}], "uncertain_segments": []}'
     )

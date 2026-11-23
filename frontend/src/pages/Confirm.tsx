@@ -40,6 +40,7 @@ export default function Confirm() {
     speech_model: { label: 'Speech recognition (কথা বলা থেকে লেখা)', badge: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
     demo_prepared_text: { label: 'Demo sample (ডেমো নমুনা)', badge: 'bg-blue-100 text-blue-900 border-blue-300' },
     demo_sample: { label: 'Demo sample (ডেমো নমুনা)', badge: 'bg-blue-100 text-blue-900 border-blue-300' },
+    cached_demo_output: { label: 'cached demo output (নমুনা ডেটা)', badge: 'bg-amber-100 text-amber-900 border-amber-300' },
     typed_by_user: { label: 'Typed by helper (হাতে টাইপ করা)', badge: 'bg-purple-100 text-purple-900 border-purple-300' },
   }
   const sourceDisplay = sourceDisplayMap[transcription.source] ?? {
@@ -209,7 +210,7 @@ export default function Confirm() {
         <div className="flex items-center gap-4 border-t border-deep/10 pt-3 text-sm">
           <span className="flex items-center gap-1.5 font-semibold text-deep">
             <UserCheck className="h-4 w-4 text-brand" aria-hidden />
-            যাচাইকারী (Confirmed by):
+            নিশ্চিতকারী (Confirmed by):
           </span>
           <label className="flex items-center gap-1.5 cursor-pointer">
             <input

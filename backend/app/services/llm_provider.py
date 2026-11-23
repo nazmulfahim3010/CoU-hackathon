@@ -32,11 +32,23 @@ LLMClient = LLMProvider
 def raise_for_provider(exc: Exception, provider: str) -> None:
     """Translate transport errors into KothaError without leaking keys or raw data."""
     if isinstance(exc, httpx.TimeoutException):
-        raise KothaError(504, "PROVIDER_TIMEOUT", f"{provider} timed out.") from exc
+        raise KothaError(
+            504,
+            "PROVIDER_TIMEOUT",
+            f"{provider} সময়মতো সাড়া দেয়নি (Provider timed out). অনুগ্রহ করে আবার চেষ্টা করুন বা ডেমো মোড ব্যবহার করুন।",
+        ) from exc
     if isinstance(exc, httpx.HTTPStatusError):
         log.warning("provider=%s status=%s", provider, exc.response.status_code)
-        raise KothaError(502, "PROVIDER_ERROR", f"{provider} returned HTTP {exc.response.status_code}.") from exc
-    raise KothaError(502, "PROVIDER_UNREACHABLE", f"Could not reach or parse response from {provider}.") from exc
+        raise KothaError(
+            502,
+            "PROVIDER_ERROR",
+            f"{provider} সেবায় ত্রুটি ঘটেছে (HTTP {exc.response.status_code}). অনুগ্রহ করে API key/মডেল সেটিংস পরীক্ষা করুন অথবা ডেমো মোড ব্যবহার করুন।",
+        ) from exc
+    raise KothaError(
+        502,
+        "PROVIDER_UNREACHABLE",
+        f"{provider} সেবার সাথে যোগাযোগ করা যাচ্ছে না ({provider} unreachable). অনুগ্রহ করে ইন্টারনেট সংযোগ ও সেটিংস পরীক্ষা করুন অথবা ডেমো মোড ব্যবহার করুন।",
+    ) from exc
 
 
 class AnthropicProvider:
@@ -128,7 +140,7 @@ def get_llm(s: Settings) -> LLMProvider:
     if not llm_configured(s):
         raise KothaError(
             503,
-            "PROVIDER_NOT_CONFIGURED",
-            "No LLM provider is configured (set LLM_PROVIDER, LLM_MODEL, LLM_API_KEY), or use demo mode.",
+            "LLM_UNAVAILABLE",
+            "ক্লিনিক্যাল তথ্য প্রক্রিয়াকরণের জন্য কোনো ভাষা মডেল (LLM) কনফিগার করা নেই (No LLM provider configured). অনুগ্রহ করে .env ফাইলে LLM_PROVIDER ও API key সেট করুন অথবা ডেমো মোড (Demo Mode) ব্যবহার করুন।",
         )
     return AnthropicProvider(s) if s.llm_provider == "anthropic" else OpenAICompatProvider(s)

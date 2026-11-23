@@ -49,7 +49,9 @@ def test_extractor_gives_up_with_controlled_error(monkeypatch):
     monkeypatch.setattr(clinical_extractor, "get_llm", lambda s: llm)
     with pytest.raises(KothaError) as e:
         asyncio.run(clinical_extractor.extract("জ্বর", Settings()))
-    assert e.value.status_code == 502 and llm.calls == clinical_extractor.MAX_ATTEMPTS
+    assert e.value.status_code == 502
+    assert e.value.code == "EXTRACTION_FAILED"
+    assert llm.calls == clinical_extractor.MAX_ATTEMPTS
 
 
 def test_missing_info_stays_not_reported_in_demo_extraction(client):
@@ -69,4 +71,50 @@ def test_live_extraction_without_llm_is_503(client, monkeypatch):
     client.post("/api/confirmation", json={"session_id": sid, "original_text": n["original"],
                                            "confirmed_text": n["normalized"], "confirmed": True})
     r = client.post("/api/clinical/extract", json={"session_id": sid})
-    assert r.status_code == 503 and r.json()["error"]["code"] == "PROVIDER_NOT_CONFIGURED"
+    assert r.status_code == 503 and r.json()["error"]["code"] in ("LLM_UNAVAILABLE", "PROVIDER_NOT_CONFIGURED")
+    # Verify Bangla friendly message
+    assert "LLM" in r.json()["error"]["message"] or "কনফিগার" in r.json()["error"]["message"]
+
+
+def test_live_typed_input_without_llm_fails_honestly(client, monkeypatch):
+    """Item 1: Unset LLM key, create live session, submit typed text, normalize, confirm, extract.
+    Must return clean 503 LLM_UNAVAILABLE with Bangla message. Must NOT return cached or fake output."""
+    monkeypatch.setenv("LLM_API_KEY", "")
+    s_res = client.post("/api/session", json={"mode": "live"})
+    assert s_res.status_code == 201
+    sid = s_res.json()["session_id"]
+    assert s_res.json()["mode"] == "live"
+
+    # Submit typed text
+    t_res = client.post("/api/transcription/typed", json={"session_id": sid, "text": "আমার মাথা ব্যথা এবং বমি হচ্ছে"})
+    assert t_res.status_code == 200
+    assert t_res.json()["mode"] == "live"
+
+    # Normalization (runs rule-based when LLM not configured)
+    n_res = client.post("/api/normalization", json={"session_id": sid})
+    assert n_res.status_code == 200
+    assert n_res.json()["source"] != "cached_demo_output"
+    assert n_res.json()["mode"] == "live"
+
+    # Confirm
+    c_res = client.post("/api/confirmation", json={
+        "session_id": sid,
+        "original_text": n_res.json()["original"],
+        "confirmed_text": n_res.json()["normalized"],
+        "confirmed": True
+    })
+    assert c_res.status_code == 200
+
+    # Extract without LLM key -> MUST fail cleanly with 503 LLM_UNAVAILABLE
+    e_res = client.post("/api/clinical/extract", json={"session_id": sid})
+    assert e_res.status_code == 503
+    err = e_res.json()["error"]
+    assert err["code"] == "LLM_UNAVAILABLE"
+    assert "কোনো ভাষা মডেল (LLM) কনফিগার করা নেই" in err["message"]
+    # Never return cached demo output or fake extraction
+    assert "extraction" not in e_res.json()
+
+    # Summary endpoint must be blocked (409)
+    sum_res = client.post("/api/summary/generate", json={"session_id": sid})
+    assert sum_res.status_code == 409
+

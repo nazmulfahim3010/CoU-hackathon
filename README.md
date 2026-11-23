@@ -230,16 +230,15 @@ All backend configurations are managed via `backend/.env` (read by `app/config.p
 | `APP_MODE` | `string` | `demo` | Application mode: `demo` (prepared scenarios) or `live` (calls real APIs). |
 | `SESSION_TTL_MINUTES` | `int` | `30` | In-memory session time-to-live before automatic garbage collection. |
 | `SESSION_TTL_SECONDS` | `int` | `1800` | In-memory session TTL in seconds. |
-| `SPEECH_PROVIDER` | `string` | `none` | Speech-to-text adapter: `none`, `hf_inference`, or `openai_compatible`. |
+| `SPEECH_PROVIDER` | `string` | `none` | Speech-to-text adapter: `none`, `local_transformers`, `hf_inference`, or `openai_compatible`. |
 | `SPEECH_MODEL` | `string` | `bangla-speech-processing/BanglaASR` | Model identifier (HF repo or OpenAI model name e.g. `whisper-1`). |
-| `SPEECH_API_KEY` | `string` | `""` | API key for Hugging Face or OpenAI-compatible STT endpoint. |
+| `SPEECH_API_KEY` | `string` | `""` | API key for cloud STT endpoints (HF Inference or OpenAI-compatible). **Not required** for local Hugging Face model (`local_transformers`), which needs only a model download. |
 | `SPEECH_BASE_URL` | `string` | `""` | Optional endpoint override (e.g. custom Groq/vLLM URL). |
-| `LLM_PROVIDER` | `string` | `none` | LLM adapter: `none`, `anthropic`, or `openai_compatible`. |
-| `LLM_MODEL` | `string` | `""` | Model identifier (e.g. `claude-3-5-sonnet-20241022` or `gpt-4o-mini`). |
-| `LLM_API_KEY` | `string` | `""` | API key for Anthropic or OpenAI-compatible endpoint. |
-| `LLM_BASE_URL` | `string` | `""` | Optional base URL override for LLM endpoint. |
-| `TTS_PROVIDER` | `string` | `gtts` | Bangla speech synthesis adapter: `gtts` or `none`. |
-| `TTS_API_KEY` | `string` | `""` | Optional key if using commercial TTS provider. |
+| `LLM_PROVIDER` | `string` | `none` | Configurable LLM adapter: `none`, `anthropic`, or `openai_compatible` (e.g. OpenAI, Groq, Ollama, vLLM). |
+| `LLM_MODEL` | `string` | `""` | Model identifier configurable via environment (e.g. any Claude, GPT, or Llama model). |
+| `LLM_API_KEY` | `string` | `""` | API key for configured LLM provider. |
+| `LLM_BASE_URL` | `string` | `""` | Optional base URL override (for Groq, Ollama, vLLM, or custom proxies). |
+| `TTS_PROVIDER` | `string` | `gtts` | Bangla speech synthesis adapter: `gtts` (in-memory, no API key required) or `none`. |
 | `MAX_AUDIO_SECONDS` | `int` | `90` | Hard cap on audio recording duration. |
 | `MAX_UPLOAD_MB` | `int` | `10` | Maximum uploaded audio payload size in megabytes. |
 | `MAX_AUDIO_BYTES` | `int` | `10485760` | Maximum raw audio payload in bytes (10 MB). |
@@ -325,15 +324,16 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 ## 10. AI Models, Providers & Honest Limitations
 
 ### Models Actually Integrated in Code
-1. **Speech-to-Text**:
-   - `bangla-speech-processing/BanglaASR` (via Hugging Face Inference API or local Transformers pipeline). Architecture: Fine-tuned Whisper on standard Bangla.
-   - `whisper-1` via OpenAI-compatible endpoints.
+1. **Speech-to-Text (STT)**:
+   - `bangla-speech-processing/BanglaASR` (Whisper fine-tune via Hugging Face Inference or local `transformers` pipeline; local pipeline requires only downloading model weights, no API key).
+   - `whisper-1` (or equivalent) via any OpenAI-compatible `/audio/transcriptions` endpoint.
    - *Manual Fallback*: `POST /api/transcription/typed` (tagged `source: "typed_by_helper"`).
-2. **Large Language Models**:
-   - `claude-3-5-sonnet-20241022` / `claude-3-7-sonnet-20250219` via Anthropic Messages API (`temperature: 0`).
-   - `gpt-4o-mini` via OpenAI-compatible Chat API (`response_format: {"type": "json_object"}`).
+2. **Configurable Large Language Models (LLM)**:
+   - Configurable via `LLM_PROVIDER`, `LLM_MODEL`, and `LLM_BASE_URL`.
+   - Supports Anthropic Messages API (e.g. `claude-3-5-sonnet-20241022` / `claude-3-7-sonnet-20250219`).
+   - Supports any OpenAI-compatible Chat API (e.g. `gpt-4o-mini`, `llama-3.3-70b-versatile` via Groq, vLLM, or local Ollama).
    - *Deterministic Fallback*: Glossary-only longest-match term replacement when LLM is unconfigured or unreachable.
-3. **Speech Synthesis**:
+3. **Speech Synthesis (TTS)**:
    - `gTTS` (Google Translate TTS web API, language `bn`). Synthesizes static reassurance templates without transmitting patient health data.
 
 ### Known Limitations

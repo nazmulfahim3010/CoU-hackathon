@@ -48,7 +48,7 @@ class LiveAsrResponse(BaseModel):
 
 @router.get("/samples", response_model=list[DemoSample])
 def list_demo_samples():
-    """List prepared demo sample audio clips and verified baseline transcripts."""
+    """List prepared demo sample audio clips and baseline sample transcripts."""
     if not TRANSCRIPTS_FILE.exists():
         raise KothaError(404, "DEMO_SAMPLES_NOT_FOUND", "Demo transcripts file missing.")
 
@@ -68,7 +68,7 @@ def list_demo_samples():
                 speaker=s.get("speaker", "Synthetic speech"),
                 original_transcript=s.get("original_transcript", ""),
                 standard_bangla=s.get("standard_bangla", ""),
-                verified_by=s.get("verified_by", "Unverified draft"),
+                verified_by=s.get("verified_by", "sample / unverified"),
             )
         )
     return samples

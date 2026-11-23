@@ -95,28 +95,10 @@ class GTTSProvider(TextToSpeechProvider):
         return audio, "audio/mpeg"
 
 
-class AzureTTSProvider(TextToSpeechProvider):
-    """Azure Speech Services adapter for high-fidelity Bangla voices (bn-BD-PradeepNeural, bn-BD-NabanitaNeural)."""
-
-    name = "azure"
-
-    def __init__(self, api_key: str | None = None, region: str = "southeastasia"):
-        self.api_key = api_key
-        self.region = region
-
-    async def synthesize(self, text: str) -> tuple[bytes, str]:
-        if not self.api_key:
-            raise KothaError(503, "TTS_NOT_CONFIGURED", "Azure TTS API key not configured.")
-        # Azure cognitive services speech implementation
-        raise KothaError(503, "TTS_FAILED", "Azure TTS is not currently connected.")
-
-
 def get_tts_provider(settings: Settings) -> TextToSpeechProvider:
     if settings.tts_provider == "gtts":
         return GTTSProvider()
-    elif settings.tts_provider == "azure":
-        return AzureTTSProvider(api_key=settings.tts_api_key)
-    raise KothaError(503, "TTS_NOT_CONFIGURED", f"TTS provider '{settings.tts_provider}' is not configured.")
+    raise KothaError(503, "TTS_NOT_CONFIGURED", f"TTS provider '{settings.tts_provider}' is not supported. Supported: 'gtts'.")
 
 
 async def synthesize(text: str, settings: Settings) -> tuple[str, str, str]:

@@ -10,9 +10,11 @@ def test_spoken_template_without_red_flags():
     assert "আপনার তথ্য ডাক্তারের কাছে পাঠানোর জন্য লেখা হয়েছে।" in text
     assert "ডাক্তারই আপনার চিকিৎসার সিদ্ধান্ত নেবেন।" in text
     assert "জরুরি" not in text
-    # Verify no diagnostic claims are made
+    # Verify no diagnostic claims are made and no promises about doctor talking soon
     for phrase in ("রোগ নির্ণয় করা হয়েছে", "আপনার রোগ হয়েছে", "প্রেসক্রিপশন", "ওষুধ খান"):
         assert phrase not in text
+    for forbidden in ("কিছুক্ষণের মধ্যে", "শীঘ্রই", "কথা বলবেন", "ডাক্তার কথা বলবেন", "মিনিটের মধ্যে"):
+        assert forbidden not in text
 
 
 def test_spoken_template_with_urgent_flag_includes_calm_instruction():
@@ -20,6 +22,8 @@ def test_spoken_template_with_urgent_flag_includes_calm_instruction():
     assert "আপনার কথায় জরুরি কিছু লক্ষণ দেখা গেছে।" in text
     assert "নিকটস্থ স্বাস্থ্য কমপ্লেক্স বা হাসপাতালে যোগাযোগ করুন" in text
     assert "ডাক্তারই আপনার চিকিৎসার সিদ্ধান্ত নেবেন।" in text
+    for forbidden in ("কিছুক্ষণের মধ্যে", "শীঘ্রই", "কথা বলবেন", "ডাক্তার কথা বলবেন"):
+        assert forbidden not in text
 
 
 def test_spoken_template_includes_missing_questions():

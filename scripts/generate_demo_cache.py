@@ -65,7 +65,7 @@ def generate_cache():
                 "glossary_matches": glossary_matches,
                 "uncertain_spans": [],
                 "warnings": [
-                    "Demo mode: this normalization was pre-verified for this sample."
+                    "Demo mode: sample / unverified normalization for this demo clip."
                 ],
                 "provider": "cached_demo_output",
             },

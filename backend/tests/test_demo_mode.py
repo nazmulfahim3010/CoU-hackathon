@@ -108,25 +108,34 @@ def test_demo_responses_carry_mode_demo_at_every_step(client):
 
 
 def test_live_mode_never_reads_cached_outputs(client, monkeypatch):
-    """Live mode must NEVER read cached outputs, failing properly when unconfigured."""
-    # Create a live session
-    sess_res = client.post("/api/session", json={"mode": "live"})
-    sid = sess_res.json()["session_id"]
+    """Live mode must NEVER read cached outputs, failing honestly when LLM key is missing."""
+    s = get_settings()
+    monkeypatch.setattr(s, "llm_provider", "none")
+    monkeypatch.setattr(s, "llm_api_key", "")
+    monkeypatch.setattr(s, "llm_model", "")
 
-    # Post a manual typed transcript
+    # 1. Create a live session
+    sess_res = client.post("/api/session", json={"mode": "live"})
+    assert sess_res.status_code == 201
+    sid = sess_res.json()["session_id"]
+    assert sess_res.json()["mode"] == "live"
+
+    # 2. Post a manual typed transcript
     tx_res = client.post(
         "/api/transcription/typed",
         json={"session_id": sid, "text": "আমার বুকে অনেক ব্যথা করছে"},
     )
     assert tx_res.status_code == 200
     assert tx_res.json()["mode"] == "live"
+    assert tx_res.json()["source"] == "typed_by_user"
 
-    # Normalize
+    # 3. Normalize (glossary-only fallback when LLM is unconfigured)
     norm_res = client.post("/api/normalization", json={"session_id": sid})
     assert norm_res.status_code == 200
     assert norm_res.json()["mode"] == "live"
+    assert norm_res.json()["source"] == "glossary_only"
 
-    # Confirm
+    # 4. Confirm
     conf_res = client.post(
         "/api/confirmation",
         json={
@@ -139,12 +148,39 @@ def test_live_mode_never_reads_cached_outputs(client, monkeypatch):
     assert conf_res.status_code == 200
     assert conf_res.json()["mode"] == "live"
 
-    # In live mode with no LLM configured, extract must raise 503 / ProviderNotConfigured, NOT read cache
-    s = get_settings()
-    monkeypatch.setattr(s, "llm_provider", "unconfigured")
+    # 5. Extract MUST fail with 503 LLM_UNAVAILABLE and Bangla-friendly error; NEVER read cache
     ext_res = client.post("/api/clinical/extract", json={"session_id": sid})
-    assert ext_res.status_code in (500, 502, 503)
-    assert ext_res.json().get("error", {}).get("code") != "CACHE_LOADED"
+    assert ext_res.status_code == 503
+    err = ext_res.json().get("error", {})
+    assert err.get("code") == "LLM_UNAVAILABLE"
+    assert "এলএলএম" in err.get("message", "") or "ভাষা মডেল" in err.get("message", "")
+
+    # 6. Verify summary CANNOT be faked/generated
+    sum_res = client.post("/api/summary/generate", json={"session_id": sid})
+    assert sum_res.status_code == 409  # Gated by state machine
+
+
+def test_demo_mode_falls_back_to_cached_output_labelled_properly(client, monkeypatch):
+    """When LLM is unconfigured, demo mode must use cached_outputs labelled 'cached demo output'."""
+    s = get_settings()
+    monkeypatch.setattr(s, "llm_provider", "none")
+    monkeypatch.setattr(s, "llm_api_key", "")
+
+    sid = client.post("/api/session", json={"mode": "demo", "demo_scenario_id": "A_ordinary"}).json()["session_id"]
+    client.post("/api/transcription", data={"session_id": sid, "demo_scenario_id": "A_ordinary"})
+    
+    norm = client.post("/api/normalization", json={"session_id": sid}).json()
+    assert norm["mode"] == "demo"
+    assert norm["source"] == "cached_demo_output"
+    assert norm["provider"] == "cached_demo_output"
+    assert any("cached demo output" in w.lower() for w in norm["warnings"])
+
+    client.post("/api/confirmation", json={"session_id": sid, "original_text": norm["original"], "confirmed_text": norm["normalized"], "confirmed": True})
+    ext = client.post("/api/clinical/extract", json={"session_id": sid}).json()
+    assert ext["mode"] == "demo"
+    assert ext["source"] == "cached_demo_output"
+    assert ext["provider"] == "cached_demo_output"
+    assert "cached demo output" in ext["note"].lower()
 
 
 def test_scenario_b_triggers_red_flag_rules(client):
@@ -239,3 +275,56 @@ def test_full_demo_flow_all_three_scenarios(client):
         sp_data = sp.json()
         assert len(sp_data["audio_base64"]) > 0
         assert len(sp_data["text_bn"]) > 0
+
+
+def test_demo_responses_never_label_sample_or_cached_as_verified_without_native_verification(client):
+    """Guardrail test: Demo and cached responses must NEVER be labelled as 'verified'
+    unless accompanied by a legitimate team native-speaker verification."""
+    import re
+
+    # 1. Samples check
+    samples_res = client.get("/api/demo/samples")
+    assert samples_res.status_code == 200
+    samples = samples_res.json()
+    assert len(samples) > 0
+
+    for s in samples:
+        # Must have a non-empty verified_by field
+        assert "verified_by" in s
+        assert bool(s["verified_by"].strip())
+        # If not native-speaker verified, cannot claim verified in title/purpose
+        assert not re.search(r"\bverified\b", s["title"], re.IGNORECASE)
+        assert "যাচাইকৃত" not in s["title"]
+        assert not re.search(r"\bverified\b", s["purpose"], re.IGNORECASE)
+
+    # 2. Pipeline output checks (fallback / cached demo mode)
+    for scenario_id in ("A_ordinary", "B_red_flag", "C_uncertain"):
+        sid = client.post("/api/session", json={"mode": "demo", "demo_scenario_id": scenario_id}).json()["session_id"]
+        
+        # Transcription response
+        tx = client.post("/api/transcription", data={"session_id": sid, "demo_scenario_id": scenario_id}).json()
+        assert not re.search(r"\bverified\b", tx.get("disclaimer", ""), re.IGNORECASE)
+        assert "যাচাইকৃত" not in tx.get("disclaimer", "")
+
+        # Normalization response (fallback)
+        norm = client.post("/api/normalization", json={"session_id": sid}).json()
+        for w in norm.get("warnings", []):
+            assert "pre-verified" not in w.lower()
+            assert not re.search(r"\bverified\b", w, re.IGNORECASE)
+            assert "যাচাইকৃত" not in w
+
+        # Confirmation
+        client.post("/api/confirmation", json={
+            "session_id": sid,
+            "original_text": norm["original"],
+            "confirmed_text": norm["normalized"],
+            "confirmed": True
+        })
+
+        # Extraction response (fallback)
+        ext = client.post("/api/clinical/extract", json={"session_id": sid}).json()
+        note = ext.get("note", "")
+        assert "pre-verified" not in note.lower()
+        assert not re.search(r"\bverified\b", note, re.IGNORECASE)
+        assert "যাচাইকৃত" not in note
+

@@ -47,7 +47,7 @@ class ExtractionRequest(BaseModel):
 
 class ExtractionResponse(BaseModel):
     session_id: str
-    source: Literal["llm", "demo_prepared"]
+    source: Literal["llm", "demo_prepared", "cached_demo_output"]
     provider: str
     extraction: ClinicalExtraction
     note: str

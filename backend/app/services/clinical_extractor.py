@@ -51,4 +51,8 @@ async def extract(confirmed_text: str, settings: Settings) -> ClinicalExtraction
         except (ValueError, ValidationError) as exc:
             last_error = type(exc).__name__
             log.warning("extraction_invalid attempt=%s error=%s", attempt, last_error)
-    raise KothaError(502, "EXTRACTION_INVALID", "The model could not produce a valid structured extraction. Please try again.")
+    raise KothaError(
+        502,
+        "EXTRACTION_FAILED",
+        "মডেলটি ক্লিনিক্যাল তথ্য সঠিকভাবে নিষ্কাশন করতে পারেনি (Clinical extraction failed). অনুগ্রহ করে আবার চেষ্টা করুন বা ডেমো মোড ব্যবহার করুন।",
+    )

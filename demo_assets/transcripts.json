@@ -9,7 +9,7 @@
     "speaker": "Fictional patient / synthetic speech",
     "original_transcript": "আইজ তিন দিন ধরি মোর মাতাত ব্যতা, অল্প জ্বর আছে। হারাদিন ভাল লাগের না। প্যারাসিটামল একবার খাইছি।",
     "standard_bangla": "আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে। সারাদিন ভালো লাগছে না। প্যারাসিটামল একবার খেয়েছি।",
-    "verified_by": "Fictional scenario — synthetic demo audio (Awaiting native speaker recording)"
+    "verified_by": "sample / unverified (synthetic demo audio; awaiting native-speaker verification)"
   },
   {
     "id": "B_red_flag",
@@ -21,7 +21,7 @@
     "speaker": "Fictional patient / synthetic speech",
     "original_transcript": "দুই ঘণ্টা ধরি বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়।",
     "standard_bangla": "দুই ঘণ্টা ধরে বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়।",
-    "verified_by": "Fictional scenario — synthetic demo audio (Awaiting native speaker recording)"
+    "verified_by": "sample / unverified (synthetic demo audio; awaiting native-speaker verification)"
   },
   {
     "id": "C_uncertain",
@@ -33,6 +33,6 @@
     "speaker": "Fictional patient / synthetic speech",
     "original_transcript": "ফেডে মাঝে মাঝে বিষ করে, কয়দিন ধরি মনে নাই। জ্বর আছিল কিনা বুঝি নাই। ওষুধ খাই নাই।",
     "standard_bangla": "পেটে মাঝে মাঝে ব্যথা করে, কয়দিন ধরে মনে নেই। জ্বর ছিল কিনা বুঝিনি। ওষুধ খাইনি।",
-    "verified_by": "Fictional scenario — synthetic demo audio (Awaiting native speaker recording)"
+    "verified_by": "sample / unverified (synthetic demo audio; awaiting native-speaker verification)"
   }
 ]

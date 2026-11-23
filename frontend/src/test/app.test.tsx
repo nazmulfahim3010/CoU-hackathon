@@ -32,7 +32,7 @@ vi.mock('../services/api', async (orig) => {
           speaker: 'Synthetic speech',
           original_transcript: 'আইজ তিন দিন ধরি মোর মাতাত ব্যতা',
           standard_bangla: 'আজ তিন দিন ধরে আমার মাথায় ব্যথা',
-          verified_by: 'Team',
+          verified_by: 'sample / unverified',
         },
       ]),
       demoLiveAsr: vi.fn().mockResolvedValue({
@@ -354,7 +354,7 @@ describe('Demo Mode in Intake', () => {
   it('renders demo sample cards with audio player and live ASR option', async () => {
     renderAt('/intake', <Intake />, { mode: 'demo' })
     expect(await screen.findByText('Scenario A — Ordinary symptoms')).toBeInTheDocument()
-    expect(screen.getByText(/Team-Verified Dialect Transcript/)).toBeInTheDocument()
+    expect(screen.getByText(/Sample \/ Unverified Dialect Transcript/i)).toBeInTheDocument()
     expect(screen.getByText(/Run live ASR on this sample/)).toBeInTheDocument()
     expect(screen.getByText(/Use this sample/)).toBeInTheDocument()
 

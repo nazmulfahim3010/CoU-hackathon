@@ -38,37 +38,54 @@ async def normalization(
     original = session.data.get("original", session.original_transcript or "")
 
     if session.mode == "demo":
-        scenario = demo_data.get_scenario(session.demo_scenario_id or "")
-        matches = load_glossary().match(original)
-        uncertain = [
-            UncertainSegment(text=m.regional, reason=f"Unverified dialect term ({m.dialect})")
-            for m in matches
-            if m.verification != "verified"
-        ]
-        changes = [
-            NormalizationChange(
-                original=m.regional,
-                normalized=m.standard,
-                reason=f"Glossary match ({m.category})",
-                source="glossary",
+        result = None
+        # Try real normalization pipeline first if LLM provider is configured
+        if llm_configured(s):
+            try:
+                result = await normalize(original, s, use_llm=True)
+                result.session_id = session.id
+                result.mode = "demo"
+                result.warnings.append("DEMO: Live LLM normalization ran on this prepared demo sample.")
+            except Exception:
+                result = None
+
+        if result is None:
+            # Fall back to cached demo output ONLY when LLM provider is unconfigured or fails
+            cached = demo_data.get_cached_output(session.demo_scenario_id or "")
+            cached_norm = cached.get("normalization", {})
+            scenario = demo_data.get_scenario(session.demo_scenario_id or "")
+            norm_text = cached_norm.get("normalized") or scenario.get("normalized", original)
+            matches = load_glossary().match(original)
+            uncertain = [
+                UncertainSegment(text=m.regional, reason=f"Unverified dialect term ({m.dialect})")
+                for m in matches
+                if m.verification != "verified"
+            ]
+            changes = [
+                NormalizationChange(
+                    original=m.regional,
+                    normalized=m.standard,
+                    reason=f"Glossary match ({m.category})",
+                    source="glossary",
+                )
+                for m in matches
+            ]
+            result = NormalizationResponse(
+                session_id=session.id,
+                original=original,
+                normalized=norm_text,
+                source="cached_demo_output",
+                glossary_matches=matches,
+                changes=changes,
+                uncertain_segments=uncertain,
+                uncertain_spans=[m.regional for m in matches if m.verification != "verified"],
+                warnings=["cached demo output: LLM provider unavailable; pre-saved sample / unverified demo normalization shown."],
+                provider="cached_demo_output",
+                mode="demo",
+                disclaimer=DISCLAIMER,
             )
-            for m in matches
-        ]
-        result = NormalizationResponse(
-            session_id=session.id,
-            original=original,
-            normalized=scenario["normalized"],
-            source="demo_prepared",
-            glossary_matches=matches,
-            changes=changes,
-            uncertain_segments=uncertain,
-            uncertain_spans=[m.regional for m in matches if m.verification != "verified"],
-            warnings=["DEMO: the standard Bangla text is prepared, not model output. Glossary matches are computed live."],
-            provider="demo",
-            mode="demo",
-            disclaimer=DISCLAIMER,
-        )
     else:
+        # LIVE MODE: NEVER reads cached outputs!
         result = await normalize(original, s, use_llm=llm_configured(s))
         result.session_id = session.id
         result.mode = session.mode
