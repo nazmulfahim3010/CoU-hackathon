@@ -271,7 +271,7 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
           <FlaskConical className="h-5 w-5" aria-hidden /> Demo Mode — Prepared Dialect Scenarios
         </p>
         <p className="text-sm text-text/80 mt-1">
-          These 3 fictional scenarios let you evaluate Kotha without audio hardware or live API keys. Audio clips can be played directly in your browser. The baseline transcript is a prepared sample (labelled as <code>demo_sample</code>, never speech recognition; unverified by native speakers). You can also run live ASR on the clip to compare actual model performance.
+          These 3 fictional scenarios let you evaluate Kotha without audio hardware or live API keys. Audio clips can be played directly in your browser. The baseline transcript is a prepared sample (labelled as <code>demo_sample</code>, never speech recognition; unverified by native speakers). Audio clips are synthetic standard-Bangla speech (gTTS) reading dialect text, not native dialect speakers; running live ASR on these clips demonstrates pipeline execution but does NOT indicate dialect recognition accuracy.
         </p>
       </div>
 
@@ -298,9 +298,14 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
 
               {/* Browser Audio Player */}
               <div className="rounded-xl bg-soft p-2.5">
-                <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wide flex items-center gap-1 mb-1">
-                  <Volume2 className="h-3.5 w-3.5 text-brand" /> Play Demo Audio Clip
-                </p>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wide flex items-center gap-1">
+                    <Volume2 className="h-3.5 w-3.5 text-brand" /> Play Demo Audio Clip
+                  </p>
+                  <span className="text-[10px] font-medium text-amber-900 bg-amber-100 rounded px-1.5 py-0.5">
+                    Synthetic voice — not a real dialect speaker
+                  </span>
+                </div>
                 <audio
                   controls
                   src={s.audio_url}

@@ -150,7 +150,7 @@ def test_transcription_typed_endpoint():
 def test_real_audio_transcription_comparison(monkeypatch):
     """Run real audio file from demo_assets/audio through processing pipeline."""
     demo_assets_dir = Path(__file__).resolve().parents[2] / "demo_assets"
-    audio_path = demo_assets_dir / "audio" / "sample_sylheti_01.wav"
+    audio_path = demo_assets_dir / "audio" / "sample_A.wav"
     assert audio_path.exists(), "demo_assets audio file must exist"
     audio_bytes = audio_path.read_bytes()
 
@@ -172,7 +172,7 @@ def test_real_audio_transcription_comparison(monkeypatch):
 
     r = client.post(
         "/api/transcription",
-        files={"audio": ("sample_sylheti_01.wav", audio_bytes, "audio/wav")},
+        files={"audio": ("sample_A.wav", audio_bytes, "audio/wav")},
     )
     assert r.status_code == 200
     res = r.json()

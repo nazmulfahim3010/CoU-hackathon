@@ -351,7 +351,7 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 
 ### Actually Used in Codebase
 - **Curated Starter Dialect Glossaries** (`backend/app/data/dialects/*.json`): 43 total starter entries across Sylheti, Chittagonian, Noakhali, and Standard Bangla. All marked `verification_status: "unverified"`. Licence: MIT / Project Open Source.
-- **Synthetic Demo Scenarios** (`demo_assets/`): 3 fictional patient profiles with synthetic audio recordings and transcript pairs. Licence: CC-BY 4.0.
+- **Synthetic Demo Scenarios** (`demo_assets/`): 3 fictional patient profiles with synthetic standard-Bangla audio recordings (gTTS reading dialect text, not native speakers) and transcript pairs. Licence: CC-BY 4.0.
 
 ### Planned / Reviewed, Not Integrated
 - **Mozilla Common Voice Bangla 17.0** (CC-0): Reviewed as candidate for acoustic fine-tuning; not bundled in prototype.
@@ -371,7 +371,32 @@ To demonstrate Kotha during evaluation, toggle to **Demo mode** in the top navig
 | **Scenario B** | *Red-Flag Emergency* (`B_red_flag`) | Chittagonian dialect: Severe chest pain and breathing difficulty for 2 hours. | Deterministic red-flag engine fires `CHEST_PAIN` and `BREATHING_DIFFICULTY`; emergency red alert banner `#C62828` appears with immediate referral advice. |
 | **Scenario C** | *Uncertain / Incomplete* (`C_uncertain`) | Noakhali dialect: Intermittent abdominal pain; duration forgotten; fever unknown. | Schema strictly preserves `uncertain` for duration and fever; never flags symptoms as negative; alerts clinician to clarify. |
 
-*Judges can also click **"Run live ASR on this sample"** to observe real foundation speech-to-text output on the same clip.*
+*Note on Demo Audio: Audio clips are synthetic standard-Bangla voice (gTTS) reading dialect text, not native dialect speakers. Running live ASR on these clips demonstrates speech-to-text pipeline execution, but does NOT indicate dialect recognition accuracy on authentic regional speech.*
+
+### Adding Real Consented Recordings
+
+To replace or extend synthetic demo audio with authentic regional dialect recordings:
+
+1. **Obtain Explicit Informed Consent (Mandatory)**:
+   - Explicit speaker consent is strictly required before recording or committing any human voice data.
+   - Speakers must be informed of how the audio will be used (open-source evaluation of dialect clinical triage) and explicitly agree to repository inclusion. Never record or commit voice data without documented speaker consent.
+
+2. **Audio File Placement and Formatting**:
+   - Save the recording in `demo_assets/audio/` using the scenario naming convention (e.g. `sample_A.wav` for Scenario A, `sample_B.wav` for Scenario B, `sample_C.wav` for Scenario C, or `sample_D.wav` for new scenarios).
+   - Format: 16 kHz mono 16-bit PCM WAV (`.wav`).
+
+3. **Register Metadata in `demo_assets/transcripts.json`**:
+   Add or update the scenario entry with the following fields:
+   - `id`: Scenario ID (e.g. `"A_ordinary"`).
+   - `scenario`: Scenario ID.
+   - `audio_file`: Audio file name (e.g. `"sample_A.wav"`).
+   - `title`: Descriptive clinical title.
+   - `purpose`: Clinical scenario context and symptoms.
+   - `dialect`: Authentic regional dialect (e.g. `"sylheti"`).
+   - `speaker`: Verified speaker profile (e.g. `"Consented native Sylheti speaker (Habiganj, age 42)"`).
+   - `original_transcript`: Exact verbatim transcription of spoken dialect.
+   - `standard_bangla`: Clinically accurate standard Bangla translation.
+   - `verified_by`: Name or identifier of the native speaker / clinician who verified the transcript (replaces `"sample / unverified"`).
 
 ---
 

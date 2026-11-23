@@ -20,11 +20,13 @@ def test_list_demo_samples(client):
         assert len(s["original_transcript"]) > 0
         assert len(s["standard_bangla"]) > 0
         assert s["speaker"]
+        assert "Synthetic" in s["speaker"]
+        assert "not a native dialect speaker" in s["speaker"]
 
 
 def test_get_demo_audio_stream(client):
     """GET /api/demo/audio/{filename} must serve valid WAV audio."""
-    res = client.get("/api/demo/audio/sample_sylheti_01.wav")
+    res = client.get("/api/demo/audio/sample_A.wav")
     assert res.status_code == 200
     assert "audio" in res.headers.get("content-type", "")
     assert res.content[:4] == b"RIFF"

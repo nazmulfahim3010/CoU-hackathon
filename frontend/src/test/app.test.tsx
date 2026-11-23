@@ -24,12 +24,12 @@ vi.mock('../services/api', async (orig) => {
         {
           id: 'A_ordinary',
           scenario: 'A_ordinary',
-          audio_file: 'sample_sylheti_01.wav',
-          audio_url: '/api/demo/audio/sample_sylheti_01.wav',
+          audio_file: 'sample_A.wav',
+          audio_url: '/api/demo/audio/sample_A.wav',
           title: 'Scenario A — Ordinary symptoms',
           purpose: 'Headache and mild fever',
           dialect: 'sylheti',
-          speaker: 'Synthetic speech',
+          speaker: 'Synthetic standard-Bangla voice (gTTS), not a native dialect speaker',
           original_transcript: 'আইজ তিন দিন ধরি মোর মাতাত ব্যতা',
           standard_bangla: 'আজ তিন দিন ধরে আমার মাথায় ব্যথা',
           verified_by: 'sample / unverified',
@@ -221,6 +221,14 @@ describe('Intake page', () => {
     await userEvent.click(switchBtn)
     expect(screen.queryByText(/ffmpeg is not installed on this server/i)).not.toBeInTheDocument()
     expect(screen.getByTestId('mode-badge')).toHaveTextContent('DEMO')
+  })
+
+  it('displays the synthetic voice label on demo audio clips', async () => {
+    mockMic(() => Promise.resolve({}))
+    renderAt('/intake', <Intake />)
+    const demoBtn = screen.getByRole('button', { name: /Demo samples/i })
+    await userEvent.click(demoBtn)
+    expect(await screen.findByText(/Synthetic voice — not a real dialect speaker/i)).toBeInTheDocument()
   })
 
   it('renders optional age group and dialect selector options', async () => {

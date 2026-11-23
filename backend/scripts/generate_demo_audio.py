@@ -12,9 +12,9 @@ audio_dir = Path("demo_assets/audio")
 audio_dir.mkdir(parents=True, exist_ok=True)
 
 files = {
-    "A_ordinary": "sample_sylheti_01.wav",
-    "B_red_flag": "sample_chittagonian_02.wav",
-    "C_uncertain": "sample_noakhali_03.wav",
+    "A_ordinary": "sample_A.wav",
+    "B_red_flag": "sample_B.wav",
+    "C_uncertain": "sample_C.wav",
 }
 
 for sc in scenarios:

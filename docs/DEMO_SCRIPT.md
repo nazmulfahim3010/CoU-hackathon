@@ -44,11 +44,11 @@
 * **Visual:** Show the microphone interface, VU audio level meter, and dialect selector.
 * **Demonstration Action:** Select **Demo Samples** -> **Scenario B (Red Flag — Chittagonian)**:
   * *"দুই ঘণ্টা ধরি বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়।"* (Severe chest pain & shortness of breath for 2 hours).
-  * Click the Play Audio button to play the sample audio clip (`sample_chittagonian_02.wav`).
+  * Click the Play Audio button to play the sample audio clip (`sample_B.wav`).
 * **Spoken Script:**
-  > "Here, a patient or community health worker in Chittagong speaks into the phone. Notice our live VU level meter and 90-second duration limiter.
+  > "Here, a patient or community health worker speaks into the phone. Notice our live VU level meter and 90-second duration limiter.
   > 
-  > For our demonstration, we'll select **Scenario B**, a patient presenting with severe acute chest tightness and dyspnea in Chittagonian dialect. Listen to the audio."
+  > For our demonstration, we'll select **Scenario B**, a patient presenting with severe acute chest tightness and dyspnea with synthetic Chittagonian text. Listen to the audio."
 
 ---
 
