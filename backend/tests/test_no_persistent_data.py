@@ -19,7 +19,7 @@ from app.config import get_settings
 from app.core.exceptions import KothaError
 from app.core.session_manager import SessionManager, Stage
 from app.services import clinical_extractor, speech_to_text, text_to_speech
-from conftest import FakeLLM
+from conftest import FakeLLM, demo_confirmed
 
 
 def _get_project_files() -> set[str]:
@@ -175,3 +175,14 @@ def test_audio_temp_files_cleaned_up_on_error(tmp_path):
     final_files = set(os.listdir(temp_dir))
     leaked = [f for f in (final_files - initial_files) if f.endswith(".raw") or f.endswith("_converted.wav")]
     assert not leaked, f"process_audio leaked temp files on error: {leaked}"
+
+
+def test_workflow_writes_no_files(client, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(text_to_speech, "_synthesize_gtts", lambda t: b"ID3fake")
+    sid = demo_confirmed(client, "B_red_flag")
+    client.post("/api/clinical/extract", json={"session_id": sid})
+    client.post("/api/safety/evaluate", json={"session_id": sid})
+    client.post("/api/summary/generate", json={"session_id": sid})
+    client.post("/api/speech/generate", json={"session_id": sid})
+    assert os.listdir(tmp_path) == []

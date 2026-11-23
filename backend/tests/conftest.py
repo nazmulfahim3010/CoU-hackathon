@@ -10,7 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import Settings, get_settings  # noqa: E402
 from app.main import create_app  # noqa: E402
-from app.services.providers.stt import STTResult  # noqa: E402
+from app.services.speech_to_text import STTResult  # noqa: E402
 
 requires_ffmpeg = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
 

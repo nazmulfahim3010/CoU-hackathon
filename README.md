@@ -161,7 +161,7 @@ flowchart TD
 │   │   └── data/
 │   │       ├── dialects/            # Sylheti, Chittagonian, Noakhali, Standard glossaries
 │   │       └── safety_rules/        # red_flags.json (10 emergency/urgent rules)
-│   └── tests/                       # 10 test modules (125 unit/integration tests)
+│   └── tests/                       # 11 test modules (131 unit/integration tests)
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/                   # Landing, Intake, Confirm, Summary, About
@@ -169,7 +169,7 @@ flowchart TD
 │   │   ├── hooks/                   # useRecorder (MediaRecorder + Web Audio VU meter)
 │   │   ├── state/                   # FlowContext (in-memory React session state)
 │   │   ├── services/                # Typed fetch API client
-│   │   └── test/                    # Vitest unit and component tests (31 tests)
+│   │   └── test/                    # Vitest unit and component tests (33 tests)
 │   └── e2e/                         # Playwright E2E workflows (desktop & mobile)
 ├── demo_assets/                     # Fictional scenario audio clips & transcripts
 ├── docs/                            # ARCHITECTURE.md, Kotha.pdf
@@ -433,17 +433,17 @@ To replace or extend synthetic demo audio with authentic regional dialect record
 All tests execute against strict regression suites without network dependencies:
 
 ```powershell
-# Backend Test Suite (125 tests)
+# Backend Test Suite (131 tests)
 backend\.venv\Scripts\python -m pytest -q --basetemp=backend/.pytest_tmp
-# Result: 125 passed in 21.26s
+# Result: 131 passed in 18.95s
 
-# Frontend Unit & Component Tests (31 tests)
+# Frontend Unit & Component Tests (33 tests)
 cd frontend; npm test
-# Result: 31 passed in 5.14s
+# Result: 33 passed in 3.94s
 
 # Frontend Production Build
 cd frontend; npm run build
-# Result: Built cleanly in 879ms (0 TypeScript errors)
+# Result: Built cleanly in 923ms (0 TypeScript errors)
 
 # Playwright End-to-End Suite
 cd frontend; npx playwright test

@@ -7,8 +7,8 @@ from app.config import Settings, get_settings
 from app.core.session_manager import SessionManager
 from app.schemas.transcription import DemoScenario
 from app.services import demo_data
-from app.services.providers.llm import llm_configured
-from app.services.providers.stt import stt_configured
+from app.services.llm_provider import llm_configured
+from app.services.speech_to_text import stt_configured
 
 router = APIRouter(prefix="/api", tags=["health"])
 

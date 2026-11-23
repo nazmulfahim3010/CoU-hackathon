@@ -8,7 +8,7 @@ from app.core.exceptions import KothaError
 from app.core.logging import get_logger
 from app.schemas.clinical import ClinicalExtraction
 from app.services.dialect_normalizer import parse_json_object
-from app.services.providers.llm import get_llm
+from app.services.llm_provider import get_llm
 
 log = get_logger("extractor")
 MAX_ATTEMPTS = 3
