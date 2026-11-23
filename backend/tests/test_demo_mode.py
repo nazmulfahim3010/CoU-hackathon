@@ -330,3 +330,28 @@ def test_demo_responses_never_label_sample_or_cached_as_verified_without_native_
         assert not re.search(r"\bverified\b", note, re.IGNORECASE)
         assert "যাচাইকৃত" not in note
 
+
+def test_raw_datasets_source_md_exists_and_contains_table():
+    """Assert demo_assets/raw_datasets/SOURCE.md exists and contains a valid markdown table."""
+    source_md = Path(__file__).resolve().parents[2] / "demo_assets" / "raw_datasets" / "SOURCE.md"
+    assert source_md.exists(), "demo_assets/raw_datasets/SOURCE.md must exist"
+
+    content = source_md.read_text(encoding="utf-8")
+    lines = [line.strip() for line in content.splitlines()]
+
+    # Check for markdown table indicators (header separator like |---|---|)
+    table_separator = [line for line in lines if line.startswith("|") and "---" in line]
+    assert len(table_separator) >= 1, "SOURCE.md must contain a markdown table with separator '|---|'"
+
+    # Verify required headers and listed dataset files
+    assert "| filename" in content.lower() or "| file" in content.lower()
+    for fname in [
+        "Barishal_NER.csv",
+        "Chittagong_NER.csv",
+        "Mymensingh_NER.csv",
+        "Noakhali_NER.csv",
+        "Regional_NER (Raw Sentences).csv",
+        "Sylhet_NER.csv",
+    ]:
+        assert fname in content, f"{fname} must be documented in SOURCE.md"
+

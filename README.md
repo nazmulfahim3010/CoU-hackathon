@@ -353,6 +353,15 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 - **Curated Starter Dialect Glossaries** (`backend/app/data/dialects/*.json`): 43 total starter entries across Sylheti, Chittagonian, Noakhali, and Standard Bangla. All marked `verification_status: "unverified"`. Licence: MIT / Project Open Source.
 - **Synthetic Demo Scenarios** (`demo_assets/`): 3 fictional patient profiles with synthetic standard-Bangla audio recordings (gTTS reading dialect text, not native speakers) and transcript pairs. Licence: CC-BY 4.0.
 
+### Unused Raw Datasets in Repository (Unconfirmed Licences)
+The following CSV files committed in `demo_assets/raw_datasets/` are **not used** in any runtime, test, or build code path. Their origin and licence are unconfirmed (`UNKNOWN - team must fill in`, documented in `demo_assets/raw_datasets/SOURCE.md`):
+- `demo_assets/raw_datasets/Barishal_NER.csv` (Licence: UNKNOWN)
+- `demo_assets/raw_datasets/Chittagong_NER.csv` (Licence: UNKNOWN)
+- `demo_assets/raw_datasets/Mymensingh_NER.csv` (Licence: UNKNOWN)
+- `demo_assets/raw_datasets/Noakhali_NER.csv` (Licence: UNKNOWN)
+- `demo_assets/raw_datasets/Regional_NER (Raw Sentences).csv` (Licence: UNKNOWN)
+- `demo_assets/raw_datasets/Sylhet_NER.csv` (Licence: UNKNOWN)
+
 ### Planned / Reviewed, Not Integrated
 - **Mozilla Common Voice Bangla 17.0** (CC-0): Reviewed as candidate for acoustic fine-tuning; not bundled in prototype.
 - **SHRUTI Speech Corpus** (Academic Non-Commercial): Reviewed for regional acoustic benchmarks; not bundled.
