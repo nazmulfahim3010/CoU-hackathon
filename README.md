@@ -350,8 +350,8 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 ## 11. Datasets & Licences
 
 ### Actually Used in Codebase
-- **Curated Starter Dialect Glossaries** (`backend/app/data/dialects/*.json`): 43 total starter entries across Sylheti, Chittagonian, Noakhali, and Standard Bangla. All marked `verification_status: "unverified"`. Licence: MIT / Project Open Source.
-- **Synthetic Demo Scenarios** (`demo_assets/`): 3 fictional patient profiles with synthetic standard-Bangla audio recordings (gTTS reading dialect text, not native speakers) and transcript pairs. Licence: CC-BY 4.0.
+- **Curated Starter Dialect Glossaries** (`backend/app/data/dialects/*.json`): 43 total starter entries across Sylheti, Chittagonian, Noakhali, and Standard Bangla. All marked `verification_status: "unverified"`. Licence: TO BE DECIDED by the team.
+- **Synthetic Demo Scenarios** (`demo_assets/`): 3 fictional patient profiles with synthetic standard-Bangla audio recordings (gTTS reading dialect text, not native speakers) and transcript pairs. Licence: TO BE DECIDED by the team.
 
 ### Unused Raw Datasets in Repository (Unconfirmed Licences)
 The following CSV files committed in `demo_assets/raw_datasets/` are **not used** in any runtime, test, or build code path. Their origin and licence are unconfirmed (`UNKNOWN - team must fill in`, documented in `demo_assets/raw_datasets/SOURCE.md`):
@@ -463,3 +463,20 @@ cd frontend; npx playwright test
 - **AI Coding Assistants**:
   - **Claude Code** (Anthropic): Initial scaffolding, architectural specification, domain services, and test generation under human direction.
   - **Antigravity** (Google DeepMind): Test suite completion, no-storage verification, Playwright E2E browser automation, and architectural documentation verification.
+
+---
+
+## 17. Licensing Decisions Needed
+
+The project licences are **undecided**. The team must formally select and assign licences before public distribution.
+
+### Decisions Checklist
+- [ ] **Code licence**: Application codebase (`backend/`, `frontend/`, and supporting scripts).
+- [ ] **Glossary licence**: Dialect glossaries (`backend/app/data/dialects/*.json`).
+- [ ] **Demo assets licence**: Audio clips and sample transcripts (`demo_assets/`).
+- [ ] **Third-party dataset licences**: Raw reference corpora in `demo_assets/raw_datasets/` (see provenance and audit in [demo_assets/raw_datasets/SOURCE.md](file:///demo_assets/raw_datasets/SOURCE.md)).
+
+### Candidate Options & Trade-offs
+- **MIT**: Very permissive, simple, but includes no explicit patent grant.
+- **Apache-2.0**: Permissive plus explicit patent grant and contributor terms, slightly longer legal text.
+- **CC-BY 4.0**: Good for data, documentation, and content; requires attribution; not meant for code.
