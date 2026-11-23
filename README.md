@@ -13,7 +13,7 @@
 
 In Bangladesh, more than 170 million people speak Bengali, yet healthcare delivery in rural upazilas and community clinics faces a severe linguistic bottleneck:
 
-1. **Dialectal Diversity**: Patients communicate in rich regional dialects (Sylheti, Chittagonian, Noakhali, Barisali, etc.) featuring distinct lexical terms for pain, anatomical locations, and duration (e.g., Chittagonian *"হিনাত বিষ"* or Sylheti *"ছাতিত ব্যতা"* for chest pain; *"ফেডে বিষ"* for abdominal pain).
+1. **Dialectal Diversity**: Patients communicate in rich regional dialects with distinct words for pain, body parts and duration (e.g. Sylheti *"বুক বেদনা"* for chest pain, *"মাথাত বেদনা"* for headache). **Kotha currently focuses on Sylheti only**; other dialects can be added later by adding a verified glossary file.
 2. **Clinical Communication Gap**: Attending physicians and community health workers (CHWs) are trained in standard Bangla and English medical nomenclature. Misinterpreting colloquial or dialectal symptom descriptions can lead to misdiagnosed severity, overlooked emergencies, or delayed care.
 3. **Speech Recognition Fragility**: Commercial and foundation Automatic Speech Recognition (ASR) models are primarily trained on standard literary Bangla (Sadhu/Cholit bhasha) or English. When presented with regional phonology and dialect vocabularies, Word Error Rates (WER) surge significantly, frequently dropping critical negation markers (e.g., *"নাই"* / *"না"* / *"নো"*).
 4. **Diagnostic Creep & LLM Hallucination Risk**: Unconstrained generative AI systems in healthcare frequently hallucinate plausible-sounding diagnoses, assume absent symptoms are negative findings, or offer unsolicited clinical advice.
@@ -82,7 +82,7 @@ flowchart TD
 ### The 8 Pipeline Stages
 1. **Intake & Audio Capture (`Stage.CREATED`)**: Web Audio API captures up to 90 seconds of audio (16 kHz mono WAV transcode via ffmpeg) or accepts typed input.
 2. **Transcription (`Stage.TRANSCRIBED`)**: Provider-independent STT adapter converts speech to regional transcript.
-3. **Dialect Normalization (`Stage.NORMALIZED`)**: Longest-match dialect glossary scans terms (Sylheti, Chittagonian, Noakhali), then LLM suggests a standard Bangla rewrite guarded by negation count and numeral preservation checks.
+3. **Dialect Normalization (`Stage.NORMALIZED`)**: Longest-match Sylheti glossary (120 team-verified entries) scans terms, then an LLM suggests a standard Bangla rewrite guarded by glossary-aware negation, number, duration and invented-symptom checks.
 4. **Patient Confirmation Gate (`Stage.CONFIRMED`)**: **The core safety boundary.** The patient or community health worker reviews side-by-side transcripts and can edit the text. Downstream endpoints reject unconfirmed sessions with `409 Conflict`.
 5. **Structured Clinical Extraction (`Stage.EXTRACTED`)**: LLM populates a strict Pydantic clinical schema (`reported`, `uncertain`, `not_reported`) requiring verbatim quotation evidence. Diagnoses and prescriptions are strictly banned.
 6. **Deterministic Safety Evaluation (`Stage.EVALUATED`)**: Rule-based keyword matching with clause-bounded negation detection scans confirmed text. Zero LLM involvement.
@@ -159,9 +159,9 @@ flowchart TD
 │   │   │   ├── summary_generator.py # Bilingual note generator
 │   │   │   └── text_to_speech.py    # Template-based gTTS synthesizer
 │   │   └── data/
-│   │       ├── dialects/            # Sylheti, Chittagonian, Noakhali, Standard glossaries
+│   │       ├── dialects/            # sylheti.json (120 entries) + standard_bangla.json (reference list)
 │   │       └── safety_rules/        # red_flags.json (10 emergency/urgent rules)
-│   └── tests/                       # 10 test modules (125 unit/integration tests)
+│   └── tests/                       # unit/integration tests (303 passing in Docker)
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/                   # Landing, Intake, Confirm, Summary, About
@@ -183,7 +183,20 @@ flowchart TD
 ### Prerequisites
 - **Python**: 3.11+ (tested on Python 3.11 & 3.14)
 - **Node.js**: 20+ (tested on Node 22+)
-- **ffmpeg**: Installed and available in system `PATH` (for audio transcoding)
+- **ffmpeg**: Required for every live recording (transcoded to 16 kHz mono WAV). Install with `winget install Gyan.FFmpeg` (Windows), `brew install ffmpeg` (macOS) or `apt install ffmpeg` (Ubuntu), **or use Docker (below), which bundles it**. `/api/health` reports `ffmpeg.available`, and live mode is never reported ready without it.
+- **Docker** (optional but recommended): Docker Desktop / Docker Engine with Compose v2.
+
+### 7.0 Quick start with Docker (recommended)
+```powershell
+# Full stack: backend (FastAPI + ffmpeg) + frontend (nginx)
+docker compose up --build
+#   App:      http://localhost:8080
+#   API docs: http://localhost:8000/docs
+
+# Run the whole backend test suite inside the image (ffmpeg included, no keys needed)
+docker compose --profile test run --rm backend-test
+```
+Without `backend/.env` the app runs in demo mode. For live mode, copy `backend/.env.example` to `backend/.env`, add keys, and run `docker compose up --build` again. Keys stay in the backend container and are never sent to the browser.
 
 ### 7.1 Backend Setup
 ```powershell
@@ -337,7 +350,7 @@ All requests and responses use JSON (except multipart audio uploads and audio by
    - `gTTS` (Google Translate TTS web API, language `bn`). Synthesizes static reassurance templates without transmitting patient health data.
 
 ### Known Limitations
-- **Dialect ASR Accuracy**: Zero-shot standard Bangla Whisper models exhibit high Word Error Rates (WER) on regional phonetics (e.g., Sylheti tonal shifts, Chittagonian spirantization). The system mitigates this via the mandatory confirmation gate and typed fallback.
+- **Dialect ASR Accuracy**: Zero-shot standard Bangla Whisper models exhibit high Word Error Rates (WER) on regional phonetics (e.g., Sylheti phonology). The system mitigates this via the mandatory confirmation gate and typed fallback.
 - **Negation Heuristics**: Clause-bounded negation detection uses token distance windows (3 tokens) and punctuation clause splitting. Complex multi-clause or idiomatic double-negations in dialectal speech may over-alert (by design, prioritizing sensitivity over specificity).
 - **Rule Clinical Status**: All 10 red-flag rules are currently marked `pending_clinical_review`. They are engineering heuristics, not validated triage algorithms.
 - **In-Memory Volatility**: Single-server process memory. Server restart clears active sessions.
@@ -347,8 +360,9 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 ## 11. Datasets & Licences
 
 ### Actually Used in Codebase
-- **Curated Starter Dialect Glossaries** (`backend/app/data/dialects/*.json`): 43 total starter entries across Sylheti, Chittagonian, Noakhali, and Standard Bangla. All marked `verification_status: "unverified"`. Licence: MIT / Project Open Source.
-- **Synthetic Demo Scenarios** (`demo_assets/`): 3 fictional patient profiles with synthetic audio recordings and transcript pairs. Licence: CC-BY 4.0.
+- **Sylheti glossary** (`demo_assets/sylheti_glossary_verified.csv` -> `backend/app/data/dialects/sylheti.json`): 120 entries authored by a team member (Avijit Dey Tonmoy) and reviewed by named team members (Noyon, Fahim), with reviewer and date stored per row. This is a text-level team review, **not** independent linguistic validation, and it has **not** been tested on real Sylheti speech. Licence: **to be decided by the team**.
+- **Synthetic demo scenarios** (`demo_assets/`): 3 fictional patients; Sylheti sentences copied from the verified glossary; audio is synthetic standard-Bangla gTTS speech. Licence: **to be decided by the team**.
+- **Removed from tracking:** `demo_assets/raw_datasets/*_NER.csv` (regional NER corpora). Their origin and licence are unknown and no code uses them, so they are no longer committed (a local copy remains on disk, git-ignored). Do not reuse them until provenance is established.
 
 ### Planned / Reviewed, Not Integrated
 - **Mozilla Common Voice Bangla 17.0** (CC-0): Reviewed as candidate for acoustic fine-tuning; not bundled in prototype.
@@ -364,35 +378,33 @@ To demonstrate Kotha during evaluation, toggle to **Demo mode** in the top navig
 
 | Scenario | Title | Description | Expected Pipeline Outcome |
 |---|---|---|---|
-| **Scenario A** | *Ordinary Symptoms* (`A_ordinary`) | Sylheti dialect: Headache and mild fever for 3 days; took 1 paracetamol. | Normalizes cleanly; 0 red flags triggered; summary highlights mild symptoms and lists unstated items under *"Ask about..."*. |
-| **Scenario B** | *Red-Flag Emergency* (`B_red_flag`) | Chittagonian dialect: Severe chest pain and breathing difficulty for 2 hours. | Deterministic red-flag engine fires `CHEST_PAIN` and `BREATHING_DIFFICULTY`; emergency red alert banner `#C62828` appears with immediate referral advice. |
-| **Scenario C** | *Uncertain / Incomplete* (`C_uncertain`) | Noakhali dialect: Intermittent abdominal pain; duration forgotten; fever unknown. | Schema strictly preserves `uncertain` for duration and fever; never flags symptoms as negative; alerts clinician to clarify. |
+| **Scenario A** | *Ordinary Symptoms* (`A_ordinary`) | Sylheti sentences (verified-glossary examples): fever and cold for 3 days plus a headache since morning. | Normalizes cleanly; 0 red flags triggered; summary highlights mild symptoms and lists unstated items under *"Ask about..."*. |
+| **Scenario B** | *Red-Flag Emergency* (`B_red_flag`) | Sylheti sentences: chest pain since last night and a suffocating feeling when lying down. | Deterministic red-flag engine fires `CHEST_PAIN` and `BREATHING_DIFFICULTY`; emergency red alert banner `#C62828` appears with immediate referral advice. |
+| **Scenario C** | *Uncertain / Incomplete* (`C_uncertain`) | Sylheti sentences: stomach pain after outside food; the patient cannot remember a test name; duration and fever not stated. | Schema strictly preserves `uncertain` for duration and fever; never flags symptoms as negative; alerts clinician to clarify. |
 
-*Judges can also click **"Run live ASR on this sample"** to observe real foundation speech-to-text output on the same clip.*
+*The demo audio clips are a **synthetic standard-Bangla voice (gTTS), not a Sylheti speaker**. "Run live ASR" on them only checks that the audio pipeline works; it says nothing about Sylheti recognition accuracy. Original sentences come from the team-verified glossary; the standard-Bangla renderings are prepared by the team and not independently verified.*
 
 ---
 
 ## 13. Test Results & Verification (Step 14)
 
-All tests execute against strict regression suites without network dependencies:
+Test status (measured 2026-11-24). Without ffmpeg on the host, run the backend suite via Docker as shown:
 
 ```powershell
-# Backend Test Suite (125 tests)
-backend\.venv\Scripts\python -m pytest -q --basetemp=backend/.pytest_tmp
-# Result: 125 passed in 21.26s
+# Backend test suite, inside Docker (includes the ffmpeg-dependent tests)
+docker compose --profile test run --rm backend-test
+# Result: 303 passed in ~32 s
 
 # Frontend Unit & Component Tests (31 tests)
 cd frontend; npm test
-# Result: 31 passed in 5.14s
+# Result: 31 passed
 
 # Frontend Production Build
 cd frontend; npm run build
-# Result: Built cleanly in 879ms (0 TypeScript errors)
+# Result: built cleanly (0 TypeScript errors)
 
-# Playwright End-to-End Suite
+# Playwright end-to-end suite: NOT re-run after the Sylheti-only change (its mocks still use older sample text)
 cd frontend; npx playwright test
-# Result: 4 passed, 2 skipped (@live requiring external keys), 0 failed in 19.7s
-# Checked on Desktop Chrome (1280x720) and Mobile Chrome (360x740)
 ```
 
 ### Verified Test Properties
@@ -413,7 +425,7 @@ cd frontend; npx playwright test
 
 ## 15. Future Improvements
 
-- **Native Speaker Dialect Corpora**: Field collection of audio and verified clinical terms in Sylhet, Chittagong, and Noakhali with native speaker validation.
+- **Native Speaker Dialect Corpora**: Field collection of Sylheti audio with consent, verified by independent native speakers; then additional dialects (each needs its own verified glossary).
 - **On-Device Quantized ASR**: Running fine-tuned Whisper quantized models locally on community clinic laptops using ONNX or llama.cpp to operate entirely offline without internet connectivity.
 - **Clinician-Led Rule Review**: Formal review of `red_flags.json` by emergency physicians and public health specialists against DGHS and WHO IMCI guidelines.
 - **DHIS2 / OpenMRS Integration**: Exporting the structured confirmed clinical summary into standard FHIR resources for integration with Bangladesh's national health data systems.
