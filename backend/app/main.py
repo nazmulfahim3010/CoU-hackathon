@@ -57,6 +57,18 @@ def create_app() -> FastAPI:
     for r in (health, session, transcription, normalization, confirmation, extraction, safety, summary, speech, demo):
         app.include_router(r.router)
 
+    @app.get("/")
+    def root():
+        return {
+            "app": "Kotha (কথা) API",
+            "version": "0.1.0",
+            "status": "online",
+            "message": "Backend API is running. Visit the frontend UI or Swagger documentation below.",
+            "frontend_url": "http://127.0.0.1:5173/",
+            "docs_url": "http://127.0.0.1:8000/docs",
+            "health_url": "http://127.0.0.1:8000/api/health",
+        }
+
     return app
 
 
