@@ -1,0 +1,15 @@
+.git
+.claude
+**/node_modules
+**/__pycache__
+**/.pytest_cache
+**/.pytest_tmp
+backend/.venv
+backend/.env
+frontend/dist
+frontend/e2e
+frontend/playwright-report
+frontend/test-results
+demo_assets/raw_datasets
+*.md
+docs
