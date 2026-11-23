@@ -28,7 +28,11 @@
           "হিনাত বিষ",
           "সিনা বিষ",
           "ছাতিত দরদ",
-          "সিনা দরদ"
+          "সিনা দরদ",
+          "বুক বেদনা",
+          "বুকে বেদনা",
+          "বুকুত বেদনা",
+          "বুকর বেদনা"
         ],
         "terms_en": [
           "chest pain",
@@ -43,7 +47,8 @@
       "explanation_bn": "বুকে ব্যথা বা অস্বস্তির কথা বলা হয়েছে। এটি হার্টের সমস্যা বা গুরুতর অসুস্থতার লক্ষণ হতে পারে।",
       "explanation_en": "Chest pain or pressure was reported. This may indicate a cardiovascular event or other urgent medical condition.",
       "recommended_action_bn": "অবিলম্বে নিকটস্থ জরুরি চিকিৎসা কেন্দ্রে বা হাসপাতালে যান। কোনো বিলম্ব না করে চিকিৎসকের মূল্যায়ন নিন।",
-      "recommended_action_en": "Seek emergency medical care immediately at the nearest healthcare facility. Clinician must assess without delay."
+      "recommended_action_en": "Seek emergency medical care immediately at the nearest healthcare facility. Clinician must assess without delay.",
+      "review_note_sylheti": "Sylheti phrasings added from the team-verified glossary; trigger terms still pending clinical review."
     },
     {
       "rule_id": "BREATHING_DIFFICULTY",
@@ -108,7 +113,8 @@
           "অতিরিক্ত রক্তপাত",
           "লাহু ফরের",
           "রক্ত ফরের",
-          "লাউড় ফরের"
+          "লাউড় ফরের",
+          "অনবরত রক্ত"
         ],
         "terms_en": [
           "heavy bleeding",
@@ -123,7 +129,8 @@
       "explanation_bn": "অতিরিক্ত বা বন্ধ না হওয়া রক্তপাতের কথা বলা হয়েছে। এটি জীবনঘাতী হতে পারে।",
       "explanation_en": "Severe or uncontrolled bleeding was reported. This requires immediate clinical intervention.",
       "recommended_action_bn": "অবিলম্বে জরুরি চিকিৎসা নিন। নিকটস্থ স্বাস্থ্য কমপ্লেক্স বা হাসপাতালে সরাসরি যান।",
-      "recommended_action_en": "Seek urgent medical care immediately. Proceed directly to the nearest emergency facility."
+      "recommended_action_en": "Seek urgent medical care immediately. Proceed directly to the nearest emergency facility.",
+      "review_note_sylheti": "Sylheti phrasings added from the team-verified glossary; trigger terms still pending clinical review."
     },
     {
       "rule_id": "INFANT_FEVER",
@@ -140,7 +147,8 @@
           "ফিভার",
           "গা গরম",
           "জর",
-          "গা পুড়ে যাচ্ছে"
+          "গা পুড়ে যাচ্ছে",
+          "তাফ"
         ],
         "terms_en": [
           "fever",
@@ -162,7 +170,8 @@
             "নবজাতক",
             "দুধের বাচ্চা",
             "infant",
-            "newborn"
+            "newborn",
+            "মাস বয়স"
           ],
           "context_loose": [
             "বাচ্চা",
@@ -172,14 +181,21 @@
             "বাচ্চার",
             "শিশুর",
             "child",
-            "baby"
+            "baby",
+            "বাইচা",
+            "বাইচাটা",
+            "বাইচাটার",
+            "হুরু",
+            "ফুয়া",
+            "ফুড়ি"
           ]
         }
       },
       "explanation_bn": "অল্পবয়সী শিশু বা নবজাতকের জ্বরের কথা বলা হয়েছে। শিশুদের ক্ষেত্রে জ্বর দ্রুত গুরুতর ইনফেকশনে রূপ নিতে পারে।",
       "explanation_en": "Fever was reported in an infant under 1 year. Fever in early infancy requires rapid clinical evaluation.",
       "recommended_action_bn": "জরুরিভাবে শিশুকে চিকিৎসকের কাছে বা স্বাস্থ্যকেন্দ্রে নিয়ে যান। চিকিৎসকের পরামর্শ ছাড়া নিজে কোনো ওষুধ দেবেন না।",
-      "recommended_action_en": "Take the infant to a healthcare professional or hospital immediately for formal assessment."
+      "recommended_action_en": "Take the infant to a healthcare professional or hospital immediately for formal assessment.",
+      "review_note_sylheti": "Sylheti phrasings added from the team-verified glossary; trigger terms still pending clinical review."
     },
     {
       "rule_id": "UNCONSCIOUSNESS",
@@ -189,7 +205,9 @@
       "negation_window": 3,
       "review_status": "pending_clinical_review",
       "reviewed_against": "WHO ETAT Impaired Consciousness Guidelines (pending clinical review)",
-      "aliases": ["LOSS_OF_CONSCIOUSNESS"],
+      "aliases": [
+        "LOSS_OF_CONSCIOUSNESS"
+      ],
       "trigger": {
         "terms_bn": [
           "অজ্ঞান",
@@ -240,7 +258,8 @@
           "মৃগী",
           "খেঁচুনি",
           "তাণ",
-          "টান ধরছে"
+          "টান ধরছে",
+          "মিরগি"
         ],
         "terms_en": [
           "seizure",
@@ -254,7 +273,8 @@
       "explanation_bn": "খিঁচুনি বা শরীর শক্ত হয়ে কাঁপার কথা বলা হয়েছে।",
       "explanation_en": "Seizure or convulsion was reported.",
       "recommended_action_bn": "জরুরি চিকিৎসা সহায়তা নিন। রোগীকে দ্রুত নিকটস্থ স্বাস্থ্যকেন্দ্রে নিয়ে যান।",
-      "recommended_action_en": "Seek immediate medical attention at an emergency health facility."
+      "recommended_action_en": "Seek immediate medical attention at an emergency health facility.",
+      "review_note_sylheti": "Sylheti phrasings added from the team-verified glossary; trigger terms still pending clinical review."
     },
     {
       "rule_id": "SEVERE_DEHYDRATION",
@@ -321,7 +341,10 @@
           "হঠাৎ অবশ",
           "মুখ ত্যাড়া",
           "কথা আউলাই যার",
-          "একপাশ লড়াইতে পারে না"
+          "একপাশ লড়াইতে পারে না",
+          "মুখ বেঁকা",
+          "হাত পা সলের না",
+          "মাততে পারে না"
         ],
         "terms_en": [
           "stroke",
@@ -338,7 +361,8 @@
       "explanation_bn": "হঠাৎ মুখ বেঁকে যাওয়া, একপাশ অবশ হওয়া বা কথা জড়িয়ে যাওয়ার মতো স্ট্রোকের লক্ষণ রয়েছে।",
       "explanation_en": "Sudden facial droop, one-sided weakness, or slurred speech was reported.",
       "recommended_action_bn": "অবিলম্বে রোগীকে স্ট্রোক সেবায় সক্ষম এমন নিকটস্থ হাসপাতালে নিয়ে যান। লক্ষণ শুরুর সময় মনে রাখুন।",
-      "recommended_action_en": "Seek emergency medical care immediately at a hospital equipped for stroke care. Note the exact time symptoms started."
+      "recommended_action_en": "Seek emergency medical care immediately at a hospital equipped for stroke care. Note the exact time symptoms started.",
+      "review_note_sylheti": "Sylheti phrasings added from the team-verified glossary; trigger terms still pending clinical review."
     },
     {
       "rule_id": "BLOOD_IN_VOMIT_STOOL",
@@ -348,7 +372,9 @@
       "negation_window": 3,
       "review_status": "pending_clinical_review",
       "reviewed_against": "Gastrointestinal Bleeding Emergency Protocol (pending clinical review)",
-      "aliases": ["VOMITING_BLOOD"],
+      "aliases": [
+        "VOMITING_BLOOD"
+      ],
       "trigger": {
         "terms_bn": [
           "রক্তবমি",
@@ -361,7 +387,8 @@
           "পায়খানা দিয়ে রক্ত",
           "রক্ত আমাশয়",
           "লাহু বমি",
-          "লাউ বমি"
+          "লাউ বমি",
+          "আগার লগে রক্ত"
         ],
         "terms_en": [
           "vomiting blood",
@@ -378,7 +405,8 @@
       "explanation_bn": "বমিতে রক্ত বা পায়খানায় রক্তের কথা বলা হয়েছে। এটি পরিপাকতন্ত্রের রক্তক্ষরণের লক্ষণ হতে পারে।",
       "explanation_en": "Blood in vomit or stool was reported. This indicates gastrointestinal bleeding requiring urgent assessment.",
       "recommended_action_bn": "অবিলম্বে নিকটস্থ জরুরি চিকিৎসা কেন্দ্রে বা হাসপাতালে যান।",
-      "recommended_action_en": "Seek urgent medical care immediately at the nearest healthcare facility."
+      "recommended_action_en": "Seek urgent medical care immediately at the nearest healthcare facility.",
+      "review_note_sylheti": "Sylheti phrasings added from the team-verified glossary; trigger terms still pending clinical review."
     },
     {
       "rule_id": "PREGNANCY_BLEEDING",

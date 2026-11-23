@@ -27,12 +27,16 @@ class GlossaryEntry(BaseModel):
     )
     source: str = Field(default="Team draft")
     contributor: str | None = None
+    # Verification audit trail. Only ever copied from the source data, never inferred.
+    verified_by: str | None = None
+    verification_date: str | None = None
+    verification_note: str | None = None
 
     @classmethod
     def from_raw(cls, data: dict, default_dialect: str = "unknown", idx: int = 1) -> "GlossaryEntry":
         """Accepts either canonical or legacy alias fields."""
-        reg = data.get("regional_expression") or data.get("regional") or data.get("term") or ""
-        std = data.get("standard_bangla") or data.get("standard") or data.get("term") or ""
+        reg = (data.get("regional_expression") or data.get("regional") or data.get("term") or "").strip()
+        std = (data.get("standard_bangla") or data.get("standard") or data.get("term") or "").strip()
         eng = data.get("english_meaning") or data.get("english") or ""
         cat = data.get("category", "common_medical")
         if cat == "severity_expression":
@@ -58,6 +62,9 @@ class GlossaryEntry(BaseModel):
             verification_status=v_status,  # type: ignore[arg-type]
             source=data.get("source", "Team draft"),
             contributor=data.get("contributor") or None,
+            verified_by=(data.get("verified_by") or "").strip() or None,
+            verification_date=(data.get("verification_date") or "").strip() or None,
+            verification_note=(data.get("verification_note") or "").strip() or None,
         )
 
     def to_dict(self) -> dict:
@@ -77,6 +84,9 @@ class GlossaryEntry(BaseModel):
             "verification": self.verification_status,
             "source": self.source,
             "contributor": self.contributor,
+            "verified_by": self.verified_by,
+            "verification_date": self.verification_date,
+            "verification_note": self.verification_note,
         }
 
 

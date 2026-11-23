@@ -2,37 +2,49 @@
   {
     "id": "A_ordinary",
     "scenario": "A_ordinary",
-    "audio_file": "sample_sylheti_01.wav",
+    "audio_file": "sample_A.wav",
     "title": "Scenario A — Ordinary symptoms",
-    "purpose": "Headache and mild fever; no red-flag rule should trigger.",
-    "dialect": "sylheti (illustrative)",
-    "speaker": "Fictional patient / synthetic speech",
-    "original_transcript": "আইজ তিন দিন ধরি মোর মাতাত ব্যতা, অল্প জ্বর আছে। হারাদিন ভাল লাগের না। প্যারাসিটামল একবার খাইছি।",
-    "standard_bangla": "আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে। সারাদিন ভালো লাগছে না। প্যারাসিটামল একবার খেয়েছি।",
-    "verified_by": "sample / unverified (synthetic demo audio; awaiting native-speaker verification)"
+    "purpose": "Fever, cold and headache; no red-flag rule should trigger.",
+    "dialect": "sylheti (verified-glossary sentences; prepared sample)",
+    "speaker": "Synthetic standard-Bangla voice (gTTS) — NOT a native Sylheti speaker",
+    "original_transcript": "৩ দিন থাকি আমার জ্বর আর সর্দি কমের না। সকাল থাকি আমার মাথাত বেদনা করের।",
+    "standard_bangla": "তিন দিন ধরে আমার জ্বর আর সর্দি কমছে না। সকাল থেকে আমার মাথাব্যথা করছে।",
+    "source_glossary_rows": [
+      "syl_054",
+      "syl_027"
+    ],
+    "verified_by": "Original sentences: team-verified glossary examples (syl_054, syl_027). Standard-Bangla rendering and audio: prepared, NOT verified."
   },
   {
     "id": "B_red_flag",
     "scenario": "B_red_flag",
-    "audio_file": "sample_chittagonian_02.wav",
+    "audio_file": "sample_B.wav",
     "title": "Scenario B — Red-flag symptoms",
-    "purpose": "Chest pain with breathing difficulty; deterministic rules should trigger.",
-    "dialect": "chittagonian (illustrative)",
-    "speaker": "Fictional patient / synthetic speech",
-    "original_transcript": "দুই ঘণ্টা ধরি বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়।",
-    "standard_bangla": "দুই ঘণ্টা ধরে বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়।",
-    "verified_by": "sample / unverified (synthetic demo audio; awaiting native-speaker verification)"
+    "purpose": "Chest pain with a feeling of suffocation; deterministic rules should trigger.",
+    "dialect": "sylheti (verified-glossary sentences; prepared sample)",
+    "speaker": "Synthetic standard-Bangla voice (gTTS) — NOT a native Sylheti speaker",
+    "original_transcript": "গত রাইত থাকি আমার বুক বেদনা করের। শুইয়া থাকলে মনে অয় আমার দম বন্ধ অইজার।",
+    "standard_bangla": "গত রাত থেকে আমার বুকে ব্যথা করছে। শুয়ে থাকলে মনে হয় আমার দম বন্ধ হয়ে আসছে।",
+    "source_glossary_rows": [
+      "syl_009",
+      "syl_018"
+    ],
+    "verified_by": "Original sentences: team-verified glossary examples (syl_009, syl_018). Standard-Bangla rendering and audio: prepared, NOT verified."
   },
   {
     "id": "C_uncertain",
     "scenario": "C_uncertain",
-    "audio_file": "sample_noakhali_03.wav",
+    "audio_file": "sample_C.wav",
     "title": "Scenario C — Uncertain / incomplete information",
-    "purpose": "Patient is unsure about duration and fever; unknowns must stay 'uncertain', never become 'absent'.",
-    "dialect": "noakhali (illustrative)",
-    "speaker": "Fictional patient / synthetic speech",
-    "original_transcript": "ফেডে মাঝে মাঝে বিষ করে, কয়দিন ধরি মনে নাই। জ্বর আছিল কিনা বুঝি নাই। ওষুধ খাই নাই।",
-    "standard_bangla": "পেটে মাঝে মাঝে ব্যথা করে, কয়দিন ধরে মনে নেই। জ্বর ছিল কিনা বুঝিনি। ওষুধ খাইনি।",
-    "verified_by": "sample / unverified (synthetic demo audio; awaiting native-speaker verification)"
+    "purpose": "Patient cannot remember a test name and gives no duration; unknowns must stay 'uncertain' or 'not reported', never 'absent'.",
+    "dialect": "sylheti (verified-glossary sentences; prepared sample)",
+    "speaker": "Synthetic standard-Bangla voice (gTTS) — NOT a native Sylheti speaker",
+    "original_transcript": "বাইরের খাবার খাওয়ার বাদে আমার পেটো বেদনা শুরু অইসে। ডাক্তারে কিতা কইতাম একটা টেস্টর নাম কইসইন, আমার মনে নাই।",
+    "standard_bangla": "বাইরের খাবার খাওয়ার পরে আমার পেট ব্যথা শুরু হয়েছে। ডাক্তার কী যেন একটা টেস্টের নাম বলেছেন, আমার মনে নেই।",
+    "source_glossary_rows": [
+      "syl_029",
+      "syl_076"
+    ],
+    "verified_by": "Original sentences: team-verified glossary examples (syl_029, syl_076). Standard-Bangla rendering and audio: prepared, NOT verified."
   }
 ]

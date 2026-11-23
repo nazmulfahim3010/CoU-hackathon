@@ -4,6 +4,8 @@ import tempfile
 import wave
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[2]  # portable: works on any machine and in Docker
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -131,7 +133,7 @@ def test_transcription_typed_endpoint():
     typed_payload = {
         "session_id": sid,
         "text": "আইজ তিন দিন ধরি মোর মাতাত ব্যতা",
-        "dialect_hint": "chittagonian",
+        "dialect_hint": "sylheti",
     }
     r = client.post("/api/transcription/typed", json=typed_payload)
     assert r.status_code == 200
@@ -145,12 +147,12 @@ def test_transcription_typed_endpoint():
 
 def test_real_audio_transcription_comparison(monkeypatch):
     """Run real audio file from demo_assets/audio through processing pipeline."""
-    audio_path = Path("c:/Users/ASUS/Desktop/CoU/CoU-hackathon/demo_assets/audio/sample_sylheti_01.wav")
+    audio_path = REPO_ROOT / "demo_assets" / "audio" / "sample_A.wav"
     assert audio_path.exists(), "demo_assets audio file must exist"
     audio_bytes = audio_path.read_bytes()
 
     # Load sample transcript
-    transcripts_path = Path("c:/Users/ASUS/Desktop/CoU/CoU-hackathon/demo_assets/transcripts.json")
+    transcripts_path = REPO_ROOT / "demo_assets" / "transcripts.json"
     with open(transcripts_path, encoding="utf-8") as f:
         meta = json.load(f)[0]
 
@@ -162,12 +164,12 @@ def test_real_audio_transcription_comparison(monkeypatch):
     assert duration > 5.0 and duration < 20.0
 
     # With mocked ASR returning candidate output to test API response shape
-    mock_asr_text = "আইজ তিন দিন ধরি মোর মাতাত ব্যতা অল্প জ্বর আছে"
+    mock_asr_text = sample_orig  # stands in for ASR output; real recognition is not exercised here
     monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FakeSTT(mock_asr_text))
 
     r = client.post(
         "/api/transcription",
-        files={"audio": ("sample_sylheti_01.wav", audio_bytes, "audio/wav")},
+        files={"audio": ("sample_A.wav", audio_bytes, "audio/wav")},
     )
     assert r.status_code == 200
     res = r.json()

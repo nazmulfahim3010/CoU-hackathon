@@ -1,79 +1,39 @@
 {
   "scenario_id": "A_ordinary",
   "title": "Scenario A — Ordinary symptoms",
-  "purpose": "Headache and mild fever; no red-flag rule should trigger.",
-  "dialect_label": "Chittagonian-style (illustrative, not native-speaker verified)",
-  "timestamp": "2026-11-22T16:07:59+00:00",
+  "purpose": "Fever, cold and headache; no red-flag rule should trigger.",
+  "dialect_label": "Sylheti — sentences copied from the team-verified glossary; standard-Bangla rendering prepared by the project team (not independently verified)",
+  "timestamp": "2026-11-23T18:49:31+00:00",
   "provider": "cached_demo_output",
   "model": "pre-saved-demo-fallback",
   "transcript": {
-    "text": "আইজ তিন দিন ধরি মোর মাতাত ব্যতা, অল্প জ্বর আছে। হারাদিন ভাল লাগের না। প্যারাসিটামল একবার খাইছি।",
+    "text": "৩ দিন থাকি আমার জ্বর আর সর্দি কমের না। সকাল থাকি আমার মাথাত বেদনা করের।",
     "source": "demo_sample"
   },
   "normalization": {
-    "original": "আইজ তিন দিন ধরি মোর মাতাত ব্যতা, অল্প জ্বর আছে। হারাদিন ভাল লাগের না। প্যারাসিটামল একবার খাইছি।",
-    "normalized": "আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে। সারাদিন ভালো লাগছে না। প্যারাসিটামল একবার খেয়েছি।",
+    "original": "৩ দিন থাকি আমার জ্বর আর সর্দি কমের না। সকাল থাকি আমার মাথাত বেদনা করের।",
+    "normalized": "তিন দিন ধরে আমার জ্বর আর সর্দি কমছে না। সকাল থেকে আমার মাথাব্যথা করছে।",
     "source": "demo_prepared",
     "glossary_matches": [
       {
-        "regional": "আইজ",
-        "standard": "আজ",
-        "english": "today",
-        "dialect": "sylheti+chittagonian+noakhali",
+        "regional": "৩ দিন থাকি",
+        "standard": "তিন দিন ধরে",
+        "english": "for three days",
+        "dialect": "sylheti",
         "category": "time_expression",
-        "verification": "unverified",
+        "verification": "verified",
         "start": 0,
-        "end": 3
+        "end": 10
       },
       {
-        "regional": "ধরি",
-        "standard": "ধরে",
-        "english": "for (a duration)",
-        "dialect": "sylheti+chittagonian+noakhali",
-        "category": "time_expression",
-        "verification": "unverified",
-        "start": 12,
-        "end": 15
-      },
-      {
-        "regional": "মাতাত",
-        "standard": "মাথায়",
-        "english": "on the head",
-        "dialect": "chittagonian",
-        "category": "body_part",
-        "verification": "unverified",
-        "start": 20,
-        "end": 25
-      },
-      {
-        "regional": "ব্যতা",
-        "standard": "ব্যথা",
-        "english": "pain",
-        "dialect": "chittagonian",
-        "category": "pain_description",
-        "verification": "unverified",
-        "start": 26,
-        "end": 31
-      },
-      {
-        "regional": "হারাদিন",
-        "standard": "সারাদিন",
-        "english": "all day",
-        "dialect": "chittagonian+noakhali",
-        "category": "time_expression",
-        "verification": "unverified",
-        "start": 48,
-        "end": 55
-      },
-      {
-        "regional": "খাইছি",
-        "standard": "খেয়েছি",
-        "english": "I have eaten/taken",
-        "dialect": "sylheti+chittagonian+noakhali",
-        "category": "common_medical",
-        "verification": "unverified",
-        "start": 89,
-        "end": 94
+        "regional": "মাথাত বেদনা",
+        "standard": "মাথাব্যথা",
+        "english": "headache",
+        "dialect": "sylheti",
+        "category": "symptom",
+        "verification": "verified",
+        "start": 54,
+        "end": 65
       }
     ],
     "uncertain_spans": [],
@@ -85,55 +45,50 @@
   "extraction": {
     "chief_complaint": {
       "status": "reported",
-      "bn": "মাথা ব্যথা",
-      "en": "Headache"
+      "bn": "জ্বর ও সর্দি, কমছে না",
+      "en": "Fever and cold that are not improving"
     },
     "symptoms": [
       {
-        "bn": "মাথা ব্যথা",
-        "en": "Headache"
+        "bn": "জ্বর",
+        "en": "Fever"
       },
       {
-        "bn": "অল্প জ্বর",
-        "en": "Mild fever"
+        "bn": "সর্দি",
+        "en": "Cold / runny nose"
+      },
+      {
+        "bn": "মাথাব্যথা",
+        "en": "Headache"
       }
     ],
     "duration": {
       "status": "reported",
-      "bn": "তিন দিন",
-      "en": "Three days"
+      "bn": "জ্বর ও সর্দি তিন দিন ধরে; মাথাব্যথা সকাল থেকে",
+      "en": "Fever and cold for three days; headache since this morning"
     },
     "severity": {
-      "status": "uncertain",
-      "bn": "অল্প জ্বর; ব্যথার তীব্রতা বলা হয়নি",
-      "en": "Fever described as mild; pain severity not stated"
+      "status": "not_reported"
     },
     "relevant_history": {
       "status": "not_reported"
     },
     "current_medications": {
-      "status": "reported",
-      "bn": "প্যারাসিটামল একবার",
-      "en": "Paracetamol, once"
+      "status": "not_reported"
     },
     "allergies": {
       "status": "not_reported"
     },
-    "associated_symptoms": [
-      {
-        "bn": "সারাদিন ভালো লাগছে না",
-        "en": "Feeling unwell throughout the day"
-      }
-    ],
+    "associated_symptoms": [],
     "negative_symptoms": [],
     "uncertain_or_missing": [
       {
-        "bn": "ব্যথার তীব্রতা ও মাপা তাপমাত্রা জানা নেই",
-        "en": "Pain severity and measured temperature unknown"
+        "bn": "মাপা তাপমাত্রা ও ব্যথার তীব্রতা জানা নেই",
+        "en": "Measured temperature and pain severity unknown"
       },
       {
-        "bn": "অ্যালার্জি ও পূর্ববর্তী রোগের তথ্য নেই",
-        "en": "No allergy or history information given"
+        "bn": "ওষুধ, অ্যালার্জি ও পূর্ববর্তী রোগের তথ্য নেই",
+        "en": "No medication, allergy or history information given"
       }
     ],
     "model_noted_red_flag_indicators": []
@@ -373,6 +328,7 @@
     "ruleset_version": "1.0-draft",
     "engine": "deterministic-keyword-rules (no LLM)",
     "notice_en": "No alert does not mean the patient is safe. Clinician assessment is required.",
-    "notice_bn": "কোনো সতর্কতা না থাকার অর্থ এই নয় যে রোগী নিরাপদ। চিকিৎসকের সরাসরি পর্যবেক্ষণ ও মূল্যায়ন আবশ্যক।"
+    "notice_bn": "কোনো সতর্কতা না থাকার অর্থ এই নয় যে রোগী নিরাপদ। চিকিৎসকের সরাসরি পর্যবেক্ষণ ও মূল্যায়ন আবশ্যক।",
+    "mode": "live"
   }
 }

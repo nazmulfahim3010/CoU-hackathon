@@ -24,8 +24,8 @@ vi.mock('../services/api', async (orig) => {
         {
           id: 'A_ordinary',
           scenario: 'A_ordinary',
-          audio_file: 'sample_sylheti_01.wav',
-          audio_url: '/api/demo/audio/sample_sylheti_01.wav',
+          audio_file: 'sample_A.wav',
+          audio_url: '/api/demo/audio/sample_A.wav',
           title: 'Scenario A — Ordinary symptoms',
           purpose: 'Headache and mild fever',
           dialect: 'sylheti',
@@ -207,7 +207,9 @@ describe('Intake page', () => {
     renderAt('/intake', <Intake />)
     expect(await screen.findByLabelText(/Optional Age Group/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/Dialect/i)).toBeInTheDocument()
-    expect(screen.getByText(/সিলেটি \(Sylheti\) — পরীক্ষাধীন/i)).toBeInTheDocument()
+    expect(screen.getByText(/সিলেটি \(Sylheti\) — টিম-যাচাইকৃত শব্দকোষ/)).toBeInTheDocument()
+    expect(screen.queryByText(/Chittagonian/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Noakhali/i)).not.toBeInTheDocument()
   })
 })
 
@@ -355,11 +357,12 @@ describe('Demo Mode in Intake', () => {
     renderAt('/intake', <Intake />, { mode: 'demo' })
     expect(await screen.findByText('Scenario A — Ordinary symptoms')).toBeInTheDocument()
     expect(screen.getByText(/Sample \/ Unverified Dialect Transcript/i)).toBeInTheDocument()
-    expect(screen.getByText(/Run live ASR on this sample/)).toBeInTheDocument()
+    expect(screen.getByText(/Run live ASR on this synthetic clip/)).toBeInTheDocument()
+    expect(screen.getByText(/Synthetic voice — not a Sylheti speaker/)).toBeInTheDocument()
     expect(screen.getByText(/Use this sample/)).toBeInTheDocument()
 
     // Test clicking Run live ASR
-    await userEvent.click(screen.getByRole('button', { name: /Run live ASR on this sample/ }))
+    await userEvent.click(screen.getByRole('button', { name: /Run live ASR on this synthetic clip/ }))
     expect(await screen.findByText('Live Speech Recognition Result')).toBeInTheDocument()
     expect(screen.getByText(/openai\/whisper-large-v3/)).toBeInTheDocument()
   })
@@ -392,8 +395,10 @@ describe('Landing page', () => {
     expect(screen.getAllByText(/Record/)[0]).toBeInTheDocument()
     expect(screen.getByText(/Spoken reply/)).toBeInTheDocument()
     expect(screen.getByText(/Supported Dialects — Transparent & Honest/)).toBeInTheDocument()
-    expect(screen.getByText('Sylheti')).toBeInTheDocument()
-    expect(screen.getByText('Chittagonian')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Sylheti' })).toBeInTheDocument()
+    expect(screen.queryByText('Chittagonian')).not.toBeInTheDocument()
+    expect(screen.queryByText('Noakhali')).not.toBeInTheDocument()
+    expect(screen.getByText('Team-verified glossary')).toBeInTheDocument()
   })
 })
 

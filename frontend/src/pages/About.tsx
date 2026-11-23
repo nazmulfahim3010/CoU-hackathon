@@ -43,13 +43,13 @@ export default function About() {
       {/* 1. The Dialect Barrier */}
       <SectionBlock icon={HeartPulse} title="The Dialect Barrier in Bangladesh Healthcare">
         <p>
-          Bangladesh is home to more than 170 million people. Although Standard Colloquial Bangla is the language of instruction and official business, the majority of the rural population speaks distinctive regional dialects—such as Sylheti, Chittagonian, and Noakhali.
+          Bangladesh is home to more than 170 million people. Although Standard Colloquial Bangla is the language of instruction and official business, the majority of the rural population speaks distinctive regional dialects—such as Sylheti (Kotha's current focus).
         </p>
         <p>
           In healthcare, this linguistic divergence creates serious clinical bottlenecks:
         </p>
         <ul className="list-disc space-y-1.5 pl-5">
-          <li><strong>Anatomical & Symptom Terminology:</strong> Regional terms for pain (e.g., <em>ব্যতা</em>, <em>বিষ</em>), body parts (e.g., <em>বুগত</em>, <em>ফেডে</em>, <em>মাতাত</em>), and time expressions differ from standard Bangla medical texts.</li>
+          <li><strong>Anatomical & Symptom Terminology:</strong> Regional terms for pain (e.g., <em>বেদনা</em>), body parts (e.g., <em>বুকুত</em>, <em>পেটো</em>, <em>মাথাত</em>), and time expressions differ from standard Bangla medical texts.</li>
           <li><strong>Consultation Delays:</strong> Clinicians trained in urban teaching hospitals often struggle to parse dialect terms rapidly, increasing triage time in high-volume rural clinics.</li>
           <li><strong>Diagnostic Risk:</strong> Crucial symptoms—such as radiating chest pain or infant lethargy—can be misinterpreted or overlooked when patients feel pressured to communicate in unfamiliar standard registers.</li>
         </ul>
@@ -138,7 +138,7 @@ export default function About() {
       <SectionBlock icon={Siren} title="Limitations and Clinical Disclaimer">
         <div className="space-y-3">
           <p>
-            <strong>Honest Dialect Validation:</strong> Kotha currently features starter glossaries for Sylheti, Chittagonian, and Noakhali. These entries are drafts awaiting formal community and native speaker validation. Kotha makes no unverified claims of native fluency.
+            <strong>Honest Dialect Validation:</strong> Kotha currently supports one dialect, Sylheti, through a 120-entry glossary whose entries were reviewed by named team members (see the verified_by field in the data). This is a text-level review, not independent linguistic validation, and Kotha has not yet been tested on real Sylheti speech. Other dialects can be added later by adding a verified glossary file.
           </p>
           <p>
             <strong>Red Flag Rules Status:</strong> The starter safety rules (covering chest pain, respiratory distress, infant fever, heavy bleeding, loss of consciousness, seizures, dehydration, and stroke symptoms) are marked as <code>pending_clinical_review</code>. Absence of a red flag alert does <strong>never</strong> indicate that a patient is clinically stable.

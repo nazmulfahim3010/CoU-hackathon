@@ -87,31 +87,11 @@ const DIALECT_CARDS: DialectCardData[] = [
     key: 'sylheti',
     name_en: 'Sylheti',
     name_bn: 'সিলেটি',
-    sample_phrase: 'আইজ তিন দিন ধরি মোর মাতাত ব্যতা, অল্প জ্বর আছে',
-    standard_bn: 'আজ তিন দিন ধরে আমার মাথায় ব্যথা, অল্প জ্বর আছে',
-    english_meaning: 'Headache and mild fever for the past three days',
-    default_vocab: 12,
-    verified_status: 'unverified / example',
-  },
-  {
-    key: 'chittagonian',
-    name_en: 'Chittagonian',
-    name_bn: 'চাঁটগাঁইয়া',
-    sample_phrase: 'দুই ঘণ্টা ধরি বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়',
-    standard_bn: 'দুই ঘণ্টা ধরে বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়',
-    english_meaning: 'Severe chest pain, difficult to breathe',
-    default_vocab: 12,
-    verified_status: 'unverified / example',
-  },
-  {
-    key: 'noakhali',
-    name_en: 'Noakhali',
-    name_bn: 'নোয়াখাইল্লা',
-    sample_phrase: 'ফেডে মাঝে মাঝে বিষ করে, কয়দিন ধরি মনে নাই',
-    standard_bn: 'পেটে মাঝে মাঝে ব্যথা করে, কয়দিন ধরে মনে নেই',
-    english_meaning: 'Intermittent stomach pain, duration uncertain',
-    default_vocab: 11,
-    verified_status: 'unverified / example',
+    sample_phrase: 'গত রাইত থাকি আমার বুক বেদনা করের',
+    standard_bn: 'গত রাত থেকে আমার বুকে ব্যথা করছে',
+    english_meaning: 'Chest pain since last night',
+    default_vocab: 120,
+    verified_status: 'Team-verified glossary',
   },
   {
     key: 'standard_bangla',
@@ -183,9 +163,9 @@ export default function Landing() {
                 1. Patient speaks in dialect (রোগী বলেন)
               </p>
               <p className="mt-1 text-lg sm:text-xl font-bangla text-white" lang="bn">
-                “…বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়”
+                “…গত রাইত থাকি আমার বুক বেদনা করের”
               </p>
-              <span className="text-xs text-white/70">Chittagonian sample expression (unverified / example)</span>
+              <span className="text-xs text-white/70">Sylheti example sentence from the team-verified glossary</span>
             </div>
 
             <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm border border-white/10">
@@ -193,7 +173,7 @@ export default function Landing() {
                 2. Patient-confirmed Standard Bangla (রোগী কর্তৃক নিশ্চিত)
               </p>
               <p className="mt-1 text-lg sm:text-xl font-bangla text-white" lang="bn">
-                “…বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়”
+                “…গত রাত থেকে আমার বুকে ব্যথা করছে”
               </p>
               <span className="text-xs text-white/70">Normalized & confirmed by patient before clinical extraction</span>
             </div>
@@ -203,13 +183,13 @@ export default function Landing() {
                 3. Doctor sees in 30 seconds (ডাক্তার দেখেন)
               </p>
               <p className="mt-1 font-semibold text-white">
-                Chest pain · Difficulty breathing · Deterministic Urgent Alert (CHEST_PAIN, BREATHING_DIFFICULTY)
+                Chest pain · Deterministic Urgent Alert (CHEST_PAIN)
               </p>
               <span className="text-xs text-white/70">Bilingual note + transparent keyword rules (no hallucinated diagnosis)</span>
             </div>
           </div>
           <p className="mt-4 text-center text-xs text-white/60">
-            Illustrative fictional sample — demonstrating the 3-step dialect comprehension bridge.
+            Illustrative sample: the Sylheti sentence is from the verified glossary; the standard rendering is illustrative.
           </p>
         </div>
       </section>
@@ -232,7 +212,7 @@ export default function Landing() {
             </span>
             <h3 className="text-lg font-bold text-deep">170M+ Regional Diversity</h3>
             <p className="text-sm text-ink/80 leading-relaxed">
-              While Standard Colloquial Bangla is taught in schools, millions across Sylhet, Chittagong, Noakhali, and rural districts communicate illness using regional vocabulary that differs markedly from textbooks.
+              While Standard Colloquial Bangla is taught in schools, millions across Sylhet and other rural districts communicate illness using regional vocabulary that differs markedly from textbooks.
             </p>
           </div>
 
@@ -301,7 +281,7 @@ export default function Landing() {
                 Supported Dialects — Transparent & Honest
               </h2>
               <p className="mt-1 text-base text-ink/80 max-w-3xl">
-                We believe in medical honesty. Standard Bangla speech models struggle with dialects, and Kotha has <strong>not</strong> yet been validated in formal native speaker trials.
+                We believe in medical honesty. Kotha currently focuses on <strong>Sylheti</strong>. The glossary is team-verified (reviewed by named team members), but it is a text-level review and Kotha has <strong>not</strong> yet been tested on real speech.
               </p>
             </div>
             {stats && (
@@ -312,7 +292,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
           {DIALECT_CARDS.map((card) => {
             const vocabCount =
               stats?.by_dialect?.[card.key]?.total ?? card.default_vocab
@@ -332,7 +312,7 @@ export default function Landing() {
                 </div>
 
                 <div className="rounded-xl bg-soft p-3 text-xs space-y-1.5 flex-1">
-                  <p className="font-semibold text-ink/60 uppercase tracking-wide">Sample Expression (unverified / example)</p>
+                  <p className="font-semibold text-ink/60 uppercase tracking-wide">Example sentence (verified glossary)</p>
                   <p className="font-bangla text-sm text-deep" lang="bn">"{card.sample_phrase}"</p>
                   <p className="text-ink/70"><strong>Std:</strong> <span lang="bn">{card.standard_bn}</span></p>
                   <p className="text-ink/60 italic">"{card.english_meaning}"</p>

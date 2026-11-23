@@ -16,6 +16,7 @@ export interface Health {
     tts: { configured: boolean; provider: string }
   }
   live_mode_ready: boolean
+  ffmpeg?: { available: boolean }
 }
 
 export type TranscriptionSource =

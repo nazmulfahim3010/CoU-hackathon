@@ -76,14 +76,21 @@ class Glossary:
         return "".join(out)
 
 
+STANDARD_FILE = "standard_bangla"
+
+
+def _dialect_files(include_standard: bool) -> list[Path]:
+    d = DATA_DIR / "dialects"
+    return sorted(p for p in d.glob("*.json") if include_standard or p.stem != STANDARD_FILE)
+
+
 @lru_cache
 def load_glossary() -> Glossary:
+    """Load every regional dialect file in data/dialects (drop a new <dialect>.json to add one)."""
     entries: list[dict] = []
-    for name in ("sylheti", "chittagonian", "noakhali"):
-        path = DATA_DIR / "dialects" / f"{name}.json"
-        if path.exists():
-            data = json.loads(path.read_text(encoding="utf-8"))
-            entries.extend(data.get("entries", []))
+    for path in _dialect_files(include_standard=False):
+        data = json.loads(path.read_text(encoding="utf-8"))
+        entries.extend(data.get("entries", []))
     return Glossary(entries)
 
 
@@ -93,23 +100,24 @@ def get_glossary_stats() -> GlossaryStatsResponse:
     total_verified = 0
     total_unverified = 0
 
-    for name in ("sylheti", "chittagonian", "noakhali", "standard_bangla"):
-        path = DATA_DIR / "dialects" / f"{name}.json"
-        if not path.exists():
-            by_dialect[name] = DialectCount(total=0, verified=0, unverified=0)
-            continue
+    for path in _dialect_files(include_standard=True):
         data = json.loads(path.read_text(encoding="utf-8"))
         entries = data.get("entries", [])
         verified = sum(1 for e in entries if (e.get("verification_status") or e.get("verification")) == "verified")
-        unverified = sum(1 for e in entries if (e.get("verification_status") or e.get("verification")) != "verified")
-        by_dialect[name] = DialectCount(total=len(entries), verified=verified, unverified=unverified)
-        total_verified += verified
-        total_unverified += unverified
+        unverified = len(entries) - verified
+        by_dialect[path.stem] = DialectCount(total=len(entries), verified=verified, unverified=unverified)
+        if path.stem != STANDARD_FILE:  # the standard list is a reference, not dialect coverage
+            total_verified += verified
+            total_unverified += unverified
 
     return GlossaryStatsResponse(
         total_entries=total_verified + total_unverified,
         by_dialect=by_dialect,
         verified_total=total_verified,
         unverified_total=total_unverified,
-        disclaimer="Regional dialect entries are unverified drafts awaiting native speaker review. Standard Bangla entries are reference standard.",
+        disclaimer=(
+            "Dialect entries marked verified were reviewed by named team members (see verified_by); "
+            "this is a text-level review, not independent linguistic validation, and the glossary has "
+            "not been tested on real speech. Standard Bangla entries are a reference list."
+        ),
     )

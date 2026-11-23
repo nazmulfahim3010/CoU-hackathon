@@ -2,7 +2,7 @@ import { createContext, useCallback, useContext, useMemo, useState, type ReactNo
 import type { Mode, NormalizationResponse, SummaryCard, TranscriptionResponse } from '../types/api'
 
 export type AgeGroup = 'not_stated' | 'infant' | 'child' | 'adult' | 'older_adult'
-export type DialectHint = 'not_sure' | 'sylheti' | 'chittagonian' | 'noakhali' | 'standard'
+export type DialectHint = 'not_sure' | 'sylheti' | 'standard'
 
 export type Pending =
   | { kind: 'audio'; blob: Blob; ageGroup?: AgeGroup; dialectHint?: DialectHint }

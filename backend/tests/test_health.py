@@ -27,3 +27,14 @@ def test_health_endpoint():
     assert isinstance(data["providers"]["tts"]["configured"], bool)
     assert "live_mode_ready" in data
     assert "active_sessions" in data
+
+
+def test_health_reports_ffmpeg_and_gates_live_mode(client, monkeypatch):
+    import shutil
+    monkeypatch.setattr(shutil, "which", lambda name: None)
+    body = client.get("/api/health").json()
+    assert body["ffmpeg"] == {"available": False}
+    assert body["live_mode_ready"] is False  # never ready without ffmpeg, whatever the keys
+
+    monkeypatch.setattr(shutil, "which", lambda name: "/usr/bin/ffmpeg")
+    assert client.get("/api/health").json()["ffmpeg"] == {"available": True}

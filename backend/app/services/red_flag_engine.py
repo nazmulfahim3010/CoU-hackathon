@@ -32,8 +32,8 @@ from app.services.glossary_service import DATA_DIR, clean_text
 NOTICE_EN = "No alert does not mean the patient is safe. Clinician assessment is required."
 NOTICE_BN = "কোনো সতর্কতা না থাকার অর্থ এই নয় যে রোগী নিরাপদ। চিকিৎসকের সরাসরি পর্যবেক্ষণ ও মূল্যায়ন আবশ্যক।"
 
-_NEG_POST = {"না", "নাই", "নেই", "নয়", "নাহ", "নি", "হয়নি", "করেনি", "no", "not", "without", "denies", "none"}
-_NEG_PRE = {"no", "without", "denies", "না", "নেই", "নাই"}
+_NEG_POST = {"না", "নাই", "নেই", "নয়", "নায়", "নাহ", "নি", "হয়নি", "করেনি", "no", "not", "without", "denies", "none"}
+_NEG_PRE = {"no", "without", "denies", "না", "নেই", "নাই", "নায়"}
 _CLAUSE_SPLIT = re.compile(r"[,;।.?!\n]")
 _TOKEN_RE = re.compile(r"[ঀ-৿A-Za-z0-9]+")
 _GAP = r"(?:\s+[^\s,;।.?!]+){0,2}\s+"  # tolerates up to 2 filler words (e.g. "বুকে খুব ব্যথা")
@@ -69,6 +69,8 @@ def _normalize(text: str) -> str:
     if not text:
         return ""
     text = unicodedata.normalize("NFC", text)
+    # Hyphens/dashes become spaces so "হাত-পা অবশ" matches the rule term "হাত পা অবশ".
+    text = re.sub(r"[-‐‑–—]", " ", text)
     return clean_text(text)
 
 

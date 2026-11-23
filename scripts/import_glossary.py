@@ -26,7 +26,7 @@ def import_csv_to_json(csv_path: Path, output_dir: Path, dry_run: bool = False) 
     output_dir.mkdir(parents=True, exist_ok=True)
     by_dialect: dict[str, list[dict]] = defaultdict(list)
 
-    with open(csv_path, "r", encoding="utf-8") as f:
+    with open(csv_path, "r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
         for idx, row in enumerate(reader, start=1):
             dialect = row.get("dialect", "standard_bangla").strip().lower()
@@ -38,7 +38,15 @@ def import_csv_to_json(csv_path: Path, output_dir: Path, dry_run: bool = False) 
         counts[dialect] = len(entries)
         if not dry_run:
             out_file = output_dir / f"{dialect}.json"
-            status = "REFERENCE STANDARD" if dialect == "standard_bangla" else "UNVERIFIED DRAFT - not reviewed by native speakers"
+            n_ver = sum(1 for e in entries if e["verification_status"] == "verified")
+            if dialect == "standard_bangla":
+                status = "REFERENCE STANDARD"
+            elif n_ver == len(entries):
+                status = "TEAM-VERIFIED - all entries reviewed by named team members; not tested on real speech"
+            elif n_ver:
+                status = f"PARTLY VERIFIED - {n_ver}/{len(entries)} entries team-verified"
+            else:
+                status = "UNVERIFIED DRAFT - not reviewed by native speakers"
             data = {
                 "dialect": dialect,
                 "status": status,

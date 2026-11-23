@@ -103,9 +103,7 @@ function Recorder({
             className="w-full rounded-xl border border-deep/20 bg-white px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-brand"
           >
             <option value="not_sure">নিশ্চিত নই / Not sure</option>
-            <option value="sylheti">সিলেটি (Sylheti) — পরীক্ষাধীন / not yet tested</option>
-            <option value="chittagonian">চাঁটগাঁইয়া (Chittagonian) — পরীক্ষাধীন / not yet tested</option>
-            <option value="noakhali">নোয়াখাইল্লা (Noakhali) — পরীক্ষাধীন / not yet tested</option>
+            <option value="sylheti">সিলেটি (Sylheti) — টিম-যাচাইকৃত শব্দকোষ; কথা এখনো পরীক্ষিত নয় / team-verified glossary, speech not yet tested</option>
             <option value="standard">প্রমিত বাংলা (Standard Bangla)</option>
           </select>
           <span className="text-xs text-text/60 mt-1 block">আঞ্চলিক শব্দাবলি প্রমিত রূপান্তরে সহায়তা করে।</span>
@@ -268,11 +266,10 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
     <div className="space-y-4">
       <div className="rounded-2xl border border-warn/60 bg-warn/10 p-4">
         <p className="flex items-center gap-2 font-semibold text-amber-900">
-          <FlaskConical className="h-5 w-5" aria-hidden /> Demo Mode — Prepared Dialect Scenarios
+          <FlaskConical className="h-5 w-5" aria-hidden /> Demo Mode — Prepared Sylheti Scenarios
         </p>
         <p className="text-sm text-text/80 mt-1">
-          These 3 fictional scenarios let you evaluate Kotha without audio hardware or live API keys. Audio clips can be played directly in your browser. The baseline transcript is a prepared sample (labelled as <code>demo_sample</code>, never speech recognition; unverified by native speakers). You can also run live ASR on the clip to compare actual model performance.
-        </p>
+          These 3 fictional scenarios let you try Kotha without a microphone or live API keys. The Sylheti sentences are copied from the team-verified glossary; the standard-Bangla rendering is prepared by the team and not independently verified. The baseline transcript is prepared text (labelled <code>demo_sample</code>), never speech recognition. The audio clips are a <strong>synthetic standard-Bangla voice, not a Sylheti speaker</strong>, so running live ASR on them shows only that the audio pipeline works, not how well Kotha recognises real Sylheti speech.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -299,7 +296,7 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
               {/* Browser Audio Player */}
               <div className="rounded-xl bg-soft p-2.5">
                 <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wide flex items-center gap-1 mb-1">
-                  <Volume2 className="h-3.5 w-3.5 text-brand" /> Play Demo Audio Clip
+                  <Volume2 className="h-3.5 w-3.5 text-brand" /> Synthetic voice — not a Sylheti speaker
                 </p>
                 <audio
                   controls
@@ -363,7 +360,7 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
                   ) : (
                     <>
                       <Radio className="h-3.5 w-3.5 text-brand" />
-                      <span>Run live ASR on this sample</span>
+                      <span>Run live ASR on this synthetic clip (pipeline check)</span>
                     </>
                   )}
                 </Button>
@@ -428,7 +425,7 @@ export default function Intake() {
         <div>
           <ErrorBox
             title="Live processing is not fully configured on this server"
-            message={`Speech provider configured: ${health.providers.speech.configured ? 'yes' : 'no'}. Language model configured: ${health.providers.llm.configured ? 'yes' : 'no'}. For live processing, configure a local model (download only) or API credentials in backend/.env (configurable via LLM_PROVIDER / LLM_MODEL / LLM_BASE_URL). You can use Demo samples meanwhile.`}
+            message={`Speech provider configured: ${health.providers.speech.configured ? 'yes' : 'no'}. Language model configured: ${health.providers.llm.configured ? 'yes' : 'no'}. Audio processing (ffmpeg) available: ${health.ffmpeg?.available === false ? 'NO (install ffmpeg or run via Docker)' : 'yes'}. For live processing, configure a local model (download only) or API credentials in backend/.env (configurable via LLM_PROVIDER / LLM_MODEL / LLM_BASE_URL). You can use Demo samples meanwhile.`}
           >
             <Button variant="secondary" onClick={() => setMode('demo')}>
               Switch to Demo samples

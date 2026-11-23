@@ -1,3 +1,5 @@
+import shutil
+
 from fastapi import APIRouter, Depends
 
 from app.api.deps import get_sessions
@@ -32,7 +34,9 @@ def health(s: Settings = Depends(get_settings), sessions: SessionManager = Depen
                 "provider": s.tts_provider,
             },
         },
-        "live_mode_ready": stt_configured(s) and llm_configured(s),
+        # every uploaded recording is transcoded with ffmpeg, so live mode cannot work without it
+        "ffmpeg": {"available": shutil.which("ffmpeg") is not None},
+        "live_mode_ready": stt_configured(s) and llm_configured(s) and shutil.which("ffmpeg") is not None,
         "active_sessions": len(sessions),
     }
 

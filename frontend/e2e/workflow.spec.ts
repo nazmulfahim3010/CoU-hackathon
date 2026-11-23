@@ -4,8 +4,8 @@ const MOCK_SAMPLES = [
   {
     id: 'B_red_flag',
     scenario: 'B_red_flag',
-    audio_file: 'sample_chittagonian_02.wav',
-    audio_url: '/api/demo/audio/sample_chittagonian_02.wav',
+    audio_file: 'sample_B.wav',
+    audio_url: '/api/demo/audio/sample_B.wav',
     title: 'Scenario B — Red-flag symptoms',
     purpose: 'Chest pain with breathing difficulty; deterministic rules should trigger.',
     dialect: 'chittagonian (illustrative)',

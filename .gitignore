@@ -13,3 +13,4 @@ frontend/test-results/
 .agents/
 skills-lock.json
 kotha/
+demo_assets/raw_datasets/

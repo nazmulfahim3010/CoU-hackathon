@@ -10,7 +10,7 @@ export const transcription: TranscriptionResponse = {
 }
 export const normalization: NormalizationResponse = {
   session_id: 's1', original: 'মোর মাতাত ব্যতা', normalized: 'আমার মাথায় ব্যথা', source: 'demo_prepared',
-  glossary_matches: [{ regional: 'মাতাত', standard: 'মাথায়', english: 'on the head', dialect: 'chittagonian', category: 'body_part', verification: 'unverified' }],
+  glossary_matches: [{ regional: 'মাতাত', standard: 'মাথায়', english: 'on the head', dialect: 'sylheti', category: 'body_part', verification: 'unverified' }],
   uncertain_spans: [], warnings: [], provider: 'demo', disclaimer: 'check it',
 }
 const rule = {
