@@ -222,6 +222,25 @@ npm run dev
 ```
 - Web Application: [http://localhost:5173](http://localhost:5173)
 
+### 7.3 Verify live providers before the demo
+
+Before running live mode demonstrations or evaluation sessions, run the automated provider checker script from the backend directory:
+
+```powershell
+cd backend
+.venv\Scripts\python scripts/check_providers.py
+# On Linux/macOS: python scripts/check_providers.py
+```
+
+This sequentially verifies:
+1. `ffmpeg` binary availability in system `PATH`.
+2. Speech-to-Text (STT) transcription on sample audio.
+3. LLM dialect normalization on sample text.
+4. LLM structured clinical extraction.
+5. Text-to-Speech (TTS) synthesis of the patient reply template.
+
+It outputs sanitized execution times and errors (never printing transcripts, model responses, or secret keys) and exits with code `0` only when all checks pass.
+
 ---
 
 ## 8. Environment Variables Reference
@@ -436,6 +455,17 @@ cd frontend; npx playwright test
 - **No-Storage Guarantee**: Verified by `test_no_persistent_data.py`. Confirmed zero files created on disk during full workflow, and verified zero transcript or audio text in `DEBUG` logs.
 - **Confirmation Boundary**: Verified by `test_confirmation_gate.py`. Direct extraction or summary calls prior to confirmation raise `409 Conflict`.
 - **Negation & Quantity Preservation**: Verified by `test_normalization.py`. Rewrites altering negative polarity or numbers are rejected.
+
+### What was and was not verified (as of 2026-11-24)
+
+Automated live provider check (`backend/scripts/check_providers.py`) executed on 2026-11-24:
+- **Verified (PASS)**:
+  - `ffmpeg present`: System `PATH` includes valid `ffmpeg` binary (0.004s).
+  - `TTS: synthesize template reply`: Bangla speech synthesis via `gTTS` in-memory stream generation (4.752s).
+- **Not Verified (FAIL / Not Configured)**:
+  - `STT: transcribe sample_A.wav`: Not verified (`speech_provider` is set to `none`; `PROVIDER_NOT_CONFIGURED`). Live ASR requires configuring `SPEECH_PROVIDER` and corresponding credentials or local model download.
+  - `LLM: normalize text`: Not verified (`llm_provider` is set to `none`; `PROVIDER_NOT_CONFIGURED`). Live normalization requires configuring `LLM_PROVIDER` and `LLM_API_KEY`.
+  - `LLM: extract clinical info`: Not verified (`llm_provider` is set to `none`; `PROVIDER_NOT_CONFIGURED`). Live clinical extraction requires configuring `LLM_PROVIDER` and `LLM_API_KEY`.
 
 ---
 
