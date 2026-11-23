@@ -424,7 +424,20 @@ export default function Intake() {
         ))}
       </div>
 
-      {mode === 'live' && health && !health.live_mode_ready && (
+      {mode === 'live' && health?.ffmpeg && !health.ffmpeg.available && (
+        <div>
+          <ErrorBox
+            title="ffmpeg is not installed on this server"
+            message="Audio processing requires ffmpeg in the system PATH. Install ffmpeg on the server to record live audio, or use Demo samples meanwhile."
+          >
+            <Button variant="secondary" onClick={() => setMode('demo')}>
+              Switch to Demo samples
+            </Button>
+          </ErrorBox>
+        </div>
+      )}
+
+      {mode === 'live' && health && (!health.providers.speech.configured || !health.providers.llm.configured) && (
         <div>
           <ErrorBox
             title="Live processing is not fully configured on this server"

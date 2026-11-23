@@ -10,6 +10,7 @@ export interface DemoScenario {
 
 export interface Health {
   status: string
+  ffmpeg?: { available: boolean }
   providers: {
     speech: { configured: boolean; provider: string; model: string }
     llm: { configured: boolean; provider: string }

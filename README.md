@@ -184,6 +184,9 @@ flowchart TD
 - **Python**: 3.11+ (tested on Python 3.11 & 3.14)
 - **Node.js**: 20+ (tested on Node 22+)
 - **ffmpeg**: Installed and available in system `PATH` (for audio transcoding)
+  - Windows: `winget install Gyan.FFmpeg`
+  - macOS: `brew install ffmpeg`
+  - Ubuntu: `sudo apt install ffmpeg`
 
 ### 7.1 Backend Setup
 ```powershell

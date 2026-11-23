@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import shutil
 import subprocess
 import tempfile
 import wave
@@ -45,6 +46,8 @@ def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
     Always deletes temporary files in a finally block. Returns (wav_bytes, duration_seconds).
     """
     validate_audio(raw_bytes, max_bytes)
+    if not shutil.which("ffmpeg"):
+        raise KothaError(503, "FFMPEG_NOT_INSTALLED", "Audio processing requires ffmpeg on the server.")
 
     in_fd, in_path = tempfile.mkstemp(suffix=".raw")
     out_path = in_path + "_converted.wav"
@@ -66,7 +69,10 @@ def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
             "pcm_s16le",
             out_path,
         ]
-        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        try:
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except FileNotFoundError:
+            raise KothaError(503, "FFMPEG_NOT_INSTALLED", "Audio processing requires ffmpeg on the server.")
         if res.returncode != 0 or not os.path.exists(out_path):
             log.warning("ffmpeg failed: %s", res.stderr.decode("utf-8", errors="ignore")[:300])
             raise KothaError(415, "AUDIO_CONVERSION_FAILED", "Could not process audio format. Please record again.")

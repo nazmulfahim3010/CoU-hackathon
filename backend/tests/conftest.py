@@ -1,4 +1,5 @@
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -10,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from app.config import Settings, get_settings  # noqa: E402
 from app.main import create_app  # noqa: E402
 from app.services.providers.stt import STTResult  # noqa: E402
+
+requires_ffmpeg = pytest.mark.skipif(shutil.which("ffmpeg") is None, reason="ffmpeg not installed")
 
 _webm_file = Path(__file__).parent / "data" / "valid_sample.webm"
 WEBM = _webm_file.read_bytes() if _webm_file.exists() else (b"\x1a\x45\xdf\xa3" + b"\x00" * 2000)

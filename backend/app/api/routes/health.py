@@ -1,3 +1,5 @@
+import shutil
+
 from fastapi import APIRouter, Depends
 
 from app.api.deps import get_sessions
@@ -13,10 +15,14 @@ router = APIRouter(prefix="/api", tags=["health"])
 
 @router.get("/health")
 def health(s: Settings = Depends(get_settings), sessions: SessionManager = Depends(get_sessions)):
+    ffmpeg_ok = bool(shutil.which("ffmpeg"))
     return {
         "status": "ok",
         "app_mode": s.app_mode,
         "prototype": True,
+        "ffmpeg": {
+            "available": ffmpeg_ok,
+        },
         "providers": {
             "speech": {
                 "configured": stt_configured(s),
@@ -32,7 +38,7 @@ def health(s: Settings = Depends(get_settings), sessions: SessionManager = Depen
                 "provider": s.tts_provider,
             },
         },
-        "live_mode_ready": stt_configured(s) and llm_configured(s),
+        "live_mode_ready": ffmpeg_ok and stt_configured(s) and llm_configured(s),
         "active_sessions": len(sessions),
     }
 

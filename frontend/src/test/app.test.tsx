@@ -202,6 +202,27 @@ describe('Intake page', () => {
     expect(screen.getByTestId('mode-badge')).toHaveTextContent('LIVE')
   })
 
+  it('warns when ffmpeg is unavailable in live mode and allows switching to demo', async () => {
+    vi.mocked(api.health).mockResolvedValueOnce({
+      status: 'ok',
+      ffmpeg: { available: false },
+      live_mode_ready: false,
+      providers: {
+        speech: { configured: true, provider: 'local', model: '' },
+        llm: { configured: true, provider: 'openai' },
+        tts: { configured: true, provider: 'gtts' },
+      },
+    })
+    mockMic(() => Promise.resolve({}))
+    renderAt('/intake', <Intake />)
+    expect(await screen.findByText(/ffmpeg is not installed on this server/i)).toBeInTheDocument()
+    const switchBtn = screen.getByRole('button', { name: /Switch to Demo samples/i })
+    expect(switchBtn).toBeInTheDocument()
+    await userEvent.click(switchBtn)
+    expect(screen.queryByText(/ffmpeg is not installed on this server/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('mode-badge')).toHaveTextContent('DEMO')
+  })
+
   it('renders optional age group and dialect selector options', async () => {
     mockMic(() => Promise.resolve({}))
     renderAt('/intake', <Intake />)

@@ -2,7 +2,7 @@ import pytest
 
 from app.core.exceptions import KothaError
 from app.core.security import validate_audio
-from conftest import WEBM, FakeSTT
+from conftest import WEBM, FakeSTT, requires_ffmpeg
 
 
 def test_validate_audio_rejects_bad_input():
@@ -44,6 +44,7 @@ def test_live_without_provider_is_503_not_fake_output(client):
     assert r.json()["error"]["code"] == "PROVIDER_NOT_CONFIGURED"
 
 
+@requires_ffmpeg
 def test_live_transcription_ok(client, monkeypatch):
     monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FakeSTT("আইজ জ্বর"))
     r = client.post("/api/transcription", files={"audio": ("x.webm", WEBM, "audio/webm")})
@@ -54,6 +55,7 @@ def test_live_transcription_ok(client, monkeypatch):
     assert body["transcript"] == "আইজ জ্বর"
 
 
+@requires_ffmpeg
 def test_blank_transcript_is_422(client, monkeypatch):
     monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FakeSTT("   "))
     r = client.post("/api/transcription", files={"audio": ("x.webm", WEBM, "audio/webm")})
