@@ -94,7 +94,7 @@ flowchart TD
 ## 4. Key Features
 
 - **Mandatory Confirmation Gate**: Direct API calls attempting extraction prior to confirmation receive an immediate `409 Conflict (WORKFLOW_ORDER_VIOLATION)`.
-- **Zero-Storage Privacy Design**: No database (no SQLite, Postgres, or Redis). In-memory session store expires after 30 minutes. All ffmpeg audio temp files are unlinked in `finally` blocks.
+- **Zero-Storage Privacy Design**: No database (no SQLite, Postgres, or Redis). In-memory session store expires after 30 minutes. All ffmpeg audio temp files (both live recordings and uploaded audio notes) are unlinked in `finally` blocks.
 - **Log Redaction**: Patient transcripts, audio bytes, and credentials are strictly excluded from logging. Only session IDs, stage transitions, and sanitized error types are logged.
 - **Meaning Preservation Guards**: Rejects LLM normalizations that alter negation polarity (e.g. *"নাই"* vs *"আছে"*), drop numbers, or tamper with duration units.
 - **Explicit Uncertainty Handling**: Missing symptoms remain `not_reported`. Hedged or vague statements remain `uncertain`. Never inferred as negative findings.
@@ -404,6 +404,24 @@ To demonstrate Kotha during evaluation, toggle to **Demo mode** in the top navig
 
 *The demo audio clips are a **synthetic standard-Bangla voice (gTTS), not a Sylheti speaker**. "Run live ASR" on them only checks that the audio pipeline works; it says nothing about Sylheti recognition accuracy. Original sentences come from the team-verified glossary; the standard-Bangla renderings are prepared by the team and not independently verified.*
 
+### Uploading a patient voice message (WhatsApp etc.)
+
+Patients frequently send voice notes to healthcare workers or relatives over messaging apps like WhatsApp. Kotha supports direct file upload intake on the Intake page:
+
+1. **How to download the voice note**:
+   - **On Phone**: Long-press the voice message in WhatsApp (or Telegram/Signal) -> tap **Share** (or **Export**) -> select **Save to Files** or download folder.
+   - **On Desktop (WhatsApp Web / Desktop)**: Hover over or right-click the voice message -> click the menu arrow -> choose **Download** (saved to your Downloads directory, typically as `.opus` or `.ogg`).
+2. **Supported Formats**:
+   - WhatsApp voice notes are typically Opus audio wrapped inside an Ogg container (`.opus` / `.ogg`).
+   - Supported extensions and containers: `.opus`, `.ogg`, `.oga`, `.m4a`, `.mp3`, `.wav`, `.aac`, `.amr`, `.webm`, `.3gp`.
+   - The backend validates actual audio streams with ffmpeg/ffprobe rather than trusting client file extensions or MIME types.
+3. **Limits & Constraints**:
+   - **Duration limit**: Maximum 90 seconds (client-side Audio element check + server-side wave duration enforcement).
+   - **Size limit**: Maximum 25 MB payload limit.
+4. **Privacy & Consent**:
+   - Only upload voice notes if the patient or their guardian explicitly agreed.
+   - Zero storage: uploaded files are transcoded in ephemeral temp files that are immediately deleted in `finally` blocks; audio is never stored in any database or disk log.
+
 ### Adding Real Consented Recordings
 
 To replace or extend synthetic demo audio with authentic regional dialect recordings:
@@ -472,7 +490,7 @@ Automated live provider check (`backend/scripts/check_providers.py`) executed on
 
 ## 14. Privacy, Security & Ethics
 
-1. **Zero Patient Record Retention**: In-memory storage only. No database, no tracking cookies, no localStorage. Sessions automatically expire after 30 minutes.
+1. **Zero Patient Record Retention**: In-memory storage only. No database, no tracking cookies, no localStorage. Sessions automatically expire after 30 minutes. Live microphone recordings and uploaded patient voice notes (such as WhatsApp audio) are converted in ephemeral temporary scratch files that are strictly deleted in `finally` blocks on both success and failure. Audio is never stored on disk or in a database.
 2. **Log Redaction**: Structured logging (`app/core/logging.py`) sanitizes output to exclude transcripts, audio payloads, and authorization headers.
 3. **No Clinical Decisions by LLM**: The LLM's role is strictly confined to dialect translation and structured key-value parsing. Triage and red-flag determinations are exclusively deterministic.
 4. **Third-Party Provider Boundary**: When live mode is active, audio is sent to the configured STT provider and text to the configured LLM provider. No patient identifiers are transmitted.

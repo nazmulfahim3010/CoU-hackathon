@@ -32,8 +32,8 @@ class Settings(BaseSettings):
 
     # Limits and uploads
     max_audio_seconds: int = 90
-    max_upload_mb: int = 10
-    max_audio_bytes: int = 10 * 1024 * 1024
+    max_upload_mb: int = 25
+    max_audio_bytes: int = 25 * 1024 * 1024
     provider_timeout_seconds: float = 60.0
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
 

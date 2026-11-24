@@ -1,5 +1,5 @@
-import { FlaskConical, Mic, Pause, Play, Radio, RotateCcw, Sparkles, Square, Trash2, Volume2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { FileAudio, FlaskConical, Mic, Pause, Play, Radio, RotateCcw, ShieldCheck, Sparkles, Square, Trash2, Upload, Volume2 } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Button, ErrorBox, ModeBadge, Spinner, StepDots } from '../components/ui'
 import { MAX_SECONDS, RECOMMENDED_MIN_SECONDS, isRecordingSupported, useRecorder } from '../hooks/useRecorder'
@@ -161,6 +161,285 @@ function Recorder({
           </div>
           <p className="text-xs text-ink/60">
             রেকর্ডিংটি জমা দেওয়ার আগে আপনার ব্রাউজারেই থাকে; সার্ভারে কোনো অডিও ফাইল স্থায়ীভাবে সংরক্ষণ করা হয় না।
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024 // 25 MB
+const ALLOWED_AUDIO_EXTENSIONS = [
+  '.opus',
+  '.ogg',
+  '.oga',
+  '.m4a',
+  '.mp3',
+  '.wav',
+  '.aac',
+  '.amr',
+  '.webm',
+  '.3gp',
+]
+
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`
+}
+
+function AudioUploader({
+  onSubmit,
+}: {
+  onSubmit: (file: File) => void
+}) {
+  const [file, setFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [duration, setDuration] = useState<number | null>(null)
+  const [error, setError] = useState<{ title: string; message: string } | null>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+    }
+  }, [previewUrl])
+
+  const handleFileSelection = (selectedFile: File) => {
+    setError(null)
+    setDuration(null)
+
+    // Check 1: Empty file
+    if (selectedFile.size === 0) {
+      setError({
+        title: 'ফাইলটি খালি (Empty file)',
+        message:
+          'নির্বাচিত ফাইলটিতে কোনো অডিও ডেটা নেই। অনুগ্রহ করে একটি সঠিক অডিও ফাইল নির্বাচন করুন। (The selected file is empty. Please choose a valid audio file.)',
+      })
+      setFile(null)
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+      return
+    }
+
+    // Check 2: Size limit 25 MB
+    if (selectedFile.size > MAX_UPLOAD_BYTES) {
+      setError({
+        title: 'ফাইলের আকার ২৫ মেগাবাইটের বেশি (File exceeds 25 MB limit)',
+        message: `ফাইলের আকার সর্বোচ্চ ২৫ মেগাবাইট হতে পারবে (বর্তমান আকার: ${formatFileSize(
+          selectedFile.size,
+        )})। (File size cannot exceed 25 MB. Current size: ${formatFileSize(selectedFile.size)}.)`,
+      })
+      setFile(null)
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+      return
+    }
+
+    // Check 3: Allowed audio formats
+    const lowerName = selectedFile.name.toLowerCase()
+    const matchesExt = ALLOWED_AUDIO_EXTENSIONS.some((ext) => lowerName.endsWith(ext))
+    const isAudioMime = selectedFile.type.startsWith('audio/')
+    if (!matchesExt && !isAudioMime) {
+      setError({
+        title: 'অসমর্থিত ফাইল ফরম্যাট (Unsupported file format)',
+        message:
+          'শুধুমাত্র অনুমোদিত অডিও ফাইল আপলোড করুন (.opus, .ogg, .m4a, .mp3, .wav, .aac, .amr, .webm, .3gp)। (Please upload a supported audio file: .opus, .ogg, .m4a, .mp3, .wav, .aac, .amr, .webm, .3gp.)',
+      })
+      setFile(null)
+      if (previewUrl) URL.revokeObjectURL(previewUrl)
+      setPreviewUrl(null)
+      return
+    }
+
+    // Set valid file and preview URL
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    const url = URL.createObjectURL(selectedFile)
+    setFile(selectedFile)
+    setPreviewUrl(url)
+
+    // Check 4: Duration limit 90 seconds via browser Audio metadata
+    try {
+      const audio = new Audio()
+      audio.preload = 'metadata'
+      audio.src = url
+      audio.onloadedmetadata = () => {
+        if (Number.isFinite(audio.duration)) {
+          setDuration(audio.duration)
+          if (audio.duration > 90.5) {
+            setError({
+              title: 'অডিওর দৈর্ঘ্য ৯০ সেকেন্ডের বেশি (Audio exceeds 90 seconds)',
+              message: `অডিও রেকর্ডিং সর্বোচ্চ ৯০ সেকেন্ডের হতে পারবে (বর্তমান দৈর্ঘ্য: ${Math.round(
+                audio.duration,
+              )} সেকেন্ড)। (Audio cannot exceed 90 seconds. Current duration: ${Math.round(
+                audio.duration,
+              )}s.)`,
+            })
+          } else if (audio.duration < 0.1) {
+            setError({
+              title: 'অডিও খালি বা নীরব (Audio empty or silent)',
+              message:
+                'অডিও ফাইলে কোনো কথা শনাক্ত করা যায়নি। অনুগ্রহ করে অন্য ফাইল নির্বাচন করুন। (The audio file appears empty or silent.)',
+            })
+          }
+        }
+      }
+      audio.onerror = () => {
+        // If the browser cannot read the duration, skip client check and rely on server
+        setDuration(null)
+      }
+    } catch {
+      setDuration(null)
+    }
+  }
+
+  const handleReset = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl)
+    setFile(null)
+    setPreviewUrl(null)
+    setDuration(null)
+    setError(null)
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  return (
+    <div className="space-y-6 rounded-3xl bg-white p-6 sm:p-8 lg:p-10 shadow-sm border border-deep/10 flex flex-col justify-center">
+      {/* Privacy & Consent Notice */}
+      <div className="rounded-2xl border border-brand/20 bg-brand/5 p-4 flex items-start gap-3 text-xs sm:text-sm text-ink/80 leading-relaxed font-bangla">
+        <ShieldCheck className="h-5 w-5 text-brand shrink-0 mt-0.5" aria-hidden />
+        <div>
+          <p className="font-semibold text-deep">গোপনীয়তা ও সম্মতি (Privacy & Consent)</p>
+          <p className="mt-0.5">
+            রোগী বা তার অভিভাবকের অনুমতি থাকলেই কেবল অডিও আপলোড করুন। ফাইলগুলো প্রক্রিয়াকরণের পর মুছে ফেলা হয়, কোনো ফাইল সংরক্ষণ করা হয় না। (Only upload audio if the patient or their guardian agreed. Files are processed and not stored.)
+          </p>
+        </div>
+      </div>
+
+      {error && <ErrorBox title={error.title} message={error.message} />}
+
+      {!file && (
+        <div
+          onDragOver={(e) => {
+            e.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault()
+            setIsDragging(false)
+          }}
+          onDrop={(e) => {
+            e.preventDefault()
+            setIsDragging(false)
+            const dropped = e.dataTransfer.files?.[0]
+            if (dropped) handleFileSelection(dropped)
+          }}
+          className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-8 sm:p-12 text-center transition-all ${
+            isDragging
+              ? 'border-brand bg-brand/5 scale-[1.01]'
+              : 'border-deep/20 hover:border-brand/60 bg-soft/50'
+          }`}
+        >
+          <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-brand/10 text-brand mb-4">
+            <Upload className="h-8 w-8 sm:h-10 sm:w-10" aria-hidden />
+          </div>
+
+          <p className="text-base sm:text-lg font-bold text-deep font-bangla mb-1">
+            অডিও ফাইল এখানে টেনে আনুন বা বেছে নিন
+          </p>
+          <p className="text-xs sm:text-sm text-ink/70 mb-5">
+            (Drag and drop audio file here or choose file)
+          </p>
+
+          <input
+            ref={inputRef}
+            type="file"
+            id="audio-upload-input"
+            accept="audio/*,.opus,.ogg,.oga,.m4a,.mp3,.wav,.aac,.amr,.webm,.3gp"
+            onChange={(e) => {
+              const chosen = e.target.files?.[0]
+              if (chosen) handleFileSelection(chosen)
+            }}
+            className="sr-only"
+          />
+
+          <Button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            className="min-h-12 px-6 font-bold shadow-sm"
+          >
+            <Upload className="h-5 w-5" aria-hidden />
+            <span lang="bn">অডিও ফাইল বেছে নিন (Choose audio file)</span>
+          </Button>
+
+          <p className="text-xs text-ink/60 mt-4 max-w-md font-bangla text-center">
+            হোয়াটসঅ্যাপ ভয়েস মেসেজ সমর্থিত। সর্বোচ্চ ৯০ সেকেন্ড, সর্বোচ্চ ২৫ এমবি।<br />
+            (WhatsApp voice notes work. Max 90 seconds, max 25 MB.)
+          </p>
+        </div>
+      )}
+
+      {file && previewUrl && (
+        <div className="space-y-5 border-t border-deep/10 pt-4">
+          <div className="rounded-2xl bg-soft p-4 border border-deep/10 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 overflow-hidden">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand shrink-0">
+                <FileAudio className="h-6 w-6" aria-hidden />
+              </span>
+              <div className="overflow-hidden">
+                <p className="font-bold text-sm sm:text-base text-deep truncate">
+                  {file.name}
+                </p>
+                <p className="text-xs text-ink/60">
+                  {formatFileSize(file.size)}
+                  {duration !== null && Number.isFinite(duration) && (
+                    <span> • {fmt(Math.round(duration))} / {fmt(90)}</span>
+                  )}
+                </p>
+              </div>
+            </div>
+
+            <Button
+              variant="ghost"
+              onClick={handleReset}
+              className="text-danger hover:bg-red-50 text-xs px-3 py-1.5 shrink-0"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden />
+              <span className="hidden sm:inline">Remove</span>
+            </Button>
+          </div>
+
+          <div>
+            <p className="font-bold text-sm sm:text-base text-deep mb-2" lang="bn">
+              অডিও শুনুন (Audio Preview)
+            </p>
+            <audio controls src={previewUrl} className="w-full" preload="metadata" />
+          </div>
+
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Button
+              big
+              disabled={Boolean(error)}
+              onClick={() => onSubmit(file)}
+              className="min-h-12 px-6 font-bold"
+            >
+              <Sparkles className="h-5 w-5" aria-hidden />
+              <span lang="bn">Process (প্রক্রিয়া করুন)</span>
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={handleReset}
+              className="min-h-12 px-5 font-semibold"
+            >
+              <Trash2 className="h-5 w-5 text-danger" aria-hidden />
+              <span lang="bn">Remove / choose another (ফাইল পরিবর্তন)</span>
+            </Button>
+          </div>
+
+          <p className="text-xs text-ink/60">
+            হোয়াটসঅ্যাপ ভয়েস মেসেজ সমর্থিত। সর্বোচ্চ ৯০ সেকেন্ড, সর্বোচ্চ ২৫ এমবি। (WhatsApp voice notes work. Max 90 seconds, max 25 MB.)
           </p>
         </div>
       )}
@@ -338,6 +617,17 @@ export default function Intake() {
   const { mode, setMode, ageGroup, setAgeGroup, dialectHint, setDialectHint, setPending, reset } = useFlow()
   const nav = useNavigate()
   const [health, setHealth] = useState<Health | null>(null)
+  const [intakeSource, setIntakeSource] = useState<'record' | 'upload' | 'demo'>(
+    mode === 'demo' ? 'demo' : 'record',
+  )
+
+  useEffect(() => {
+    if (mode === 'demo' && intakeSource === 'record') {
+      setIntakeSource('demo')
+    } else if (mode === 'live' && intakeSource === 'demo') {
+      setIntakeSource('record')
+    }
+  }, [mode])
 
   useEffect(() => {
     api.health().then(setHealth).catch(() => setHealth(null))
@@ -373,19 +663,51 @@ export default function Intake() {
             <span className="text-xs font-bold uppercase tracking-wider text-ink/60 block">
               ইনটেক মাধ্যম নির্বাচন (Intake Source)
             </span>
-            <div className="inline-flex w-full rounded-xl border border-deep/20 bg-soft p-1" role="group" aria-label="Mode">
-              {(['live', 'demo'] as const).map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMode(m)}
-                  aria-pressed={mode === m}
-                  className={`flex-1 min-h-11 rounded-lg px-3 sm:px-4 text-xs sm:text-sm font-bold transition-all ${
-                    mode === m ? 'bg-deep text-white shadow-sm' : 'text-deep hover:bg-white/70'
-                  }`}
-                >
-                  {m === 'live' ? 'Live voice (মাইক্রোফোন)' : 'Demo samples (নমুনা)'}
-                </button>
-              ))}
+            <div className="flex flex-col sm:flex-row w-full rounded-xl border border-deep/20 bg-soft p-1 gap-1" role="group" aria-label="Intake Source">
+              <button
+                type="button"
+                onClick={() => {
+                  setIntakeSource('record')
+                  setMode('live')
+                }}
+                aria-pressed={intakeSource === 'record' && mode === 'live'}
+                className={`flex-1 min-h-11 rounded-lg px-2 sm:px-3 text-xs sm:text-sm font-bold transition-all text-center ${
+                  intakeSource === 'record' && mode === 'live'
+                    ? 'bg-deep text-white shadow-sm'
+                    : 'text-deep hover:bg-white/70'
+                }`}
+              >
+                Live voice (মাইক্রোফোন)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIntakeSource('upload')
+                }}
+                aria-pressed={intakeSource === 'upload'}
+                className={`flex-1 min-h-11 rounded-lg px-2 sm:px-3 text-xs sm:text-sm font-bold transition-all text-center ${
+                  intakeSource === 'upload'
+                    ? 'bg-deep text-white shadow-sm'
+                    : 'text-deep hover:bg-white/70'
+                }`}
+              >
+                Upload audio (ফাইল আপলোড)
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIntakeSource('demo')
+                  setMode('demo')
+                }}
+                aria-pressed={intakeSource === 'demo' || (mode === 'demo' && intakeSource !== 'upload')}
+                className={`flex-1 min-h-11 rounded-lg px-2 sm:px-3 text-xs sm:text-sm font-bold transition-all text-center ${
+                  intakeSource === 'demo' || (mode === 'demo' && intakeSource !== 'upload')
+                    ? 'bg-deep text-white shadow-sm'
+                    : 'text-deep hover:bg-white/70'
+                }`}
+              >
+                Demo samples (নমুনা)
+              </button>
             </div>
           </div>
 
@@ -473,9 +795,26 @@ export default function Intake() {
           </div>
         </div>
 
-        {/* Right Column: Large Recorder Card or Demo Scenario Picker */}
+        {/* Right Column: Large Recorder Card, Audio Uploader, or Demo Scenario Picker */}
         <div className="lg:col-span-7">
-          {mode === 'live' ? (
+          {intakeSource === 'demo' ? (
+            <DemoPicker onPick={(id) => go({ kind: 'demo', scenarioId: id })} />
+          ) : intakeSource === 'upload' ? (
+            mode === 'demo' ? (
+              <div className="rounded-3xl bg-white p-6 sm:p-8 lg:p-10 shadow-sm border border-deep/10 space-y-4">
+                <ErrorBox
+                  title="ফাইল আপলোডের জন্য লাইভ মোড প্রয়োজন (File upload requires Live mode)"
+                  message="ডেমো মোডে ফাইল আপলোড করা যায় না। আপনার ডিভাইস থেকে ভয়েস মেসেজ বা অডিও ফাইল প্রক্রিয়াকরণ করতে লাইভ মোডে স্যুইচ করুন। (File upload is not available in Demo mode. Switch to Live mode to process audio files from your device.)"
+                >
+                  <Button onClick={() => setMode('live')}>
+                    Switch to Live mode (লাইভ মোডে যান)
+                  </Button>
+                </ErrorBox>
+              </div>
+            ) : (
+              <AudioUploader onSubmit={(file) => go({ kind: 'audio', blob: file, ageGroup, dialectHint })} />
+            )
+          ) : mode === 'live' ? (
             <Recorder onSubmit={(blob) => go({ kind: 'audio', blob, ageGroup, dialectHint })} />
           ) : (
             <DemoPicker onPick={(id) => go({ kind: 'demo', scenarioId: id })} />

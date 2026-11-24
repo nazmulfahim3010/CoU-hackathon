@@ -128,9 +128,10 @@ export default function About() {
       {/* 4. Privacy & Zero-Retention Model */}
       <SectionBlock icon={Lock} title="Zero-Retention Privacy Architecture">
         <ul className="list-disc space-y-2 pl-5">
-          <li><strong>No Disk or Database Storage:</strong> Audio and transcript data exist exclusively in ephemeral process memory. Once the session expires (default 30 minutes) or is explicitly ended, all in-memory representations are permanently deleted.</li>
-          <li><strong>Ephemeral Audio Processing:</strong> Audio recordings are temporarily converted in a memory-mapped or temp scratch buffer with immediate file deletion in <code>finally</code> blocks.</li>
-          <li><strong>Redacted System Telemetry:</strong> Loggers are strictly filtered to ensure patient transcripts, names, contact details, and API credentials are never written to standard output or log streams.</li>
+          <li><strong>No Disk or Database Storage:</strong> Audio and transcript data exist exclusively in ephemeral process memory. Once the session expires (default 30 minutes) or is explicitly ended, all in-memory representations are permanently deleted. Neither microphone recordings nor uploaded voice messages (e.g. WhatsApp audio) are ever persisted to disk or stored in any database.</li>
+          <li><strong>Ephemeral Audio Processing:</strong> Audio recordings and uploaded voice notes are temporarily converted in an ephemeral scratch buffer with strictly enforced file deletion in <code>finally</code> blocks on both success and error.</li>
+          <li><strong>Patient Consent for Uploaded Audio:</strong> Voice messages sent by patients (such as WhatsApp voice notes) should only be uploaded if the patient or their guardian explicitly agreed. Files are processed solely for clinical intake and never retained.</li>
+          <li><strong>Redacted System Telemetry:</strong> Loggers are strictly filtered to ensure patient transcripts, names, contact details, audio bytes, and API credentials are never written to standard output or log streams.</li>
         </ul>
       </SectionBlock>
 

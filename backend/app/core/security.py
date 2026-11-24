@@ -8,8 +8,12 @@ _SIGNATURES: list[tuple[bytes, int, str]] = [
     (b"ID3", 0, "mp3"),
     (b"\xff\xfb", 0, "mp3"),
     (b"\xff\xf3", 0, "mp3"),
-    (b"ftyp", 4, "mp4/m4a"),
+    (b"\xff\xf2", 0, "mp3"),
+    (b"ftyp", 4, "mp4/m4a/3gp"),
     (b"fLaC", 0, "flac"),
+    (b"#!AMR", 0, "amr"),
+    (b"\xff\xf1", 0, "aac"),
+    (b"\xff\xf9", 0, "aac"),
 ]
 MIN_AUDIO_BYTES = 1000  # anything smaller cannot contain meaningful speech
 
@@ -23,6 +27,6 @@ def validate_audio(data: bytes, max_bytes: int) -> str:
     if len(data) > max_bytes:
         raise KothaError(413, "AUDIO_TOO_LARGE", "The recording is too large.")
     for sig, offset, name in _SIGNATURES:
-        if data[offset : offset + len(sig)] == sig:
+        if len(data) >= offset + len(sig) and data[offset : offset + len(sig)] == sig:
             return name
-    raise KothaError(415, "INVALID_AUDIO", "The file is not a supported audio format.")
+    raise KothaError(415, "UNSUPPORTED_AUDIO", "The file is not a supported audio format.")

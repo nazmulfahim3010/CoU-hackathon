@@ -75,6 +75,49 @@ def validate_bangla_script(text: str, min_bangla_ratio: float = 0.5) -> None:
             )
 
 
+def probe_audio_stream(in_path: str) -> None:
+    """Probe input file using ffprobe/ffmpeg to verify it contains a valid audio stream.
+    Rejects non-audio files or corrupt files with KothaError(415, 'UNSUPPORTED_AUDIO').
+    """
+    if shutil.which("ffprobe"):
+        cmd = [
+            "ffprobe",
+            "-v",
+            "error",
+            "-select_streams",
+            "a:0",
+            "-show_entries",
+            "stream=codec_type",
+            "-of",
+            "json",
+            in_path,
+        ]
+        try:
+            res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            if res.returncode != 0:
+                raise KothaError(415, "UNSUPPORTED_AUDIO", "The file is not a supported or valid audio format.")
+            import json
+            try:
+                info = json.loads(res.stdout.decode("utf-8", errors="ignore"))
+                streams = info.get("streams", [])
+                if not streams or streams[0].get("codec_type") != "audio":
+                    raise KothaError(415, "UNSUPPORTED_AUDIO", "The uploaded file contains no audio stream.")
+            except (json.JSONDecodeError, KeyError):
+                raise KothaError(415, "UNSUPPORTED_AUDIO", "The file is not a supported or valid audio format.")
+            return
+        except FileNotFoundError:
+            pass
+
+    # Fallback to probing with ffmpeg if ffprobe is unavailable
+    cmd = ["ffmpeg", "-v", "error", "-i", in_path, "-vn", "-f", "null", "-"]
+    try:
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if res.returncode != 0:
+            raise KothaError(415, "UNSUPPORTED_AUDIO", "The file is not a supported or valid audio format.")
+    except FileNotFoundError:
+        raise KothaError(503, "FFMPEG_NOT_INSTALLED", "Audio processing requires ffmpeg on the server.")
+
+
 def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
     """Validate raw audio container, transcode to 16kHz mono PCM 16-bit WAV with ffmpeg,
     and verify duration <= 90s.
@@ -89,6 +132,9 @@ def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
     try:
         with os.fdopen(in_fd, "wb") as f:
             f.write(raw_bytes)
+
+        # Probe input file to ensure it actually contains valid audio
+        probe_audio_stream(in_path)
 
         # Transcode to 16kHz mono 16-bit PCM WAV using ffmpeg
         cmd = [
@@ -110,7 +156,7 @@ def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
             raise KothaError(503, "FFMPEG_NOT_INSTALLED", "Audio processing requires ffmpeg on the server.")
         if res.returncode != 0 or not os.path.exists(out_path):
             log.warning("ffmpeg failed: %s", res.stderr.decode("utf-8", errors="ignore")[:300])
-            raise KothaError(415, "AUDIO_CONVERSION_FAILED", "Could not process audio format. Please record again.")
+            raise KothaError(415, "UNSUPPORTED_AUDIO", "Could not process audio format. Please check the file.")
 
         # Inspect duration via wave
         with wave.open(out_path, "rb") as wf:

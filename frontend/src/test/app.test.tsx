@@ -1,4 +1,4 @@
-import { act, renderHook, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, renderHook, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import About from '../pages/About'
@@ -239,6 +239,82 @@ describe('Intake page', () => {
     expect(screen.getByText(/সিলেটি \(Sylheti\) — টিম-যাচাইকৃত শব্দকোষ/)).toBeInTheDocument()
     expect(screen.queryByText(/Chittagonian/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Noakhali/i)).not.toBeInTheDocument()
+  })
+
+  it('renders the third toggle option: Upload audio (ফাইল আপলোড)', async () => {
+    mockMic(() => Promise.resolve({}))
+    renderAt('/intake', <Intake />)
+    const uploadToggle = await screen.findByRole('button', { name: /Upload audio \(ফাইল আপলোড\)/i })
+    expect(uploadToggle).toBeInTheDocument()
+  })
+
+  it('choosing a valid audio file shows file details, preview, and Process button', async () => {
+    mockMic(() => Promise.resolve({}))
+    const { container } = renderAt('/intake', <Intake />)
+    const uploadToggle = await screen.findByRole('button', { name: /Upload audio \(ফাইল আপলোড\)/i })
+    await userEvent.click(uploadToggle)
+
+    expect(screen.getByText(/গোপনীয়তা ও সম্মতি/i)).toBeInTheDocument()
+    expect(screen.getByText(/WhatsApp voice notes work. Max 90 seconds, max 25 MB/i)).toBeInTheDocument()
+
+    const input = container.querySelector('#audio-upload-input') as HTMLInputElement
+    expect(input).toBeInTheDocument()
+
+    const file = new File(['valid audio stream content here'], 'patient_voice.opus', {
+      type: 'audio/ogg',
+    })
+    await userEvent.upload(input, file)
+
+    expect(screen.getByText('patient_voice.opus')).toBeInTheDocument()
+    expect(screen.getByText(/Audio Preview/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Process \(প্রক্রিয়া করুন\)/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Remove \/ choose another/i })).toBeInTheDocument()
+  })
+
+  it('shows error for oversized file exceeding 25 MB', async () => {
+    mockMic(() => Promise.resolve({}))
+    const { container } = renderAt('/intake', <Intake />)
+    const uploadToggle = await screen.findByRole('button', { name: /Upload audio \(ফাইল আপলোড\)/i })
+    await userEvent.click(uploadToggle)
+
+    const input = container.querySelector('#audio-upload-input') as HTMLInputElement
+    const bigFile = new File(['x'], 'huge.opus', { type: 'audio/ogg' })
+    Object.defineProperty(bigFile, 'size', { value: 26 * 1024 * 1024 })
+    await userEvent.upload(input, bigFile)
+
+    const alerts = await screen.findAllByRole('alert')
+    expect(alerts.some((a) => a.textContent?.includes('২৫ মেগাবাইটের বেশি') || a.textContent?.includes('File exceeds 25 MB'))).toBe(true)
+  })
+
+  it('shows error for unsupported file format', async () => {
+    mockMic(() => Promise.resolve({}))
+    const { container } = renderAt('/intake', <Intake />)
+    const uploadToggle = await screen.findByRole('button', { name: /Upload audio \(ফাইল আপলোড\)/i })
+    await userEvent.click(uploadToggle)
+
+    const input = container.querySelector('#audio-upload-input') as HTMLInputElement
+    const wrongFile = new File(['text content'], 'prescription.pdf', { type: 'application/pdf' })
+    fireEvent.change(input, { target: { files: [wrongFile] } })
+
+    const alerts = await screen.findAllByRole('alert')
+    expect(alerts.some((a) => a.textContent?.includes('অসমর্থিত ফাইল ফরম্যাট') || a.textContent?.includes('Unsupported file format'))).toBe(true)
+  })
+
+  it('shows switch-to-Live note in Demo mode and switches on click', async () => {
+    mockMic(() => Promise.resolve({}))
+    renderAt('/intake', <Intake />, { mode: 'demo' })
+    const uploadToggle = await screen.findByRole('button', { name: /Upload audio \(ফাইল আপলোড\)/i })
+    await userEvent.click(uploadToggle)
+
+    expect(screen.getByText(/ফাইল আপলোডের জন্য লাইভ মোড প্রয়োজন/i)).toBeInTheDocument()
+    expect(screen.getByText(/File upload requires Live mode/i)).toBeInTheDocument()
+
+    const switchBtn = screen.getByRole('button', { name: /Switch to Live mode \(লাইভ মোডে যান\)/i })
+    expect(switchBtn).toBeInTheDocument()
+
+    await userEvent.click(switchBtn)
+    expect(screen.getByTestId('mode-badge')).toHaveTextContent('LIVE')
+    expect(screen.getByText(/অডিও ফাইল এখানে টেনে আনুন বা বেছে নিন/i)).toBeInTheDocument()
   })
 })
 

@@ -1,5 +1,6 @@
 import json
 import os
+import subprocess
 import tempfile
 import wave
 from pathlib import Path
@@ -39,7 +40,7 @@ def make_test_wav(duration_seconds: float = 1.0) -> bytes:
 def test_invalid_file_type_is_415():
     r = client.post("/api/transcription", files={"audio": ("bad.bin", b"not-audio" * 200, "application/octet-stream")})
     assert r.status_code == 415
-    assert r.json()["error"]["code"] == "INVALID_AUDIO"
+    assert r.json()["error"]["code"] in ("INVALID_AUDIO", "UNSUPPORTED_AUDIO")
 
 
 def test_empty_audio_is_400():
@@ -49,10 +50,10 @@ def test_empty_audio_is_400():
 
 
 def test_oversized_audio_is_413():
-    # Audio exceeding max_bytes limit (10MB default)
+    # Audio exceeding max_bytes limit (25MB default)
     r = client.post(
         "/api/transcription",
-        files={"audio": ("huge.wav", b"RIFF" + b"\x00" * (11 * 1024 * 1024), "audio/wav")},
+        files={"audio": ("huge.wav", b"RIFF" + b"\x00" * (26 * 1024 * 1024), "audio/wav")},
     )
     assert r.status_code == 413
     assert r.json()["error"]["code"] == "AUDIO_TOO_LARGE"
@@ -442,3 +443,131 @@ def test_stt_provider_error_mapping_and_temp_cleanup(monkeypatch):
         after_files = set(os.listdir(temp_dir))
         new_files = [f for f in after_files - before_files if f.endswith(".raw") or "_converted.wav" in f]
         assert new_files == []
+
+
+def make_test_opus(duration_seconds: float = 1.0) -> bytes:
+    """Generate in-memory valid Ogg Opus audio bytes via ffmpeg."""
+    with tempfile.NamedTemporaryFile(suffix=".opus", delete=False) as f:
+        path = f.name
+    try:
+        cmd = [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "lavfi",
+            "-i",
+            f"sine=frequency=1000:duration={duration_seconds}",
+            "-c:a",
+            "libopus",
+            "-f",
+            "ogg",
+            path,
+        ]
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if res.returncode != 0 or not os.path.exists(path):
+            pytest.skip("ffmpeg libopus encoding not available")
+        return Path(path).read_bytes()
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
+
+
+@requires_ffmpeg
+def test_audio_upload_accepted_wav_and_ogg_opus(monkeypatch):
+    """Uploaded audio files (WAV and Ogg Opus WhatsApp notes) are accepted, converted to 16kHz WAV,
+    transcribed, and temp files are strictly cleaned up."""
+    monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FakeSTT("আমার শরীরে ব্যথা এবং জ্বর আছে।"))
+
+    temp_dir = tempfile.gettempdir()
+
+    # 1. Test WAV upload
+    before_wav = set(os.listdir(temp_dir))
+    wav_bytes = make_test_wav(duration_seconds=1.5)
+    r_wav = client.post(
+        "/api/transcription",
+        files={"audio": ("patient_recording.wav", wav_bytes, "audio/wav")},
+    )
+    assert r_wav.status_code == 200
+    data_wav = r_wav.json()
+    assert data_wav["source"] == "speech_recognition"
+    assert data_wav["transcript"] == "আমার শরীরে ব্যথা এবং জ্বর আছে।"
+    assert data_wav["duration_seconds"] > 1.0
+    after_wav = set(os.listdir(temp_dir))
+    new_wav = [f for f in after_wav - before_wav if f.endswith(".raw") or "_converted.wav" in f]
+    assert new_wav == []
+
+    # 2. Test Ogg Opus (.opus, WhatsApp voice note) upload
+    before_opus = set(os.listdir(temp_dir))
+    opus_bytes = make_test_opus(duration_seconds=1.5)
+    r_opus = client.post(
+        "/api/transcription",
+        files={"audio": ("voice_message.opus", opus_bytes, "audio/ogg")},
+    )
+    assert r_opus.status_code == 200
+    data_opus = r_opus.json()
+    assert data_opus["source"] == "speech_recognition"
+    assert data_opus["transcript"] == "আমার শরীরে ব্যথা এবং জ্বর আছে।"
+    assert data_opus["duration_seconds"] > 1.0
+    after_opus = set(os.listdir(temp_dir))
+    new_opus = [f for f in after_opus - before_opus if f.endswith(".raw") or "_converted.wav" in f]
+    assert new_opus == []
+
+
+@requires_ffmpeg
+def test_audio_upload_rejected_for_non_audio_renamed_to_opus():
+    """Non-audio file renamed with .opus extension is rejected with clean 4xx (415 UNSUPPORTED_AUDIO),
+    never causes an unhandled 500 error, and cleans up any temp files."""
+    temp_dir = tempfile.gettempdir()
+    before_files = set(os.listdir(temp_dir))
+
+    fake_opus = b"Not an audio file. Just plain text renamed to pretend it is a voice note." * 20
+    r = client.post(
+        "/api/transcription",
+        files={"audio": ("deceptive_voice.opus", fake_opus, "audio/ogg")},
+    )
+    assert r.status_code == 415
+    data = r.json()
+    assert "error" in data
+    assert data["error"]["code"] == "UNSUPPORTED_AUDIO"
+
+    after_files = set(os.listdir(temp_dir))
+    new_files = [f for f in after_files - before_files if f.endswith(".raw") or "_converted.wav" in f]
+    assert new_files == []
+
+
+@requires_ffmpeg
+def test_audio_upload_rejected_for_over_90_seconds():
+    """Audio exceeding 90 seconds is rejected with 413 AUDIO_TOO_LONG and temp files cleaned up."""
+    temp_dir = tempfile.gettempdir()
+    before_files = set(os.listdir(temp_dir))
+
+    long_wav = make_test_wav(duration_seconds=92.0)
+    r = client.post(
+        "/api/transcription",
+        files={"audio": ("long_patient_audio.wav", long_wav, "audio/wav")},
+    )
+    assert r.status_code == 413
+    assert r.json()["error"]["code"] == "AUDIO_TOO_LONG"
+
+    after_files = set(os.listdir(temp_dir))
+    new_files = [f for f in after_files - before_files if f.endswith(".raw") or "_converted.wav" in f]
+    assert new_files == []
+
+
+def test_audio_upload_rejected_for_over_25_mb():
+    """Audio exceeding 25 MB limit is rejected with 413 AUDIO_TOO_LARGE and temp files cleaned up."""
+    temp_dir = tempfile.gettempdir()
+    before_files = set(os.listdir(temp_dir))
+
+    # 25 MB = 26,214,400 bytes. 26 MB exceeds the limit.
+    oversized_data = b"OggS" + b"\x00" * (26 * 1024 * 1024)
+    r = client.post(
+        "/api/transcription",
+        files={"audio": ("huge_whatsapp.opus", oversized_data, "audio/ogg")},
+    )
+    assert r.status_code == 413
+    assert r.json()["error"]["code"] == "AUDIO_TOO_LARGE"
+
+    after_files = set(os.listdir(temp_dir))
+    new_files = [f for f in after_files - before_files if f.endswith(".raw") or "_converted.wav" in f]
+    assert new_files == []

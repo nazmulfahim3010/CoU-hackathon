@@ -87,7 +87,8 @@ export const api = {
   glossaryStats: () => request<GlossaryStats>('/glossary/stats'),
   transcribeAudio: (blob: Blob, sessionId?: string, dialectHint?: string) => {
     const fd = new FormData()
-    fd.append('audio', blob, 'recording.webm')
+    const filename = blob instanceof File && blob.name ? blob.name : 'recording.webm'
+    fd.append('audio', blob, filename)
     if (sessionId) fd.append('session_id', sessionId)
     if (dialectHint) fd.append('dialect_hint', dialectHint)
     return request<TranscriptionResponse>('/transcription', { method: 'POST', body: fd })
