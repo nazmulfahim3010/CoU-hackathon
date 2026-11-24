@@ -10,13 +10,13 @@ export interface DemoScenario {
 
 export interface Health {
   status: string
+  ffmpeg?: { available: boolean }
   providers: {
     speech: { configured: boolean; provider: string; model: string }
     llm: { configured: boolean; provider: string }
     tts: { configured: boolean; provider: string }
   }
   live_mode_ready: boolean
-  ffmpeg?: { available: boolean }
 }
 
 export type TranscriptionSource =

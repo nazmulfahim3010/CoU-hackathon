@@ -295,9 +295,14 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
 
               {/* Browser Audio Player */}
               <div className="rounded-xl bg-soft p-2.5">
-                <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wide flex items-center gap-1 mb-1">
-                  <Volume2 className="h-3.5 w-3.5 text-brand" /> Synthetic voice — not a Sylheti speaker
-                </p>
+                <div className="flex items-center justify-between gap-1 mb-1">
+                  <p className="text-[11px] font-semibold text-ink/60 uppercase tracking-wide flex items-center gap-1">
+                    <Volume2 className="h-3.5 w-3.5 text-brand" /> Play Demo Audio Clip
+                  </p>
+                  <span className="text-[10px] font-medium text-amber-900 bg-amber-100 rounded px-1.5 py-0.5">
+                    Synthetic voice — not a real dialect speaker
+                  </span>
+                </div>
                 <audio
                   controls
                   src={s.audio_url}
@@ -421,7 +426,20 @@ export default function Intake() {
         ))}
       </div>
 
-      {mode === 'live' && health && !health.live_mode_ready && (
+      {mode === 'live' && health?.ffmpeg && !health.ffmpeg.available && (
+        <div>
+          <ErrorBox
+            title="ffmpeg is not installed on this server"
+            message="Audio processing requires ffmpeg in the system PATH. Install ffmpeg on the server to record live audio, or use Demo samples meanwhile."
+          >
+            <Button variant="secondary" onClick={() => setMode('demo')}>
+              Switch to Demo samples
+            </Button>
+          </ErrorBox>
+        </div>
+      )}
+
+      {mode === 'live' && health && (!health.providers.speech.configured || !health.providers.llm.configured) && (
         <div>
           <ErrorBox
             title="Live processing is not fully configured on this server"

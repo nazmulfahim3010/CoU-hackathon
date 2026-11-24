@@ -10,6 +10,5 @@ frontend/dist
 frontend/e2e
 frontend/playwright-report
 frontend/test-results
-demo_assets/raw_datasets
-*.md
+demo_assets/raw_datasets/*.csv
 docs

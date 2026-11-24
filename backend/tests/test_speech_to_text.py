@@ -13,7 +13,7 @@ from app.core.exceptions import KothaError
 from app.core.session_manager import Stage
 from app.main import app
 from app.services.speech_to_text import STTResult, process_audio
-from conftest import WEBM, FakeSTT, demo_session
+from conftest import WEBM, FakeSTT, demo_session, requires_ffmpeg
 
 client = TestClient(app)
 
@@ -58,6 +58,7 @@ def test_oversized_audio_is_413():
     assert r.json()["error"]["code"] == "AUDIO_TOO_LARGE"
 
 
+@requires_ffmpeg
 def test_audio_longer_than_90s_rejected():
     long_wav = make_test_wav(duration_seconds=92.0)
     with pytest.raises(KothaError) as exc_info:
@@ -66,6 +67,7 @@ def test_audio_longer_than_90s_rejected():
     assert exc_info.value.code == "AUDIO_TOO_LONG"
 
 
+@requires_ffmpeg
 def test_temp_files_deleted_after_success_and_failure(monkeypatch):
     """Zero-storage guarantee: asserts no temporary files remain in temp directory."""
     temp_dir = tempfile.gettempdir()
@@ -106,6 +108,7 @@ def test_wrong_session_state_returns_409(monkeypatch):
     assert r.json()["error"]["code"] == "WORKFLOW_ORDER_VIOLATION"
 
 
+@requires_ffmpeg
 def test_provider_failure_returns_502_no_fake_transcript(monkeypatch):
     class FailingSTT:
         name = "failing"
@@ -145,14 +148,16 @@ def test_transcription_typed_endpoint():
     assert data["confidence"] == 1.0
 
 
+@requires_ffmpeg
 def test_real_audio_transcription_comparison(monkeypatch):
     """Run real audio file from demo_assets/audio through processing pipeline."""
-    audio_path = REPO_ROOT / "demo_assets" / "audio" / "sample_A.wav"
+    demo_assets_dir = Path(__file__).resolve().parents[2] / "demo_assets"
+    audio_path = demo_assets_dir / "audio" / "sample_A.wav"
     assert audio_path.exists(), "demo_assets audio file must exist"
     audio_bytes = audio_path.read_bytes()
 
     # Load sample transcript
-    transcripts_path = REPO_ROOT / "demo_assets" / "transcripts.json"
+    transcripts_path = demo_assets_dir / "transcripts.json"
     with open(transcripts_path, encoding="utf-8") as f:
         meta = json.load(f)[0]
 
@@ -176,3 +181,45 @@ def test_real_audio_transcription_comparison(monkeypatch):
     assert res["source"] in ("speech_recognition", "speech_model")
     assert res["duration_seconds"] > 5.0
     assert res["transcript"] == mock_asr_text
+
+
+def test_process_audio_without_ffmpeg_raises_503_no_temp_files(monkeypatch):
+    """When ffmpeg is missing, process_audio raises 503 FFMPEG_NOT_INSTALLED
+    BEFORE creating any temporary file."""
+    import shutil
+    monkeypatch.setattr(shutil, "which", lambda cmd: None)
+
+    temp_dir = tempfile.gettempdir()
+    before_files = set(os.listdir(temp_dir))
+
+    with pytest.raises(KothaError) as exc_info:
+        process_audio(WEBM, 100_000)
+
+    assert exc_info.value.status_code == 503
+    assert exc_info.value.code == "FFMPEG_NOT_INSTALLED"
+    assert "ffmpeg" in exc_info.value.message.lower()
+
+    after_files = set(os.listdir(temp_dir))
+    new_files = [f for f in after_files - before_files if f.endswith(".raw") or "_converted.wav" in f]
+    assert new_files == []
+
+
+def test_transcription_endpoint_without_ffmpeg_returns_503(monkeypatch):
+    """Audio upload when ffmpeg is missing returns a clean 503 JSON response
+    with FFMPEG_NOT_INSTALLED code, not an unhandled 500 traceback."""
+    import shutil
+    monkeypatch.setattr(shutil, "which", lambda cmd: None)
+    monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FakeSTT("test"))
+
+    temp_dir = tempfile.gettempdir()
+    before_files = set(os.listdir(temp_dir))
+
+    r = client.post("/api/transcription", files={"audio": ("sample.webm", WEBM, "audio/webm")})
+    assert r.status_code == 503
+    data = r.json()
+    assert "error" in data
+    assert data["error"]["code"] == "FFMPEG_NOT_INSTALLED"
+
+    after_files = set(os.listdir(temp_dir))
+    new_files = [f for f in after_files - before_files if f.endswith(".raw") or "_converted.wav" in f]
+    assert new_files == []

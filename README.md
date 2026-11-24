@@ -161,7 +161,7 @@ flowchart TD
 │   │   └── data/
 │   │       ├── dialects/            # sylheti.json (120 entries) + standard_bangla.json (reference list)
 │   │       └── safety_rules/        # red_flags.json (10 emergency/urgent rules)
-│   └── tests/                       # unit/integration tests (303 passing in Docker)
+│   └── tests/                       # unit/integration tests (305 passing in Docker)
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/                   # Landing, Intake, Confirm, Summary, About
@@ -169,7 +169,7 @@ flowchart TD
 │   │   ├── hooks/                   # useRecorder (MediaRecorder + Web Audio VU meter)
 │   │   ├── state/                   # FlowContext (in-memory React session state)
 │   │   ├── services/                # Typed fetch API client
-│   │   └── test/                    # Vitest unit and component tests (31 tests)
+│   │   └── test/                    # Vitest unit and component tests (33 tests)
 │   └── e2e/                         # Playwright E2E workflows (desktop & mobile)
 ├── demo_assets/                     # Fictional scenario audio clips & transcripts
 ├── docs/                            # ARCHITECTURE.md, Kotha.pdf
@@ -231,6 +231,25 @@ npm install
 npm run dev
 ```
 - Web Application: [http://localhost:5173](http://localhost:5173)
+
+### 7.3 Verify live providers before the demo
+
+Before running live mode demonstrations or evaluation sessions, run the automated provider checker script from the backend directory:
+
+```powershell
+cd backend
+.venv\Scripts\python scripts/check_providers.py
+# On Linux/macOS: python scripts/check_providers.py
+```
+
+This sequentially verifies:
+1. `ffmpeg` binary availability in system `PATH`.
+2. Speech-to-Text (STT) transcription on sample audio.
+3. LLM dialect normalization on sample text.
+4. LLM structured clinical extraction.
+5. Text-to-Speech (TTS) synthesis of the patient reply template.
+
+It outputs sanitized execution times and errors (never printing transcripts, model responses, or secret keys) and exits with code `0` only when all checks pass.
 
 ---
 
@@ -363,6 +382,7 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 - **Sylheti glossary** (`demo_assets/sylheti_glossary_verified.csv` -> `backend/app/data/dialects/sylheti.json`): 120 entries authored by a team member (Avijit Dey Tonmoy) and reviewed by named team members (Noyon, Fahim), with reviewer and date stored per row. This is a text-level team review, **not** independent linguistic validation, and it has **not** been tested on real Sylheti speech. Licence: **to be decided by the team**.
 - **Synthetic demo scenarios** (`demo_assets/`): 3 fictional patients; Sylheti sentences copied from the verified glossary; audio is synthetic standard-Bangla gTTS speech. Licence: **to be decided by the team**.
 - **Removed from tracking:** `demo_assets/raw_datasets/*_NER.csv` (regional NER corpora). Their origin and licence are unknown and no code uses them, so they are no longer committed (a local copy remains on disk, git-ignored). Do not reuse them until provenance is established.
+  Provenance of those files is recorded in `demo_assets/raw_datasets/SOURCE.md` (origin and licence UNKNOWN).
 
 ### Planned / Reviewed, Not Integrated
 - **Mozilla Common Voice Bangla 17.0** (CC-0): Reviewed as candidate for acoustic fine-tuning; not bundled in prototype.
@@ -384,6 +404,31 @@ To demonstrate Kotha during evaluation, toggle to **Demo mode** in the top navig
 
 *The demo audio clips are a **synthetic standard-Bangla voice (gTTS), not a Sylheti speaker**. "Run live ASR" on them only checks that the audio pipeline works; it says nothing about Sylheti recognition accuracy. Original sentences come from the team-verified glossary; the standard-Bangla renderings are prepared by the team and not independently verified.*
 
+### Adding Real Consented Recordings
+
+To replace or extend synthetic demo audio with authentic regional dialect recordings:
+
+1. **Obtain Explicit Informed Consent (Mandatory)**:
+   - Explicit speaker consent is strictly required before recording or committing any human voice data.
+   - Speakers must be informed of how the audio will be used (open-source evaluation of dialect clinical triage) and explicitly agree to repository inclusion. Never record or commit voice data without documented speaker consent.
+
+2. **Audio File Placement and Formatting**:
+   - Save the recording in `demo_assets/audio/` using the scenario naming convention (e.g. `sample_A.wav` for Scenario A, `sample_B.wav` for Scenario B, `sample_C.wav` for Scenario C, or `sample_D.wav` for new scenarios).
+   - Format: 16 kHz mono 16-bit PCM WAV (`.wav`).
+
+3. **Register Metadata in `demo_assets/transcripts.json`**:
+   Add or update the scenario entry with the following fields:
+   - `id`: Scenario ID (e.g. `"A_ordinary"`).
+   - `scenario`: Scenario ID.
+   - `audio_file`: Audio file name (e.g. `"sample_A.wav"`).
+   - `title`: Descriptive clinical title.
+   - `purpose`: Clinical scenario context and symptoms.
+   - `dialect`: Authentic regional dialect (e.g. `"sylheti"`).
+   - `speaker`: Verified speaker profile (e.g. `"Consented native Sylheti speaker (Habiganj, age 42)"`).
+   - `original_transcript`: Exact verbatim transcription of spoken dialect.
+   - `standard_bangla`: Clinically accurate standard Bangla translation.
+   - `verified_by`: Name or identifier of the native speaker / clinician who verified the transcript (replaces `"sample / unverified"`).
+
 ---
 
 ## 13. Test Results & Verification (Step 14)
@@ -393,11 +438,11 @@ Test status (measured 2026-11-24). Without ffmpeg on the host, run the backend s
 ```powershell
 # Backend test suite, inside Docker (includes the ffmpeg-dependent tests)
 docker compose --profile test run --rm backend-test
-# Result: 303 passed in ~32 s
+# Result: 305 passed in ~31 s
 
-# Frontend Unit & Component Tests (31 tests)
+# Frontend Unit & Component Tests (33 tests)
 cd frontend; npm test
-# Result: 31 passed
+# Result: 33 passed
 
 # Frontend Production Build
 cd frontend; npm run build
@@ -411,6 +456,17 @@ cd frontend; npx playwright test
 - **No-Storage Guarantee**: Verified by `test_no_persistent_data.py`. Confirmed zero files created on disk during full workflow, and verified zero transcript or audio text in `DEBUG` logs.
 - **Confirmation Boundary**: Verified by `test_confirmation_gate.py`. Direct extraction or summary calls prior to confirmation raise `409 Conflict`.
 - **Negation & Quantity Preservation**: Verified by `test_normalization.py`. Rewrites altering negative polarity or numbers are rejected.
+
+### What was and was not verified (as of 2026-11-24)
+
+Automated live provider check (`backend/scripts/check_providers.py`) executed on 2026-11-24:
+- **Verified (PASS)**:
+  - `ffmpeg present`: System `PATH` includes valid `ffmpeg` binary (0.004s).
+  - `TTS: synthesize template reply`: Bangla speech synthesis via `gTTS` in-memory stream generation (4.752s).
+- **Not Verified (FAIL / Not Configured)**:
+  - `STT: transcribe sample_A.wav`: Not verified (`speech_provider` is set to `none`; `PROVIDER_NOT_CONFIGURED`). Live ASR requires configuring `SPEECH_PROVIDER` and corresponding credentials or local model download.
+  - `LLM: normalize text`: Not verified (`llm_provider` is set to `none`; `PROVIDER_NOT_CONFIGURED`). Live normalization requires configuring `LLM_PROVIDER` and `LLM_API_KEY`.
+  - `LLM: extract clinical info`: Not verified (`llm_provider` is set to `none`; `PROVIDER_NOT_CONFIGURED`). Live clinical extraction requires configuring `LLM_PROVIDER` and `LLM_API_KEY`.
 
 ---
 
@@ -438,3 +494,20 @@ cd frontend; npx playwright test
 - **AI Coding Assistants**:
   - **Claude Code** (Anthropic): Initial scaffolding, architectural specification, domain services, and test generation under human direction.
   - **Antigravity** (Google DeepMind): Test suite completion, no-storage verification, Playwright E2E browser automation, and architectural documentation verification.
+
+---
+
+## 17. Licensing Decisions Needed
+
+The project licences are **undecided**. The team must formally select and assign licences before public distribution.
+
+### Decisions Checklist
+- [ ] **Code licence**: Application codebase (`backend/`, `frontend/`, and supporting scripts).
+- [ ] **Glossary licence**: Dialect glossaries (`backend/app/data/dialects/*.json`).
+- [ ] **Demo assets licence**: Audio clips and sample transcripts (`demo_assets/`).
+- [ ] **Third-party dataset licences**: Raw reference corpora in `demo_assets/raw_datasets/` (see provenance and audit in [demo_assets/raw_datasets/SOURCE.md](file:///demo_assets/raw_datasets/SOURCE.md)).
+
+### Candidate Options & Trade-offs
+- **MIT**: Very permissive, simple, but includes no explicit patent grant.
+- **Apache-2.0**: Permissive plus explicit patent grant and contributor terms, slightly longer legal text.
+- **CC-BY 4.0**: Good for data, documentation, and content; requires attribution; not meant for code.

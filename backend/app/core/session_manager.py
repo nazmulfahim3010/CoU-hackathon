@@ -23,7 +23,6 @@ class Stage(IntEnum):
     CONFIRMED = 3
     EXTRACTED = 4
     EVALUATED = 5
-    SAFETY_EVALUATED = 5  # alias
     SUMMARIZED = 6
 
 

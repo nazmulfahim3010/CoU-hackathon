@@ -20,7 +20,7 @@ A grounded evaluation of the repository state as of November 22, 2026:
   * Normalization service (`app/services/dialect_normalizer.py`) with meaning-preservation checks (negation counting, numeral preservation).
   * Clinical extraction service (`app/services/clinical_extractor.py`) using Pydantic schemas with evidence quoting.
   * TTS integration (`app/services/text_to_speech.py`) using `gTTS` with deterministic non-clinical Bangla templates.
-  * Backend test suite: 6 test files covering confirmation gates, extraction, normalization, red flags, sessions, and inputs.
+  * Backend test suite: 11 test files covering confirmation gates, extraction, normalization, red flags, sessions, health, speech-to-text, and zero-retention privacy (131 tests).
 * **Frontend Architecture & Code (`frontend/src/`)**:
   * React 18 + Vite + TypeScript + Tailwind CSS structure.
   * Audio recording hook (`useRecorder.ts`) using browser `MediaRecorder` API with Web Audio API `AnalyserNode` level visualization and 90-second hard cap.
@@ -137,20 +137,24 @@ backend/
 │       ├── demo_data.py          # Scenario loader
 │       ├── dialect_normalizer.py # Hybrid glossary + LLM normalizer with guards
 │       ├── glossary_service.py   # Longest-prefix Trie/Regex glossary matcher
+│       ├── llm_provider.py       # Anthropic & OpenAI-compatible LLM adapters
 │       ├── red_flag_engine.py    # Rule evaluator with clause-level negation handling
+│       ├── speech_to_text.py     # Hugging Face & OpenAI-compatible STT adapters
 │       ├── summary_generator.py  # Deterministic bilingual note synthesizer
-│       ├── text_to_speech.py     # gTTS client with fixed patient-safe templates
-│       └── providers/
-│           ├── llm.py            # Anthropic & OpenAI-compatible LLM adapters
-│           └── stt.py            # Hugging Face & OpenAI-compatible STT adapters
+│       └── text_to_speech.py     # gTTS client with fixed patient-safe templates
 └── tests/
-    ├── conftest.py             # Pytest fixtures and mock session factories
+    ├── conftest.py               # Pytest fixtures and mock session factories
     ├── test_confirmation_gate.py # Verification of strict 409 gating before confirmation
-    ├── test_extraction.py      # Schema compliance, evidence checks, retry logic
+    ├── test_demo_mode.py         # Demo scenarios end-to-end, audio serving, live ASR comparison
+    ├── test_extraction.py        # Schema compliance, evidence checks, retry logic
+    ├── test_health.py            # Health check endpoint & provider readiness status
     ├── test_input_and_providers.py # Audio container validation, provider error wrapping
-    ├── test_normalization.py   # Negation preservation, numeral preservation
-    ├── test_red_flags.py       # Rule triggers, explicit negation, absence handling
-    └── test_sessions_and_e2e.py # End-to-end flow, TTL expiration, session deletion
+    ├── test_no_persistent_data.py # Zero-retention privacy architecture verification
+    ├── test_normalization.py     # Negation preservation, numeral preservation
+    ├── test_red_flags.py         # Rule triggers, explicit negation, absence handling
+    ├── test_session_workflow.py   # Session lifecycle, TTL expiration, purge, stage ordering
+    ├── test_speech_to_text.py    # Audio validation, ffmpeg transcoding, provider timeouts
+    └── test_summary_and_speech.py # Doctor summary assembly, template speech synthesis
 ```
 
 ### 2.3 The AI Pipeline
@@ -195,8 +199,8 @@ The system integrates AI where necessary for comprehension while restricting AI 
 | 2 | `/api/normalization` | `POST` | `session_id` | Requires `TRANSCRIBED`. Glossary matching applied; LLM performs standard Bangla rewrite; negation/number guards verified. | Returns normalized text, changes, uncertain spans. State: `TRANSCRIBED` → `NORMALIZED`. |
 | 3 | `/api/confirmation` | `POST` | `session_id`, `confirmed_text`, `confirmed` (bool) | Requires `NORMALIZED`. Compares confirmed text with normalized; stores confirmed text; invalidates downstream extractions. | Returns confirmed status. State: `NORMALIZED` → `CONFIRMED`. |
 | 4 | `/api/clinical/extract` | `POST` | `session_id` | Requires `CONFIRMED`. Clinical extractor calls LLM with confirmed text; validates schema and quote evidence. | Returns `ClinicalExtraction` JSON. State: `CONFIRMED` → `EXTRACTED`. |
-| 5 | `/api/safety/evaluate` | `POST` | `session_id` | Requires `CONFIRMED`. Deterministic red-flag engine scans confirmed text against rule patterns with negation window. | Returns `SafetyResponse` with triggered rules. State: `EXTRACTED` → `SAFETY_EVALUATED`. |
-| 6 | `/api/summary/generate` | `POST` | `session_id` | Requires `SAFETY_EVALUATED`. Assembles doctor summary card deterministically without LLM. | Returns bilingual `SummaryCard`. State: `SAFETY_EVALUATED` → `SUMMARIZED`. |
+| 5 | `/api/safety/evaluate` | `POST` | `session_id` | Requires `CONFIRMED`. Deterministic red-flag engine scans confirmed text against rule patterns with negation window. | Returns `SafetyResponse` with triggered rules. State: `EXTRACTED` → `EVALUATED`. |
+| 6 | `/api/summary/generate` | `POST` | `session_id` | Requires `EVALUATED`. Assembles doctor summary card deterministically without LLM. | Returns bilingual `SummaryCard`. State: `EVALUATED` → `SUMMARIZED`. |
 | 7 | `/api/speech/generate` | `POST` | `session_id` | Requires `SUMMARIZED`. Selects pre-scripted Bangla template (reassurance + urgent care if flagged); synthesizes audio via gTTS. | Returns base64 audio and template text. |
 | 8 | `/api/session/{id}` | `DELETE` | `session_id` (Path) | Explicit consultation termination; purges session from memory immediately. | 204 No Content. |
 
@@ -376,7 +380,7 @@ Every provider adapter implements a typed `Protocol`. Model IDs are marked **TO 
 10. **Step 11 — Bangla TTS Spoken Reply (Module H)**: Implement template-based reassurance and urgent triage voice reply via `gTTS`; handle browser speech synthesis fallback.
 11. **Step 12 — Demo Mode**: Integrate prepared scenarios A (ordinary), B (red flag), and C (uncertain) with clear badges across UI and API.
 12. **Step 13 — UI Polish**: Accessibility audit (WCAG AA), Bangla typography line-height (`leading-loose` ≥ 1.7), responsiveness across 360px, 768px, and 1280px widths.
-13. **Step 14 — Full Test Suite**: Execute backend pytest (69+ tests) and frontend Vitest (20+ tests); verify no persistent files and zero patient text in logs.
+13. **Step 14 — Full Test Suite**: Execute backend pytest (131 tests) and frontend Vitest (33 tests); verify no persistent files and zero patient text in logs.
 14. **Step 15 — README & Attribution**: Document models, limitations, verified vs unverified dialects, team credits, and setup instructions.
 15. **Step 16 — Final Verification**: Run fresh-clone dry run, rehearse 3-minute judge demo script, execute security and safety verification checklists.
 

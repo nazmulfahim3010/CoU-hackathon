@@ -9,7 +9,7 @@ const MOCK_SAMPLES = [
     title: 'Scenario B — Red-flag symptoms',
     purpose: 'Chest pain with breathing difficulty; deterministic rules should trigger.',
     dialect: 'chittagonian (illustrative)',
-    speaker: 'Fictional patient / synthetic speech',
+    speaker: 'Synthetic standard-Bangla voice (gTTS), not a native dialect speaker',
     original_transcript: 'দুই ঘণ্টা ধরি বুগত খুব ব্যতা, নিঃশ্বাস নিতে কষ্ট অয়।',
     standard_bangla: 'দুই ঘণ্টা ধরে বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়।',
     verified_by: 'Fictional scenario — synthetic demo audio',

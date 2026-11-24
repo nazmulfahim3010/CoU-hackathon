@@ -7,18 +7,22 @@ from app.config import Settings, get_settings
 from app.core.session_manager import SessionManager
 from app.schemas.transcription import DemoScenario
 from app.services import demo_data
-from app.services.providers.llm import llm_configured
-from app.services.providers.stt import stt_configured
+from app.services.llm_provider import llm_configured
+from app.services.speech_to_text import stt_configured
 
 router = APIRouter(prefix="/api", tags=["health"])
 
 
 @router.get("/health")
 def health(s: Settings = Depends(get_settings), sessions: SessionManager = Depends(get_sessions)):
+    ffmpeg_ok = bool(shutil.which("ffmpeg"))
     return {
         "status": "ok",
         "app_mode": s.app_mode,
         "prototype": True,
+        "ffmpeg": {
+            "available": ffmpeg_ok,
+        },
         "providers": {
             "speech": {
                 "configured": stt_configured(s),
@@ -34,9 +38,7 @@ def health(s: Settings = Depends(get_settings), sessions: SessionManager = Depen
                 "provider": s.tts_provider,
             },
         },
-        # every uploaded recording is transcoded with ffmpeg, so live mode cannot work without it
-        "ffmpeg": {"available": shutil.which("ffmpeg") is not None},
-        "live_mode_ready": stt_configured(s) and llm_configured(s) and shutil.which("ffmpeg") is not None,
+        "live_mode_ready": ffmpeg_ok and stt_configured(s) and llm_configured(s),
         "active_sessions": len(sessions),
     }
 

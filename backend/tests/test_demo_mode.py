@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 import pytest
 from app.config import get_settings
+from app.services import text_to_speech
+from conftest import demo_confirmed
 
 
 def test_list_demo_samples(client):
@@ -20,6 +22,8 @@ def test_list_demo_samples(client):
         assert len(s["original_transcript"]) > 0
         assert len(s["standard_bangla"]) > 0
         assert s["speaker"]
+        assert "Synthetic" in s["speaker"]
+        assert "not a native" in s["speaker"].lower()  # synthetic voice, never a real speaker
 
 
 def test_get_demo_audio_stream(client):
@@ -327,4 +331,79 @@ def test_demo_responses_never_label_sample_or_cached_as_verified_without_native_
         assert "pre-verified" not in note.lower()
         assert not re.search(r"\bverified\b", note, re.IGNORECASE)
         assert "যাচাইকৃত" not in note
+
+
+def test_raw_datasets_source_md_exists_and_contains_table():
+    """Assert demo_assets/raw_datasets/SOURCE.md exists and contains a valid markdown table."""
+    source_md = Path(__file__).resolve().parents[2] / "demo_assets" / "raw_datasets" / "SOURCE.md"
+    assert source_md.exists(), "demo_assets/raw_datasets/SOURCE.md must exist"
+
+    content = source_md.read_text(encoding="utf-8")
+    lines = [line.strip() for line in content.splitlines()]
+
+    # Check for markdown table indicators (header separator like |---|---|)
+    table_separator = [line for line in lines if line.startswith("|") and "---" in line]
+    assert len(table_separator) >= 1, "SOURCE.md must contain a markdown table with separator '|---|'"
+
+    # Verify required headers and listed dataset files
+    assert "| filename" in content.lower() or "| file" in content.lower()
+    for fname in [
+        "Barishal_NER.csv",
+        "Chittagong_NER.csv",
+        "Mymensingh_NER.csv",
+        "Noakhali_NER.csv",
+        "Regional_NER (Raw Sentences).csv",
+        "Sylhet_NER.csv",
+    ]:
+        assert fname in content, f"{fname} must be documented in SOURCE.md"
+
+
+def run_full(client, scenario):
+    sid = demo_confirmed(client, scenario)
+    ext = client.post("/api/clinical/extract", json={"session_id": sid})
+    saf = client.post("/api/safety/evaluate", json={"session_id": sid})
+    summ = client.post("/api/summary/generate", json={"session_id": sid})
+    assert ext.status_code == saf.status_code == summ.status_code == 200
+    return sid, saf.json(), summ.json()
+
+
+@pytest.mark.parametrize("scenario,expected", [
+    ("A_ordinary", set()),
+    ("B_red_flag", {"CHEST_PAIN", "BREATHING_DIFFICULTY"}),
+    ("C_uncertain", set()),
+])
+def test_demo_scenarios_end_to_end(client, monkeypatch, scenario, expected):
+    monkeypatch.setattr(text_to_speech, "_synthesize_gtts", lambda t: b"ID3fake")
+    sid, saf, summ = run_full(client, scenario)
+    assert {r["rule_id"] for r in saf["triggered"]} == expected
+    assert {r["rule_id"] for r in summ["red_flags"]} == expected
+    assert "verification required" in summ["label_en"]
+    assert "not a diagnostic tool" in summ["disclaimer_en"]
+    assert summ["provenance"]["speech_to_text"] in ("demo_prepared_text", "demo_sample")
+    assert summ["provenance"]["red_flags"] == "deterministic rules"
+    assert summ["original_statement"] and summ["normalized_statement"]
+    keys = [s["key"] for s in summ["sections"]]
+    assert keys[:4] == ["chief_complaint", "symptoms", "duration", "severity"]
+    sp = client.post("/api/speech/generate", json={"session_id": sid}).json()
+    assert sp["audio_base64"] and sp["text_bn"]
+    assert ("জরুরি" in sp["text_bn"]) == bool(expected)
+    assert "রোগ নির্ণয় নয়" in sp["text_bn"]
+
+
+def test_uncertain_scenario_summary_does_not_claim_absence(client):
+    _, _, summ = run_full(client, "C_uncertain")
+    sev = next(s for s in summ["sections"] if s["key"] == "severity")
+    assert sev["en"] == ["Not reported"]
+    neg = next(s for s in summ["sections"] if s["key"] == "negatives")
+    assert neg["en"] == ["None explicitly stated"]
+
+
+def test_tts_failure_is_reported_not_faked(client, monkeypatch):
+    def boom(t):
+        raise RuntimeError("network down")
+    monkeypatch.setattr(text_to_speech, "_synthesize_gtts", boom)
+    sid, _, _ = run_full(client, "A_ordinary")
+    r = client.post("/api/speech/generate", json={"session_id": sid})
+    assert r.status_code == 503 and r.json()["error"]["code"] == "TTS_FAILED"
+    assert client.get(f"/api/speech/text/{sid}").json()["text_bn"]
 

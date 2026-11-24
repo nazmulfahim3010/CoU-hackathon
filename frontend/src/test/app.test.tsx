@@ -29,7 +29,7 @@ vi.mock('../services/api', async (orig) => {
           title: 'Scenario A — Ordinary symptoms',
           purpose: 'Headache and mild fever',
           dialect: 'sylheti',
-          speaker: 'Synthetic speech',
+          speaker: 'Synthetic standard-Bangla voice (gTTS), not a native dialect speaker',
           original_transcript: 'আইজ তিন দিন ধরি মোর মাতাত ব্যতা',
           standard_bangla: 'আজ তিন দিন ধরে আমার মাথায় ব্যথা',
           verified_by: 'sample / unverified',
@@ -202,6 +202,35 @@ describe('Intake page', () => {
     expect(screen.getByTestId('mode-badge')).toHaveTextContent('LIVE')
   })
 
+  it('warns when ffmpeg is unavailable in live mode and allows switching to demo', async () => {
+    vi.mocked(api.health).mockResolvedValueOnce({
+      status: 'ok',
+      ffmpeg: { available: false },
+      live_mode_ready: false,
+      providers: {
+        speech: { configured: true, provider: 'local', model: '' },
+        llm: { configured: true, provider: 'openai' },
+        tts: { configured: true, provider: 'gtts' },
+      },
+    })
+    mockMic(() => Promise.resolve({}))
+    renderAt('/intake', <Intake />)
+    expect(await screen.findByText(/ffmpeg is not installed on this server/i)).toBeInTheDocument()
+    const switchBtn = screen.getByRole('button', { name: /Switch to Demo samples/i })
+    expect(switchBtn).toBeInTheDocument()
+    await userEvent.click(switchBtn)
+    expect(screen.queryByText(/ffmpeg is not installed on this server/i)).not.toBeInTheDocument()
+    expect(screen.getByTestId('mode-badge')).toHaveTextContent('DEMO')
+  })
+
+  it('displays the synthetic voice label on demo audio clips', async () => {
+    mockMic(() => Promise.resolve({}))
+    renderAt('/intake', <Intake />)
+    const demoBtn = screen.getByRole('button', { name: /Demo samples/i })
+    await userEvent.click(demoBtn)
+    expect(await screen.findByText(/Synthetic voice — not a real dialect speaker/i)).toBeInTheDocument()
+  })
+
   it('renders optional age group and dialect selector options', async () => {
     mockMic(() => Promise.resolve({}))
     renderAt('/intake', <Intake />)
@@ -358,7 +387,7 @@ describe('Demo Mode in Intake', () => {
     expect(await screen.findByText('Scenario A — Ordinary symptoms')).toBeInTheDocument()
     expect(screen.getByText(/Sample \/ Unverified Dialect Transcript/i)).toBeInTheDocument()
     expect(screen.getByText(/Run live ASR on this synthetic clip/)).toBeInTheDocument()
-    expect(screen.getByText(/Synthetic voice — not a Sylheti speaker/)).toBeInTheDocument()
+    expect(screen.getByText(/Synthetic voice — not a real dialect speaker/)).toBeInTheDocument()
     expect(screen.getByText(/Use this sample/)).toBeInTheDocument()
 
     // Test clicking Run live ASR

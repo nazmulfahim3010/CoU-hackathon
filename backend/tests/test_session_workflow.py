@@ -163,3 +163,26 @@ def test_delete_wipes_session(client):
     # Confirm session is deleted from memory
     get_res = client.post("/api/normalization", json={"session_id": sid})
     assert get_res.status_code == 404
+
+
+def test_purge_removes_expired_data():
+    clock = MockClock()
+    sm = SessionManager(60, clock=clock)
+    s = sm.create("live")
+    s.data["original"] = "sensitive"
+    clock.time += 120
+    assert sm.purge_expired() == 1 and len(sm) == 0
+
+
+def test_session_ordering_enforced():
+    sm = SessionManager(60)
+    s = sm.create("demo")
+    with pytest.raises(KothaError):
+        sm.require(s.id, Stage.CONFIRMED)
+
+
+def test_summary_requires_extraction_and_safety(client):
+    sid = demo_confirmed(client, "A_ordinary")
+    assert client.post("/api/summary/generate", json={"session_id": sid}).status_code == 409
+    client.post("/api/safety/evaluate", json={"session_id": sid})
+    assert client.post("/api/summary/generate", json={"session_id": sid}).status_code == 409

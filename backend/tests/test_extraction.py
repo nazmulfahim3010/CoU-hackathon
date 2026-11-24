@@ -7,7 +7,7 @@ from app.config import Settings
 from app.core.exceptions import KothaError
 from app.schemas.clinical import BilingualField, ClinicalExtraction
 from app.services import clinical_extractor
-from conftest import FakeLLM, demo_confirmed, valid_extraction_json
+from conftest import FakeLLM, demo_confirmed, requires_ffmpeg, valid_extraction_json
 
 
 def test_schema_accepts_valid():
@@ -63,6 +63,7 @@ def test_missing_info_stays_not_reported_in_demo_extraction(client):
     assert ext["uncertain_or_missing"]
 
 
+@requires_ffmpeg
 def test_live_extraction_without_llm_is_503(client, monkeypatch):
     from conftest import FakeSTT, WEBM
     monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FakeSTT("জ্বর আছে"))
