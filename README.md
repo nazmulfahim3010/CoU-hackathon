@@ -265,7 +265,7 @@ All backend configurations are managed via `backend/.env` (read by `app/config.p
 | `SESSION_TTL_MINUTES` | `int` | `30` | In-memory session time-to-live before automatic garbage collection. |
 | `SESSION_TTL_SECONDS` | `int` | `1800` | In-memory session TTL in seconds. |
 | `SPEECH_PROVIDER` | `string` | `none` | Speech-to-text adapter: `none`, `local_transformers`, `hf_inference`, or `openai_compatible`. |
-| `SPEECH_MODEL` | `string` | `bangla-speech-processing/BanglaASR` | Model identifier (HF repo or OpenAI model name e.g. `whisper-1`). |
+| `SPEECH_MODEL` | `string` | *(empty = provider default)* | Model id. Empty uses the provider's own default: Groq `whisper-large-v3`, OpenAI `whisper-1`, Hugging Face `openai/whisper-large-v3`. Never reuse one provider's id on another (HTTP 400). |
 | `SPEECH_API_KEY` | `string` | `""` | API key for cloud STT endpoints (HF Inference or OpenAI-compatible). **Not required** for local Hugging Face model (`local_transformers`), which needs only a model download. |
 | `SPEECH_BASE_URL` | `string` | `""` | Optional endpoint override (e.g. custom Groq/vLLM URL). |
 | `LLM_PROVIDER` | `string` | `none` | Configurable LLM adapter: `none`, `anthropic`, or `openai_compatible` (e.g. OpenAI, Groq, Ollama, vLLM). |
@@ -359,8 +359,9 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 
 ### Models Actually Integrated in Code
 1. **Speech-to-Text (STT)**:
-   - `bangla-speech-processing/BanglaASR` (Whisper fine-tune via Hugging Face Inference or local `transformers` pipeline; local pipeline requires only downloading model weights, no API key).
-   - `whisper-1` (or equivalent) via any OpenAI-compatible `/audio/transcriptions` endpoint.
+   - **Groq `whisper-large-v3` / `whisper-large-v3-turbo`** via the OpenAI-compatible `/audio/transcriptions` endpoint (`https://api.groq.com/openai/v1`): verified working with a real call on 2026-11-24 (all browser formats after ffmpeg conversion).
+   - `whisper-1` (or equivalent) via any OpenAI-compatible endpoint (OpenAI key tested: provider returned 429 `credit_balance_exhausted`, so not verified).
+   - Hugging Face Inference: `bangla-speech-processing/BanglaASR` and `openai/whisper-small/base/tiny` return **HTTP 400 "Model not supported by provider hf-inference"**; `openai/whisper-large-v3` is served but returned 402 (needs pre-paid HF credits). Not verified. `bangla-speech-processing/BanglaASR` remains usable only through the local `transformers` pipeline (no API key, untested here).
    - *Manual Fallback*: `POST /api/transcription/typed` (tagged `source: "typed_by_helper"`).
 2. **Configurable Large Language Models (LLM)**:
    - Configurable via `LLM_PROVIDER`, `LLM_MODEL`, and `LLM_BASE_URL`.

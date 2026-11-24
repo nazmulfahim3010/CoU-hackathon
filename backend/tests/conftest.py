@@ -9,6 +9,12 @@ from fastapi.testclient import TestClient
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from app.config import Settings, get_settings  # noqa: E402
+
+# Tests must NEVER read a developer's backend/.env (real API keys, APP_MODE=live). Disable dotenv loading
+# before anything builds Settings, and drop any cached instance.
+Settings.model_config["env_file"] = None
+get_settings.cache_clear()
+
 from app.main import create_app  # noqa: E402
 from app.services.speech_to_text import STTResult  # noqa: E402
 

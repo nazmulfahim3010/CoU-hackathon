@@ -16,7 +16,9 @@ class Settings(BaseSettings):
 
     # Speech-to-text. provider: none | hf_inference | openai_compatible
     speech_provider: str = "none"
-    speech_model: str = "bangla-speech-processing/BanglaASR"
+    # Empty = use that provider's own default (see services/speech_to_text.py: effective_speech_model).
+    # Never default to one provider's model id: sending it to another provider returns HTTP 400.
+    speech_model: str = ""
     speech_api_key: str = ""
     speech_base_url: str = ""  # openai_compatible: e.g. https://api.openai.com/v1
 

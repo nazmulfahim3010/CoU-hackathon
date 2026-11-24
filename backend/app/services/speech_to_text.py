@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -23,6 +24,48 @@ from app.core.logging import get_logger
 from app.core.security import validate_audio
 
 log = get_logger("stt")
+
+# Defaults per provider. hf-inference answers "Model not supported by provider hf-inference" (HTTP 400) for
+# BanglaASR, whisper-small/base/tiny; whisper-large-v3 IS served but the HF account needs pre-paid credits (402).
+HF_DEFAULT_MODEL = "openai/whisper-large-v3"
+LOCAL_DEFAULT_MODEL = "openai/whisper-tiny"
+
+_SECRET_RE = re.compile(r"(?:gsk_|sk-[A-Za-z0-9]*-?|hf_|AQ\.|Bearer\s+)[A-Za-z0-9_\-\.]{8,}")
+
+
+def effective_speech_model(s: Settings) -> str:
+    """The model id actually sent. An explicit SPEECH_MODEL always wins; otherwise a default that exists on the
+    configured provider (Groq: whisper-large-v3, OpenAI: whisper-1, Hugging Face: openai/whisper-large-v3)."""
+    if s.speech_model:
+        return s.speech_model
+    if s.speech_provider == "hf_inference":
+        return HF_DEFAULT_MODEL
+    if s.speech_provider == "openai_compatible":
+        return "whisper-large-v3" if "groq.com" in (s.speech_base_url or "").lower() else "whisper-1"
+    return LOCAL_DEFAULT_MODEL
+
+
+def safe_provider_hint(resp: httpx.Response, limit: int = 160) -> str:
+    """A short, sanitized reason taken from a provider error body (e.g. 'Model not supported by provider
+    hf-inference'). Never contains keys, auth headers or audio: only the provider's own error text, with any
+    key-looking token redacted, control characters removed and length capped."""
+    msg = ""
+    try:
+        data = resp.json()
+    except ValueError:
+        data = None
+    if isinstance(data, dict):
+        err = data.get("error", data.get("message"))
+        if isinstance(err, dict):
+            err = err.get("message") or err.get("code") or err.get("type")
+        if isinstance(err, str):
+            msg = err
+    elif data is None and "text" in resp.headers.get("content-type", ""):
+        msg = resp.text[: limit * 2]
+    msg = _SECRET_RE.sub("<redacted>", msg)
+    msg = re.sub(r"[^\S ]+|[\x00-\x1f]", " ", msg)
+    msg = re.sub(r"\s+", " ", msg).strip()
+    return msg[:limit]
 
 
 @dataclass
@@ -109,10 +152,13 @@ def raise_for_stt(exc: Exception, provider: str) -> None:
         ) from exc
     if isinstance(exc, httpx.HTTPStatusError):
         log.warning("provider=%s status=%s", provider, exc.response.status_code)
+        hint = safe_provider_hint(exc.response)
         raise KothaError(
             502,
             "PROVIDER_ERROR",
-            f"স্পিচ রিকগনিশন সেবা ত্রুটি দিয়েছে (HTTP {exc.response.status_code}). অনুগ্রহ করে টাইপ করুন বা ডেমো মোড ব্যবহার করুন।",
+            f"স্পিচ রিকগনিশন সেবা ত্রুটি দিয়েছে (HTTP {exc.response.status_code})"
+            + (f" — {hint}" if hint else "")
+            + "। অনুগ্রহ করে টাইপ করুন বা ডেমো মোড ব্যবহার করুন।",
         ) from exc
     raise KothaError(
         502,
@@ -127,7 +173,7 @@ class LocalTransformersSTT:
     name = "local_transformers"
 
     def __init__(self, s: Settings):
-        self._model = s.speech_model or "openai/whisper-tiny"
+        self._model = effective_speech_model(s)
         self._pipeline = None
 
     def _get_pipeline(self):
@@ -164,7 +210,7 @@ class HFInferenceSTT:
     name = "hf_inference"
 
     def __init__(self, s: Settings):
-        self._model = s.speech_model or "bangla-speech-processing/BanglaASR"
+        self._model = effective_speech_model(s)
         self._key = s.speech_api_key
         self._timeout = s.provider_timeout_seconds
         self._base = (s.speech_base_url or "https://router.huggingface.co/hf-inference/models").rstrip("/")
@@ -191,7 +237,7 @@ class OpenAICompatSTT:
     name = "openai_compatible"
 
     def __init__(self, s: Settings):
-        self._model = s.speech_model or "whisper-1"
+        self._model = effective_speech_model(s)
         self._key = s.speech_api_key
         self._timeout = s.provider_timeout_seconds
         self._base = (s.speech_base_url or "https://api.openai.com/v1").rstrip("/")
@@ -215,9 +261,9 @@ class OpenAICompatSTT:
 
 def stt_configured(s: Settings) -> bool:
     if s.speech_provider in ("hf_inference", "openai_compatible"):
-        return bool(s.speech_api_key and s.speech_model)
+        return bool(s.speech_api_key)  # the model has a per-provider default
     if s.speech_provider == "local_transformers":
-        return bool(s.speech_model)
+        return True
     return False
 
 
