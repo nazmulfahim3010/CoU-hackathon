@@ -567,6 +567,20 @@ describe('Processing page', () => {
     expect(await screen.findByTestId('elsewhere')).toBeInTheDocument()
   })
 
+  it('still shows the rule-based safety alert when AI extraction fails', async () => {
+    vi.mocked(api.evaluateSafety).mockResolvedValueOnce({
+      triggered: [{ rule_id: 'CHEST_PAIN', status: 'triggered', alert_level: 'emergency', name_en: 'Chest pain', name_bn: 'বুকে ব্যথা', recommended_action_bn: 'জরুরি সেবা নিন' }],
+      needs_information: [],
+      negated: [],
+      notice_en: '',
+      notice_bn: '',
+    } as never)
+    vi.mocked(api.extract).mockRejectedValueOnce(new ApiError(503, 'PROVIDER_RATE_LIMITED', 'busy'))
+    renderAt('/processing', <Processing />, { sessionId: 's1', mode: 'live' })
+    expect(await screen.findByTestId('safety-on-failure')).toHaveTextContent('Chest pain')
+    expect(api.summary).not.toHaveBeenCalledWith('s1')
+  })
+
   it('redirects to intake if no session ID is present', () => {
     renderAt('/processing', <Processing />, { sessionId: null })
     expect(screen.getByTestId('elsewhere')).toBeInTheDocument()

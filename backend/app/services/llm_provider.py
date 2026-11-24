@@ -8,6 +8,7 @@ Candidate Verification:
 """
 from __future__ import annotations
 
+import asyncio
 from typing import Protocol
 import httpx
 
@@ -25,6 +26,30 @@ class LLMProvider(Protocol):
         ...
 
 
+RATE_LIMIT_RETRIES = 2
+MAX_RETRY_WAIT_SECONDS = 8.0
+
+
+def retry_wait_seconds(resp: httpx.Response, attempt: int) -> float:
+    """How long to wait before retrying a 429/503: the provider's Retry-After (capped), else a short backoff."""
+    try:
+        wait = float(resp.headers.get("retry-after", ""))
+    except ValueError:
+        wait = 1.5 * (attempt + 1)
+    return max(0.2, min(wait, MAX_RETRY_WAIT_SECONDS))
+
+
+async def post_with_retry(client: httpx.AsyncClient, url: str, **kwargs) -> httpx.Response:
+    """POST, retrying a couple of times on 429/503 so a brief rate limit does not fail the patient's session."""
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
+        r = await client.post(url, **kwargs)
+        if r.status_code in (429, 503) and attempt < RATE_LIMIT_RETRIES:
+            await asyncio.sleep(retry_wait_seconds(r, attempt))
+            continue
+        return r
+    return r  # pragma: no cover
+
+
 # Type alias for backward compatibility
 LLMClient = LLMProvider
 
@@ -39,6 +64,12 @@ def raise_for_provider(exc: Exception, provider: str) -> None:
         ) from exc
     if isinstance(exc, httpx.HTTPStatusError):
         log.warning("provider=%s status=%s", provider, exc.response.status_code)
+        if exc.response.status_code == 429:
+            raise KothaError(
+                503,
+                "PROVIDER_RATE_LIMITED",
+                f"{provider} এখন ব্যস্ত (rate limit)। কয়েক সেকেন্ড পরে আবার চেষ্টা করুন (Provider rate limit reached; please retry in a few seconds).",
+            ) from exc
         raise KothaError(
             502,
             "PROVIDER_ERROR",
@@ -65,7 +96,8 @@ class AnthropicProvider:
     async def complete(self, system: str, user: str, max_tokens: int = 1500) -> str:
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as c:
-                r = await c.post(
+                r = await post_with_retry(
+                    c,
                     f"{self._base}/v1/messages",
                     headers={
                         "x-api-key": self._key,
@@ -116,7 +148,8 @@ class OpenAICompatProvider:
                     payload["response_format"] = {"type": "json_object"}
 
                 try:
-                    r = await c.post(
+                    r = await post_with_retry(
+                        c,
                         f"{self._base}/chat/completions",
                         headers={"Authorization": f"Bearer {self._key}"},
                         json=payload,
@@ -126,7 +159,8 @@ class OpenAICompatProvider:
                     if err.response.status_code == 400 and "response_format" in payload:
                         # Model/endpoint does not support json_object mode; retry without response_format
                         payload.pop("response_format", None)
-                        r = await c.post(
+                        r = await post_with_retry(
+                            c,
                             f"{self._base}/chat/completions",
                             headers={"Authorization": f"Bearer {self._key}"},
                             json=payload,

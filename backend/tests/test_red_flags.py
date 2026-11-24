@@ -165,11 +165,11 @@ def test_safety_route_state_gate(client):
     client.post("/api/normalization", json={"session_id": sid})
     assert client.post("/api/safety/evaluate", json={"session_id": sid}).status_code == 409
 
-    # CONFIRMED state (extraction not done yet) -> Must be 409
+    # CONFIRMED state: red flags are deterministic and must work even if the LLM extraction has not run or failed
     sid2 = demo_confirmed(client, "A_ordinary")
-    assert client.post("/api/safety/evaluate", json={"session_id": sid2}).status_code == 409
+    assert client.post("/api/safety/evaluate", json={"session_id": sid2}).status_code == 200
 
-    # EXTRACTED state -> Must be 200 and transition to EVALUATED
+    # EXTRACTED state -> still 200
     ext_res = client.post("/api/clinical/extract", json={"session_id": sid2})
     assert ext_res.status_code == 200
     eval_res = client.post("/api/safety/evaluate", json={"session_id": sid2})
