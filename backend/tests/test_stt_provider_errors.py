@@ -67,7 +67,7 @@ def test_400_keeps_a_safe_provider_hint(mock_provider):
     s = Settings(speech_provider="hf_inference", speech_api_key=KEY)
     with pytest.raises(KothaError) as e:
         asyncio.run(stt.HFInferenceSTT(s).transcribe(wav_bytes(), "audio/wav"))
-    assert e.value.status_code == 502 and e.value.code == "PROVIDER_ERROR"
+    assert e.value.status_code == 502 and e.value.code == "ASR_PROVIDER_REJECTED"
     assert "HTTP 400" in e.value.message
     assert "Model not supported by provider hf-inference" in e.value.message
     assert KEY not in e.value.message
@@ -92,7 +92,7 @@ def test_a_provider_that_echoes_the_key_is_redacted(mock_provider):
     with pytest.raises(KothaError) as e:
         asyncio.run(stt.OpenAICompatSTT(groq()).transcribe(wav_bytes(), "audio/wav"))
     assert KEY not in e.value.message and "A1b2C3d4E5" not in e.value.message
-    assert "<redacted>" in e.value.message
+    assert "redacted" in e.value.message  # the marker survives the character filter as plain text
 
 
 def test_hint_is_short_single_line_and_ignores_html_pages():
@@ -112,14 +112,14 @@ def test_non_http_failures_stay_generic(monkeypatch):
     monkeypatch.setattr(stt.httpx, "AsyncClient", boom)
     with pytest.raises(KothaError) as e:
         asyncio.run(stt.OpenAICompatSTT(groq()).transcribe(wav_bytes(), "audio/wav"))
-    assert e.value.code == "PROVIDER_UNREACHABLE"
+    assert e.value.code == "ASR_PROVIDER_UNAVAILABLE"
 
 
 # ---------- request shape for Groq (OpenAI-compatible)
 def test_groq_request_is_a_correct_multipart_upload(mock_provider):
-    seen = mock_provider(lambda r: httpx.Response(200, json={"text": "ok"}))
+    seen = mock_provider(lambda r: httpx.Response(200, json={"text": "আমার মাথা ব্যথা"}))
     out = asyncio.run(stt.OpenAICompatSTT(groq(speech_model="whisper-large-v3")).transcribe(wav_bytes(), "audio/wav"))
-    assert out.text == "ok" and out.model == "whisper-large-v3"
+    assert out.text == "আমার মাথা ব্যথা" and out.model == "whisper-large-v3"
     assert seen["url"] == "https://api.groq.com/openai/v1/audio/transcriptions"
     assert seen["headers"]["authorization"] == f"Bearer {KEY}"
     assert seen["headers"]["content-type"].startswith("multipart/form-data")
@@ -143,7 +143,7 @@ def test_effective_model_defaults_per_provider():
 
 
 def test_groq_without_a_model_sends_a_groq_model(mock_provider):
-    seen = mock_provider(lambda r: httpx.Response(200, json={"text": "ok"}))
+    seen = mock_provider(lambda r: httpx.Response(200, json={"text": "আমার মাথা ব্যথা"}))
     asyncio.run(stt.OpenAICompatSTT(groq()).transcribe(wav_bytes(), "audio/wav"))
     assert b"whisper-large-v3" in seen["body"] and b"BanglaASR" not in seen["body"]
 
@@ -169,7 +169,7 @@ def test_route_surfaces_hint_leaves_no_temp_files_and_logs_nothing_sensitive(cli
 
     assert r.status_code == 502
     msg = r.json()["error"]["message"]
-    assert r.json()["error"]["code"] == "PROVIDER_ERROR"
+    assert r.json()["error"]["code"] == "ASR_PROVIDER_REJECTED"
     assert "HTTP 400" in msg and "Model not supported by provider hf-inference" in msg
     assert KEY not in json.dumps(r.json()) and KEY not in caplog.text
     assert os.listdir(tmp_path) == []  # temp audio removed even though the provider failed

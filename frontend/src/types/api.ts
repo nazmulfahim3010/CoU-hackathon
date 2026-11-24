@@ -71,6 +71,9 @@ export interface GlossaryMatch {
 export interface NormalizationResponse {
   session_id: string
   original: string
+  original_text?: string
+  transliterated_text?: string | null
+  script_type?: 'bangla_script' | 'romanized' | 'mixed'
   normalized: string
   source: 'llm_with_glossary' | 'glossary_only' | 'demo_prepared' | 'cached_demo_output'
   glossary_matches: GlossaryMatch[]

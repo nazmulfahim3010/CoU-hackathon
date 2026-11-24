@@ -115,12 +115,25 @@ class OpenAICompatProvider:
                 if "json" in system.lower():
                     payload["response_format"] = {"type": "json_object"}
 
-                r = await c.post(
-                    f"{self._base}/chat/completions",
-                    headers={"Authorization": f"Bearer {self._key}"},
-                    json=payload,
-                )
-                r.raise_for_status()
+                try:
+                    r = await c.post(
+                        f"{self._base}/chat/completions",
+                        headers={"Authorization": f"Bearer {self._key}"},
+                        json=payload,
+                    )
+                    r.raise_for_status()
+                except httpx.HTTPStatusError as err:
+                    if err.response.status_code == 400 and "response_format" in payload:
+                        # Model/endpoint does not support json_object mode; retry without response_format
+                        payload.pop("response_format", None)
+                        r = await c.post(
+                            f"{self._base}/chat/completions",
+                            headers={"Authorization": f"Bearer {self._key}"},
+                            json=payload,
+                        )
+                        r.raise_for_status()
+                    else:
+                        raise
                 return r.json()["choices"][0]["message"]["content"] or ""
         except (httpx.HTTPError, KeyError, IndexError, ValueError) as exc:
             raise_for_provider(exc, "openai_compatible")

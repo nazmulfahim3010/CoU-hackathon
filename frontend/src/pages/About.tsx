@@ -12,9 +12,9 @@ function SectionBlock({
   children: React.ReactNode
 }) {
   return (
-    <section className="rounded-3xl border border-deep/10 bg-white p-6 sm:p-8 shadow-sm space-y-3">
+    <section className="rounded-3xl border border-deep/10 bg-white p-6 sm:p-8 lg:p-10 shadow-sm space-y-3">
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand">
+        <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand/10 text-brand shrink-0">
           <Icon className="h-5 w-5" aria-hidden />
         </span>
         <h2 className="text-xl font-bold text-deep">{title}</h2>
@@ -28,14 +28,14 @@ function SectionBlock({
 
 export default function About() {
   return (
-    <div className="mx-auto max-w-4xl space-y-8 pb-12">
+    <div className="w-full max-w-6xl mx-auto space-y-8 pb-12">
       {/* Title & Introduction */}
       <div className="space-y-3">
         <h1 className="text-3xl sm:text-4xl font-extrabold text-deep">About Kotha (কথা)</h1>
         <p className="text-lg sm:text-xl text-brand font-semibold font-bangla" lang="bn">
           আপনার কণ্ঠ। আপনার ভাষা। উন্নত স্বাস্থ্যসেবা।
         </p>
-        <p className="text-base sm:text-lg text-ink/85 leading-relaxed">
+        <p className="text-base sm:text-lg text-ink/85 leading-relaxed max-w-3xl">
           Kotha is an AI-assisted patient intake and clinical documentation prototype designed for Bangladesh's linguistically diverse healthcare landscape. It enables patients to voice health concerns in their regional dialect, empowers them to confirm the text, and generates a structured bilingual clinical summary for healthcare providers.
         </p>
       </div>
@@ -60,7 +60,7 @@ export default function About() {
         <p>
           Kotha bridges this divide through four tightly coordinated pillars:
         </p>
-        <div className="grid gap-3 sm:grid-cols-2 pt-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 pt-2">
           <div className="rounded-2xl bg-soft p-4 border border-deep/5 space-y-1">
             <h3 className="font-bold text-deep text-sm">1. Dialect-Aware ASR</h3>
             <p className="text-xs text-ink/70">Pretrained Bangla acoustic models convert speech to raw phonetic text, allowing patients to speak without typing barriers.</p>

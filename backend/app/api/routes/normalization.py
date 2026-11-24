@@ -94,5 +94,7 @@ async def normalization(
     session.normalization_notes = result.warnings
     session.data["normalized"] = result.normalized
     session.data["norm_source"] = result.source
+    session.data["transliterated"] = result.transliterated_text
+    session.data["script_type"] = result.script_type
     session.stage = Stage.NORMALIZED
     return result

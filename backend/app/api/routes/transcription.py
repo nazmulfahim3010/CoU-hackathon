@@ -12,7 +12,7 @@ from app.schemas.transcription import (
 )
 from app.services import demo_data
 from app.services.glossary_service import clean_text
-from app.services.speech_to_text import get_stt, process_audio
+from app.services.speech_to_text import get_stt, process_audio, validate_bangla_script
 
 router = APIRouter(prefix="/api", tags=["transcription"])
 log = get_logger("transcription")
@@ -72,8 +72,7 @@ async def transcribe(
     del wav_bytes
 
     text = clean_text(result.text)
-    if not text:
-        raise KothaError(422, "NO_SPEECH_DETECTED", "No speech was detected. Please record again, closer to the microphone.")
+    validate_bangla_script(text)
 
     if session is None:
         session = sessions.create("live")

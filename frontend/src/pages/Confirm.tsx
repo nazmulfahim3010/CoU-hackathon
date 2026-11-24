@@ -10,16 +10,43 @@ export default function Confirm() {
   const nav = useNavigate()
   const [original, setOriginal] = useState(normalization?.original ?? '')
   const [standard, setStandard] = useState(normalization?.normalized ?? '')
-  const [reviewed, setReviewed] = useState(true)
+  const [reviewed, setReviewed] = useState(false)
   const [confirmedBy, setConfirmedBy] = useState<'patient' | 'helper'>('patient')
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
+  const [acknowledgedWarning, setAcknowledgedWarning] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!sessionId || !normalization || !transcription) return <Navigate to="/intake" replace />
 
+  const isRomanConverted = Boolean(
+    normalization?.script_type === 'romanized' ||
+      normalization?.script_type === 'mixed' ||
+      normalization?.transliterated_text ||
+      normalization?.warnings?.some((w) => w.toLowerCase().includes('roman letters'))
+  )
+
+  const isStrongWarning = Boolean(
+    isRomanConverted ||
+      normalization?.warnings?.some((w) => {
+        const lower = w.toLowerCase()
+        return (
+          lower.includes('invalid response') ||
+          lower.includes('no glossary term') ||
+          lower.includes('meaning-preservation') ||
+          lower.includes('roman letters') ||
+          lower.includes('unverified')
+        )
+      })
+  )
+
   const edited = original !== normalization.original || standard !== normalization.normalized
-  const canConfirm = reviewed && standard.trim().length > 0 && original.trim().length > 0 && !busy
+  const canConfirm =
+    reviewed &&
+    standard.trim().length > 0 &&
+    original.trim().length > 0 &&
+    (!isStrongWarning || acknowledgedWarning) &&
+    !busy
 
   const confirm = async () => {
     setBusy(true)
@@ -57,7 +84,7 @@ export default function Confirm() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="w-full max-w-7xl mx-auto space-y-6 pb-28 lg:pb-36">
       <StepDots step={1} />
 
       {/* Header & Badges */}
@@ -84,8 +111,49 @@ export default function Confirm() {
         </p>
       </div>
 
-      {/* Prominent Normalization Warnings */}
-      {normalization.warnings.length > 0 && (
+      {/* Strong Warning when LLM invalid response or no glossary terms matched */}
+      {isStrongWarning && (
+        <div
+          data-testid="strong-warning"
+          className="rounded-2xl border-2 border-red-500 bg-red-50/95 p-5 text-red-950 shadow-sm space-y-3"
+          role="alert"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-6 w-6 shrink-0 text-red-600 mt-0.5" aria-hidden />
+            <div>
+              <h2 className="text-lg font-bold text-red-900 font-bangla" lang="bn">
+                জরুরি সতর্কবার্তা: স্বয়ংক্রিয় রূপান্তর অসম্পূর্ণ বা যাচাইবিহীন (Action Required)
+              </h2>
+              <p className="mt-1 text-sm text-red-900/90 font-bangla" lang="bn">
+                ভাষাগত এআই বা শব্দকোষ থেকে এই কথার কোনো প্রমিত রূপান্তর নিশ্চিত করা যায়নি। ডাক্তারের কাছে পাঠানোর আগে অনুগ্রহ করে লেখাটি নিজ হাতে সংশোধন করুন অথবা নিশ্চিত করতে নিচে টিক চিহ্ন দিন।
+              </p>
+            </div>
+          </div>
+
+          <ul className="list-inside list-disc pl-2 space-y-1 text-xs text-red-800 font-medium">
+            {normalization.warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+
+          <label className="flex items-start gap-2.5 rounded-xl border border-red-300 bg-white p-3 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              id="ack-warning-checkbox"
+              data-testid="ack-warning-checkbox"
+              checked={acknowledgedWarning}
+              onChange={(e) => setAcknowledgedWarning(e.target.checked)}
+              className="mt-0.5 h-4 w-4 rounded border-red-400 text-red-600 focus:ring-red-500"
+            />
+            <span className="text-sm font-semibold text-red-950 font-bangla" lang="bn">
+              আমি সতর্কবার্তা পড়েছি এবং উল্লেখিত তথ্য সঠিক বলে নিশ্চিত করছি (I acknowledge and verified the warnings)
+            </span>
+          </label>
+        </div>
+      )}
+
+      {/* Prominent Normalization Warnings (standard notice when not high warning) */}
+      {!isStrongWarning && normalization.warnings.length > 0 && (
         <div className="rounded-xl border border-warn/40 bg-amber-50 p-4 text-amber-950" role="alert">
           <div className="flex items-start gap-2.5 font-semibold text-amber-900">
             <AlertTriangle className="h-5 w-5 shrink-0 text-warn" aria-hidden />
@@ -100,30 +168,38 @@ export default function Confirm() {
       )}
 
       {/* Side-by-Side (Stacked on Mobile) Comparison */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Original Dialect Transcript */}
-        <div className="flex flex-col rounded-2xl border border-deep/15 bg-white p-5 shadow-sm">
+      <div className="grid gap-6 md:grid-cols-2 items-stretch">
+        {/* Original Dialect / Typed Transcript */}
+        <div className="flex flex-col rounded-2xl border border-deep/15 bg-white p-5 lg:p-6 shadow-sm">
           <div className="mb-2 flex items-center justify-between">
             <div>
               <span className="flex items-center gap-2 text-lg font-bold text-deep font-bangla" lang="bn">
                 <Pencil className="h-4 w-4 text-ink/60" aria-hidden />
                 আপনার কথা (মূল)
               </span>
-              <span className="text-xs text-ink/60">Original transcript as spoken</span>
+              <span className="text-xs text-ink/60">
+                {isRomanConverted ? 'Original typed text (রোমান হরফে লেখা)' : 'Original transcript as spoken'}
+              </span>
             </div>
             <span className="rounded bg-soft px-2 py-0.5 text-xs text-ink/60">Editable</span>
           </div>
           <textarea
-            className="mt-2 min-h-48 w-full flex-1 rounded-xl border border-deep/20 p-4 font-bangla text-xl leading-loose text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20"
+            className="mt-2 min-h-52 lg:min-h-64 w-full flex-1 rounded-xl border border-deep/20 p-4 font-bangla text-xl leading-loose text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/20 resize-y"
             lang="bn"
             value={original}
             onChange={(e) => setOriginal(e.target.value)}
             aria-label="Original transcript"
           />
+          {normalization.transliterated_text && (
+            <div className="mt-3 rounded-lg bg-brand/5 border border-brand/20 p-2.5 text-xs text-deep">
+              <span className="font-semibold font-bangla" lang="bn">বাংলা লিপিতে রূপান্তর (Transliterated): </span>
+              <span className="font-bangla font-medium text-brand" lang="bn">{normalization.transliterated_text}</span>
+            </div>
+          )}
         </div>
 
         {/* Standard Bangla Transcript */}
-        <div className="flex flex-col rounded-2xl border-2 border-brand/40 bg-white p-5 shadow-sm ring-1 ring-brand/20">
+        <div className="flex flex-col rounded-2xl border-2 border-brand/40 bg-white p-5 lg:p-6 shadow-sm ring-1 ring-brand/20">
           <div className="mb-2 flex items-center justify-between">
             <div>
               <span className="flex items-center gap-2 text-lg font-bold text-deep font-bangla" lang="bn">
@@ -135,7 +211,7 @@ export default function Confirm() {
             <span className="rounded bg-brand/10 px-2 py-0.5 text-xs font-semibold text-brand">Clinical Note</span>
           </div>
           <textarea
-            className="mt-2 min-h-48 w-full flex-1 rounded-xl border border-brand/40 p-4 font-bangla text-xl leading-loose text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+            className="mt-2 min-h-52 lg:min-h-64 w-full flex-1 rounded-xl border border-brand/40 p-4 font-bangla text-xl leading-loose text-ink focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30 resize-y"
             lang="bn"
             value={standard}
             onChange={(e) => setStandard(e.target.value)}
@@ -218,90 +294,98 @@ export default function Confirm() {
         </div>
       )}
 
-      {/* Mandatory Checkbox & Confirmed-By Selector */}
-      <div className="rounded-2xl border border-deep/15 bg-white p-5 shadow-sm space-y-4">
-        <label className="flex items-start gap-3 cursor-pointer select-none">
-          <input
-            type="checkbox"
-            id="reviewed-checkbox"
-            checked={reviewed}
-            onChange={(e) => setReviewed(e.target.checked)}
-            className="mt-1 h-5 w-5 rounded border-deep/30 text-brand focus:ring-brand"
-            aria-label="আমি পড়েছি এবং এটি সঠিক"
-          />
-          <div>
-            <span className="text-lg font-bold text-deep font-bangla" lang="bn">
-              আমি পড়েছি এবং এটি সঠিক
-            </span>
-            <p className="text-xs text-ink/70">
-              I have read the transcript and verify that it accurately reflects the symptoms and duration.
-            </p>
-          </div>
-        </label>
-
-        {/* Confirmed-by toggle */}
-        <div className="flex items-center gap-4 border-t border-deep/10 pt-3 text-sm">
-          <span className="flex items-center gap-1.5 font-semibold text-deep">
-            <UserCheck className="h-4 w-4 text-brand" aria-hidden />
-            নিশ্চিতকারী (Confirmed by):
-          </span>
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="radio"
-              name="confirmed_by"
-              value="patient"
-              checked={confirmedBy === 'patient'}
-              onChange={() => setConfirmedBy('patient')}
-              className="text-brand focus:ring-brand"
-            />
-            <span className="font-bangla" lang="bn">রোগী নিজে (Patient)</span>
-          </label>
-          <label className="flex items-center gap-1.5 cursor-pointer">
-            <input
-              type="radio"
-              name="confirmed_by"
-              value="helper"
-              checked={confirmedBy === 'helper'}
-              onChange={() => setConfirmedBy('helper')}
-              className="text-brand focus:ring-brand"
-            />
-            <span className="font-bangla" lang="bn">স্বাস্থ্যকর্মী / সহকারী (Helper)</span>
-          </label>
-        </div>
-      </div>
-
       {error && <ErrorBox title="Could not confirm" message={error} />}
 
-      {/* Action Buttons */}
-      <div className="flex flex-wrap items-center gap-4 pt-2">
-        <Button big onClick={confirm} disabled={!canConfirm}>
-          {busy ? <Spinner label="নিশ্চিত হচ্ছে…" /> : (
-            <span className="flex items-center gap-2 font-bangla text-lg" lang="bn">
-              <CheckCircle2 className="h-5 w-5" aria-hidden />
-              ঠিক আছে, নিশ্চিত করছি
-            </span>
-          )}
-        </Button>
-
-        <Link
-          to="/intake"
-          className="inline-flex min-h-16 items-center gap-2 rounded-xl border border-deep/30 bg-white px-6 font-bangla text-lg font-semibold text-deep transition-colors hover:bg-soft"
-          onClick={() => api.endSession(sessionId)}
-        >
-          <RotateCcw className="h-5 w-5" aria-hidden />
-          <span lang="bn">আবার রেকর্ড করুন</span>
-        </Link>
-
-        {edited && (
-          <span className="text-sm font-medium text-brand font-bangla" lang="bn">
-            ✓ আপনি লেখা সংশোধন করেছেন (Edited)
-          </span>
-        )}
-      </div>
-
-      <p className="text-xs text-ink/60">
+      <p className="text-xs text-ink/60 lg:pb-2">
         Kotha Safety Gate: No symptoms are extracted and no clinical summaries are created until you explicitly confirm the standard Bangla text.
       </p>
+
+      {/* Confirmation Controls: Sticky Bottom Bar on Desktop (lg+), Natural Inline Card on Mobile (<lg) */}
+      <div className="lg:fixed lg:bottom-0 lg:left-0 lg:right-0 lg:z-30 lg:bg-white/95 lg:backdrop-blur-md lg:border-t lg:border-deep/15 lg:py-4 lg:shadow-xl transition-all">
+        <div className="w-full max-w-7xl mx-auto lg:px-8">
+          <div className="rounded-2xl border border-deep/15 bg-white p-5 shadow-sm space-y-4 lg:space-y-0 lg:border-0 lg:p-0 lg:bg-transparent lg:shadow-none lg:flex lg:items-center lg:justify-between lg:gap-6">
+            
+            {/* Review Checkbox & Confirmed-By Toggle */}
+            <div className="space-y-3 lg:space-y-1.5 lg:max-w-2xl">
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  id="reviewed-checkbox"
+                  checked={reviewed}
+                  onChange={(e) => setReviewed(e.target.checked)}
+                  className="mt-1 h-5 w-5 rounded border-deep/30 text-brand focus:ring-brand shrink-0"
+                  aria-label="আমি পড়েছি এবং এটি সঠিক"
+                />
+                <div>
+                  <span className="text-lg font-bold text-deep font-bangla leading-snug" lang="bn">
+                    আমি পড়েছি এবং এটি সঠিক
+                  </span>
+                  <p className="text-xs text-ink/70">
+                    I have read the transcript and verify that it accurately reflects the symptoms and duration.
+                  </p>
+                </div>
+              </label>
+
+              {/* Confirmed-by toggle */}
+              <div className="flex flex-wrap items-center gap-3 border-t border-deep/10 pt-2 lg:border-t-0 lg:pt-0 text-sm">
+                <span className="flex items-center gap-1.5 font-semibold text-deep">
+                  <UserCheck className="h-4 w-4 text-brand shrink-0" aria-hidden />
+                  নিশ্চিতকারী (Confirmed by):
+                </span>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="confirmed_by"
+                    value="patient"
+                    checked={confirmedBy === 'patient'}
+                    onChange={() => setConfirmedBy('patient')}
+                    className="text-brand focus:ring-brand"
+                  />
+                  <span className="font-bangla" lang="bn">রোগী নিজে (Patient)</span>
+                </label>
+                <label className="flex items-center gap-1.5 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="confirmed_by"
+                    value="helper"
+                    checked={confirmedBy === 'helper'}
+                    onChange={() => setConfirmedBy('helper')}
+                    className="text-brand focus:ring-brand"
+                  />
+                  <span className="font-bangla" lang="bn">স্বাস্থ্যকর্মী / সহকারী (Helper)</span>
+                </label>
+                {edited && (
+                  <span className="text-xs font-semibold text-brand font-bangla pl-2" lang="bn">
+                    ✓ আপনি লেখা সংশোধন করেছেন (Edited)
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap items-center gap-3 shrink-0">
+              <Button big onClick={confirm} disabled={!canConfirm} className="min-h-14 lg:min-h-16">
+                {busy ? <Spinner label="নিশ্চিত হচ্ছে…" /> : (
+                  <span className="flex items-center gap-2 font-bangla text-lg" lang="bn">
+                    <CheckCircle2 className="h-5 w-5 shrink-0" aria-hidden />
+                    ঠিক আছে, নিশ্চিত করছি
+                  </span>
+                )}
+              </Button>
+
+              <Link
+                to="/intake"
+                className="inline-flex min-h-14 lg:min-h-16 items-center gap-2 rounded-xl border border-deep/30 bg-white px-5 font-bangla text-base lg:text-lg font-semibold text-deep transition-colors hover:bg-soft"
+                onClick={() => api.endSession(sessionId)}
+              >
+                <RotateCcw className="h-5 w-5 shrink-0" aria-hidden />
+                <span lang="bn">আবার রেকর্ড করুন</span>
+              </Link>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </div>
   )
 }

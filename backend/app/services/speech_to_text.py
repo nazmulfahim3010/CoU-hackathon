@@ -83,6 +83,40 @@ class SpeechToTextProvider(Protocol):
         ...
 
 
+def validate_bangla_script(text: str, min_bangla_ratio: float = 0.5) -> None:
+    """Validate that transcribed text contains predominantly Bengali script.
+
+    If fewer than ~50% of the alphabetic characters belong to the Bengali Unicode block (\u0980-\u09FF),
+    raise KothaError(422, 'ASR_NON_BANGLA', 'কথা বোঝা যায়নি, আবার বলুন বা লিখে দিন').
+    Strictly avoids logging or leaking the transcript text.
+    """
+    cleaned = (text or "").strip()
+    if not cleaned:
+        raise KothaError(
+            422,
+            "NO_SPEECH_DETECTED",
+            "No speech was detected. Please record again, closer to the microphone.",
+        )
+    letters = [ch for ch in cleaned if ch.isalpha()]
+    if letters:
+        bangla_chars = sum(1 for ch in letters if "\u0980" <= ch <= "\u09ff")
+        ratio = bangla_chars / len(letters)
+        if ratio < min_bangla_ratio:
+            raise KothaError(
+                422,
+                "ASR_NON_BANGLA",
+                "কথা বোঝা যায়নি, আবার বলুন বা লিখে দিন (Speech could not be recognized as Bangla. Please record again or type your note).",
+            )
+    else:
+        has_bangla = any("\u0980" <= ch <= "\u09ff" for ch in cleaned)
+        if not has_bangla:
+            raise KothaError(
+                422,
+                "ASR_NON_BANGLA",
+                "কথা বোঝা যায়নি, আবার বলুন বা লিখে দিন (Speech could not be recognized as Bangla. Please record again or type your note).",
+            )
+
+
 def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
     """Validate raw audio container, transcode to 16kHz mono PCM 16-bit WAV with ffmpeg,
     and verify duration <= 90s.
@@ -143,26 +177,50 @@ def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
 
 
 def raise_for_stt(exc: Exception, provider: str) -> None:
-    """Translate transport and provider errors into clean KothaError without leaking credentials."""
+    """Translate transport and provider errors into clean KothaError without leaking credentials or transcripts."""
     if isinstance(exc, (httpx.TimeoutException, asyncio.TimeoutError)):
         raise KothaError(
             504,
-            "PROVIDER_TIMEOUT",
+            "ASR_TIMEOUT",
             "স্পিচ রিকগনিশন সার্ভার সময়মতো সাড়া দেয়নি (ASR provider timed out). অনুগ্রহ করে আবার চেষ্টা করুন বা টাইপ করুন।",
         ) from exc
     if isinstance(exc, httpx.HTTPStatusError):
-        log.warning("provider=%s status=%s", provider, exc.response.status_code)
+        status = exc.response.status_code
+        # Provider's own error text, with keys redacted and non-text bodies (e.g. audio) ignored...
         hint = safe_provider_hint(exc.response)
+        # Provider error type/code (e.g. invalid_request_error) when the body has one
+        error_type = ""
+        try:
+            body = exc.response.json()
+            err = body.get("error") if isinstance(body, dict) else None
+            if isinstance(err, dict):
+                error_type = str(err.get("type") or err.get("code") or "")
+        except ValueError:
+            pass
+        # ...then restricted to a conservative character set so no user text can ride along in the reason.
+        keep = r"[^a-zA-Z0-9_\-\.\:\s`]"
+        error_type = re.sub(keep, "", error_type)[:40].strip()
+        hint = re.sub(keep, "", hint)[:100].strip()
+        detail = ": ".join(p for p in (error_type, hint) if p)
+        safe_reason = f"HTTP {status}: {detail}" if detail else f"HTTP {status}"
+
+        log.warning("stt_upstream_error provider=%s status=%s reason=%s", provider, status, safe_reason)
+
+        if 400 <= status < 500:
+            raise KothaError(
+                502,
+                "ASR_PROVIDER_REJECTED",
+                f"স্পিচ রিকগনিশন সেবা অনুরোধটি প্রত্যাখ্যান করেছে ({safe_reason}). অনুগ্রহ করে আবার চেষ্টা করুন বা টাইপ করে লিখুন।",
+            ) from exc
         raise KothaError(
             502,
-            "PROVIDER_ERROR",
-            f"স্পিচ রিকগনিশন সেবা ত্রুটি দিয়েছে (HTTP {exc.response.status_code})"
-            + (f" — {hint}" if hint else "")
-            + "। অনুগ্রহ করে টাইপ করুন বা ডেমো মোড ব্যবহার করুন।",
+            "ASR_PROVIDER_UNAVAILABLE",
+            f"স্পিচ রিকগনিশন সেবা সাময়িকভাবে অনুপলব্ধ ({safe_reason}). অনুগ্রহ করে কিছুক্ষণ পর চেষ্টা করুন বা টাইপ করে লিখুন।",
         ) from exc
+
     raise KothaError(
         502,
-        "PROVIDER_UNREACHABLE",
+        "ASR_PROVIDER_UNAVAILABLE",
         f"স্পিচ রিকগনিশন সেবা এই মুহূর্তে অনুপলব্ধ ({provider} unreachable). অনুগ্রহ করে টাইপ করে লিখুন বা ডেমো মোড ব্যবহার করুন।",
     ) from exc
 
@@ -198,6 +256,7 @@ class LocalTransformersSTT:
                 lambda: pipe(audio_bytes, generate_kwargs={"language": "bn", "task": "transcribe"}),
             )
             text = (res.get("text") or "").strip()
+            validate_bangla_script(text)
             return STTResult(text=text, confidence=None, provider=self.name, model=self._model)
         except Exception as exc:
             raise_for_stt(exc, self.name)
@@ -220,11 +279,17 @@ class HFInferenceSTT:
             async with httpx.AsyncClient(timeout=self._timeout) as c:
                 r = await c.post(
                     f"{self._base}/{self._model}",
-                    headers={"Authorization": f"Bearer {self._key}", "Content-Type": content_type or "audio/wav"},
+                    headers={
+                        "Authorization": f"Bearer {self._key}",
+                        "Content-Type": content_type or "audio/wav",
+                        "x-wait-for-model": "true",
+                    },
+                    params={"language": "bn", "task": "transcribe"},
                     content=audio_bytes,
                 )
                 r.raise_for_status()
                 text = (r.json().get("text") or "").strip()
+                validate_bangla_script(text)
         except Exception as exc:
             raise_for_stt(exc, self.name)
             raise
@@ -248,11 +313,17 @@ class OpenAICompatSTT:
                 r = await c.post(
                     f"{self._base}/audio/transcriptions",
                     headers={"Authorization": f"Bearer {self._key}"},
-                    data={"model": self._model, "language": "bn", "response_format": "json"},
+                    data={
+                        "model": self._model,
+                        "language": "bn",
+                        "response_format": "json",
+                        "prompt": "বাংলায় বলুন।",
+                    },
                     files={"file": ("recording.wav", audio_bytes, content_type or "audio/wav")},
                 )
                 r.raise_for_status()
                 text = (r.json().get("text") or "").strip()
+                validate_bangla_script(text)
         except Exception as exc:
             raise_for_stt(exc, self.name)
             raise

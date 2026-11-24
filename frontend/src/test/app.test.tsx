@@ -259,6 +259,8 @@ describe('Confirm page', () => {
   it('sends the EDITED text on confirm', async () => {
     vi.mocked(api.confirm).mockResolvedValue({ session_id: 's1', stage: 'confirmed', edited_by_patient: true })
     renderAt('/confirm', <Confirm />, seed)
+    const checkbox = screen.getByLabelText(/আমি পড়েছি এবং এটি সঠিক/i)
+    await userEvent.click(checkbox)
     const std = screen.getByLabelText('Standard Bangla transcript')
     await userEvent.clear(std)
     await userEvent.type(std, 'সংশোধিত')
@@ -269,6 +271,8 @@ describe('Confirm page', () => {
 
   it('cannot confirm empty text', async () => {
     renderAt('/confirm', <Confirm />, seed)
+    const checkbox = screen.getByLabelText(/আমি পড়েছি এবং এটি সঠিক/i)
+    await userEvent.click(checkbox)
     await userEvent.clear(screen.getByLabelText('Standard Bangla transcript'))
     expect(screen.getByRole('button', { name: /নিশ্চিত করছি/ })).toBeDisabled()
   })
@@ -276,16 +280,69 @@ describe('Confirm page', () => {
   it('checkbox toggles confirm button enabled state', async () => {
     renderAt('/confirm', <Confirm />, seed)
     const checkbox = screen.getByLabelText(/আমি পড়েছি এবং এটি সঠিক/i)
+    const confirmBtn = screen.getByRole('button', { name: /নিশ্চিত করছি/ })
+    // Main confirmation checkbox is NOT pre-checked by default
+    expect(checkbox).not.toBeChecked()
+    expect(confirmBtn).toBeDisabled()
+
+    await userEvent.click(checkbox)
     expect(checkbox).toBeChecked()
-    expect(screen.getByRole('button', { name: /নিশ্চিত করছি/ })).toBeEnabled()
+    expect(confirmBtn).toBeEnabled()
 
     await userEvent.click(checkbox)
     expect(checkbox).not.toBeChecked()
-    expect(screen.getByRole('button', { name: /নিশ্চিত করছি/ })).toBeDisabled()
+    expect(confirmBtn).toBeDisabled()
+  })
 
-    await userEvent.click(checkbox)
-    expect(checkbox).toBeChecked()
-    expect(screen.getByRole('button', { name: /নিশ্চিত করছি/ })).toBeEnabled()
+  it('requires user edit or explicit acknowledgement when normalization has high warnings', async () => {
+    const seedWithWarning: FlowInitial = {
+      sessionId: 's1',
+      transcription,
+      normalization: {
+        ...normalization,
+        warnings: ['No glossary terms matched; text is unchanged. Please review carefully.'],
+      },
+    }
+    renderAt('/confirm', <Confirm />, seedWithWarning)
+
+    // Strong warning alert is rendered
+    expect(screen.getByTestId('strong-warning')).toBeInTheDocument()
+
+    // Confirm button is initially disabled (neither main checkbox nor ack checkbox checked)
+    const confirmBtn = screen.getByRole('button', { name: /নিশ্চিত করছি/ })
+    const mainCheckbox = screen.getByLabelText(/আমি পড়েছি এবং এটি সঠিক/i)
+    const ackCheckbox = screen.getByTestId('ack-warning-checkbox')
+    expect(confirmBtn).toBeDisabled()
+
+    // Checking only main checkbox: still disabled because ack checkbox is not checked
+    await userEvent.click(mainCheckbox)
+    expect(confirmBtn).toBeDisabled()
+
+    // Checking ack checkbox as well: now enabled
+    await userEvent.click(ackCheckbox)
+    expect(confirmBtn).toBeEnabled()
+
+    // Unchecking ack checkbox: disabled again
+    await userEvent.click(ackCheckbox)
+    expect(confirmBtn).toBeDisabled()
+  })
+
+  it('shows transliterated Bangla text alongside Romanized input', () => {
+    const romanSeed: FlowInitial = {
+      sessionId: 's1',
+      transcription,
+      normalization: {
+        ...normalization,
+        original: 'amar peto bedna korer',
+        transliterated_text: 'আমার পেটো বেদনা করের',
+        script_type: 'romanized',
+        normalized: 'আমার পেটে ব্যথা করছে',
+      },
+    }
+    renderAt('/confirm', <Confirm />, romanSeed)
+    expect(screen.getByText(/রোমান হরফে লেখা/)).toBeInTheDocument()
+    expect(screen.getByText(/বাংলা লিপিতে রূপান্তর/)).toBeInTheDocument()
+    expect(screen.getByText('আমার পেটো বেদনা করের')).toBeInTheDocument()
   })
 
   it('record again links back to intake', () => {
@@ -297,6 +354,8 @@ describe('Confirm page', () => {
   it('shows API failure and stays on the page', async () => {
     vi.mocked(api.confirm).mockRejectedValue(new ApiError(404, 'SESSION_NOT_FOUND', 'Session not found or expired.'))
     renderAt('/confirm', <Confirm />, seed)
+    const checkbox = screen.getByLabelText(/আমি পড়েছি এবং এটি সঠিক/i)
+    await userEvent.click(checkbox)
     await userEvent.click(screen.getByRole('button', { name: /নিশ্চিত করছি/ }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Session not found or expired.')
     expect(screen.queryByTestId('elsewhere')).toBeNull()
@@ -314,6 +373,15 @@ describe('Transcribe page', () => {
     renderAt('/transcribe', <Transcribe />, { pending: { kind: 'demo', scenarioId: 'A_ordinary' } })
     expect(await screen.findByRole('alert')).toHaveTextContent('No speech provider configured.')
     expect(screen.getByRole('button', { name: /try again|আবার চেষ্টা করুন/i })).toBeInTheDocument()
+  })
+
+  it('opens typed manual fallback with Banglish helper text on ASR error', async () => {
+    vi.mocked(api.transcribeDemo).mockRejectedValue(new ApiError(502, 'ASR_PROVIDER_REJECTED', 'Speech recognition request rejected.'))
+    renderAt('/transcribe', <Transcribe />, { pending: { kind: 'demo', scenarioId: 'A_ordinary' } })
+    expect(await screen.findByRole('alert')).toHaveTextContent('Speech recognition request rejected.')
+    const typeBtn = screen.getByRole('button', { name: /নিজে টাইপ করুন/i })
+    await userEvent.click(typeBtn)
+    expect(screen.getByPlaceholderText(/বাংলা অক্ষরে লিখুন \(Roman letters will be converted, please check\)/i)).toBeInTheDocument()
   })
 
   it('moves to confirmation when transcription and normalization succeed', async () => {

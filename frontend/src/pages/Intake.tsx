@@ -34,16 +34,8 @@ export const fmt = (s: number) =>
   `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 
 function Recorder({
-  ageGroup,
-  setAgeGroup,
-  dialectHint,
-  setDialectHint,
   onSubmit,
 }: {
-  ageGroup: AgeGroup
-  setAgeGroup: (a: AgeGroup) => void
-  dialectHint: DialectHint
-  setDialectHint: (d: DialectHint) => void
   onSubmit: (b: Blob) => void
 }) {
   const r = useRecorder()
@@ -60,92 +52,48 @@ function Recorder({
   }
 
   return (
-    <div className="space-y-6 rounded-3xl bg-white p-5 shadow-sm sm:p-8">
-      {/* Simple Bangla instructions */}
-      <div className="rounded-2xl bg-bg border border-deep/10 p-5 text-lg font-bangla" lang="bn">
-        <p className="text-xl font-bold text-deep">বোতাম চাপুন এবং আপনার সমস্যার কথা নিজের ভাষায় বলুন।</p>
-        <ul className="mt-2 list-disc space-y-1 pl-5 text-text">
-          <li>কবে থেকে লক্ষণ শুরু হয়েছে, কোথায় ব্যথা বা কষ্ট, কোনো ওষুধ খেয়েছেন কি না তা স্পষ্ট করে বলুন।</li>
-          <li>অন্তত ৩০ থেকে ৯০ সেকেন্ড নিজের ভাষায় কথা বলুন।</li>
-          <li>কথা শেষ হলে নিচের থামান (Stop) বোতামটি চাপুন।</li>
-        </ul>
-      </div>
-
-      {/* Optional Patient Context Fields */}
-      <div className="grid gap-4 sm:grid-cols-2 rounded-2xl border border-deep/10 bg-soft p-4">
-        <div>
-          <label htmlFor="age-group" className="block text-sm font-semibold text-deep mb-1">
-            রোগীর বয়সসীমা (Optional Age Group)
-          </label>
-          <select
-            id="age-group"
-            value={ageGroup}
-            onChange={(e) => setAgeGroup(e.target.value as AgeGroup)}
-            className="w-full rounded-xl border border-deep/20 bg-white px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-brand"
-          >
-            <option value="not_stated">বলা হয়নি / Not stated (Default)</option>
-            <option value="infant">১ বছরের কম শিশু / Infant (under 1 year)</option>
-            <option value="child">শিশু ১-১২ বছর / Child (1-12 years)</option>
-            <option value="adult">প্রাপ্তবয়স্ক ১৩-৫৯ বছর / Adult (13-59 years)</option>
-            <option value="older_adult">বয়োজ্যেষ্ঠ ৬০+ বছর / Older adult (60+ years)</option>
-          </select>
-          <span className="text-xs text-text/60 mt-1 block">জরুরি লক্ষণ ও শিশুর জ্বর মূল্যায়নে সাহায্য করে।</span>
-        </div>
-
-        <div>
-          <label htmlFor="dialect-hint" className="block text-sm font-semibold text-deep mb-1">
-            আঞ্চলিক ভাষা বা উপভাষা (Dialect)
-          </label>
-          <select
-            id="dialect-hint"
-            value={dialectHint}
-            onChange={(e) => setDialectHint(e.target.value as DialectHint)}
-            className="w-full rounded-xl border border-deep/20 bg-white px-3 py-2 text-sm text-text focus:outline-none focus:ring-2 focus:ring-brand"
-          >
-            <option value="not_sure">নিশ্চিত নই / Not sure</option>
-            <option value="sylheti">সিলেটি (Sylheti) — টিম-যাচাইকৃত শব্দকোষ; কথা এখনো পরীক্ষিত নয় / team-verified glossary, speech not yet tested</option>
-            <option value="standard">প্রমিত বাংলা (Standard Bangla)</option>
-          </select>
-          <span className="text-xs text-text/60 mt-1 block">আঞ্চলিক শব্দাবলি প্রমিত রূপান্তরে সহায়তা করে।</span>
-        </div>
-      </div>
-
+    <div className="space-y-6 rounded-3xl bg-white p-6 sm:p-8 lg:p-10 shadow-sm border border-deep/10 flex flex-col justify-center">
       {!supported && <ErrorBox title={ERROR_TEXT.unsupported.t} message={ERROR_TEXT.unsupported.d} />}
       {r.status === 'error' && r.error && (
         <ErrorBox title={ERROR_TEXT[r.error]?.t || ERROR_TEXT.failed.t} message={ERROR_TEXT[r.error]?.d || ERROR_TEXT.failed.d} />
       )}
 
       {/* Record and Timer Area */}
-      <div className="flex flex-col items-center gap-4 py-3">
+      <div className="flex flex-col items-center gap-5 py-3">
         <div
-          className={`flex h-28 w-28 items-center justify-center rounded-full text-white shadow-md transition-all ${
+          className={`flex h-28 w-28 sm:h-32 sm:w-32 items-center justify-center rounded-full text-white shadow-md transition-all ${
             r.status === 'recording' ? 'rec-pulse bg-danger' : 'bg-brand'
           }`}
           aria-hidden
         >
-          <Mic className="h-12 w-12" />
+          <Mic className="h-12 w-12 sm:h-14 sm:w-14" />
         </div>
 
         {r.status === 'recording' && (
-          <div className="flex h-10 items-end gap-1" aria-label="Recording level" role="img">
-            {Array.from({ length: 20 }).map((_, i) => (
+          <div className="flex h-10 items-end gap-1.5" aria-label="Recording level" role="img">
+            {Array.from({ length: 22 }).map((_, i) => (
               <span
                 key={i}
-                className="w-1.5 rounded bg-danger transition-all"
+                className="w-1.5 rounded-full bg-danger transition-all"
                 style={{
-                  height: `${8 + Math.max(0, r.level * 32 * (0.4 + 0.6 * Math.abs(Math.sin(i + r.seconds))))}px`,
+                  height: `${8 + Math.max(0, r.level * 36 * (0.4 + 0.6 * Math.abs(Math.sin(i + r.seconds))))}px`,
                 }}
               />
             ))}
           </div>
         )}
 
-        <p className="text-3xl font-bold tabular-nums" aria-live="polite" data-testid="timer">
-          {fmt(r.seconds)} <span className="text-base font-normal text-ink/60">/ {fmt(MAX_SECONDS)}</span>
-        </p>
+        <div className="text-center">
+          <p className="text-3xl sm:text-4xl font-extrabold tabular-nums tracking-tight text-deep" aria-live="polite" data-testid="timer">
+            {fmt(r.seconds)} <span className="text-lg sm:text-xl font-normal text-ink/50">/ {fmt(MAX_SECONDS)}</span>
+          </p>
+          <p className="text-xs text-ink/60 mt-0.5">
+            {r.status === 'recording' ? 'রেকর্ডিং চলছে... কথা শেষ হলে থামান বোতাম চাপুন' : 'সর্বোচ্চ ৯০ সেকেন্ড রেকর্ড করতে পারবেন'}
+          </p>
+        </div>
 
         {r.status === 'recording' && r.seconds < RECOMMENDED_MIN_SECONDS && (
-          <p className="text-sm text-text/70 font-bangla" lang="bn">
+          <p className="text-sm text-amber-800 font-bangla text-center" lang="bn">
             কমপক্ষে ৩০ সেকেন্ড বলার চেষ্টা করুন। (Recommended: at least 30s)
           </p>
         )}
@@ -154,13 +102,13 @@ function Recorder({
         )}
 
         {(r.status === 'idle' || r.status === 'error') && (
-          <Button big onClick={r.start} disabled={!supported} className="min-h-14 px-8 text-lg">
+          <Button big onClick={r.start} disabled={!supported} className="min-h-14 px-8 text-lg font-bold shadow-sm">
             <Mic className="h-6 w-6" aria-hidden /> <span lang="bn">রেকর্ড শুরু করুন (Record)</span>
           </Button>
         )}
         {r.status === 'requesting' && <Spinner label="মাইক্রোফোনের অনুমতির অপেক্ষায়… (Waiting for mic permission)" />}
         {r.status === 'recording' && (
-          <Button big variant="danger" onClick={r.stop} className="min-h-14 px-8 text-lg">
+          <Button big variant="danger" onClick={r.stop} className="min-h-14 px-8 text-lg font-bold shadow-sm">
             <Square className="h-6 w-6" aria-hidden /> <span lang="bn">থামান (Stop)</span>
           </Button>
         )}
@@ -169,7 +117,7 @@ function Recorder({
       {/* Recorded Preview & Actions */}
       {r.status === 'recorded' && r.url && (
         <div className="space-y-4 border-t border-deep/10 pt-5">
-          <p className="font-semibold text-lg text-deep" lang="bn">আপনার রেকর্ডিং শুনে দেখুন (Review Recording)</p>
+          <p className="font-bold text-base sm:text-lg text-deep" lang="bn">আপনার রেকর্ডিং শুনে দেখুন (Review Recording)</p>
           <audio
             ref={setAudioEl}
             src={r.url}
@@ -192,21 +140,21 @@ function Recorder({
             <Button
               big
               onClick={() => r.blob && onSubmit(r.blob)}
-              className="min-h-12 px-6"
+              className="min-h-12 px-6 font-bold"
             >
               <span lang="bn">Use this recording (জমা দিন)</span>
             </Button>
             <Button
               variant="secondary"
               onClick={r.start}
-              className="min-h-12 px-5"
+              className="min-h-12 px-5 font-semibold"
             >
               <RotateCcw className="h-5 w-5" aria-hidden /> <span lang="bn">Record again (আবার রেকর্ড)</span>
             </Button>
             <Button
               variant="ghost"
               onClick={r.discard}
-              className="min-h-12 px-5 text-danger hover:bg-red-50"
+              className="min-h-12 px-4 text-danger hover:bg-red-50"
             >
               <Trash2 className="h-5 w-5" aria-hidden /> <span lang="bn">Discard (বাতিল)</span>
             </Button>
@@ -402,72 +350,138 @@ export default function Intake() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="w-full max-w-7xl mx-auto space-y-6 lg:space-y-8">
       <StepDots step={0} />
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-deep font-bangla" lang="bn">
-          আপনার সমস্যার কথা বলুন (Voice Intake)
-        </h1>
+
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-deep/10 pb-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-deep font-bangla" lang="bn">
+            আপনার সমস্যার কথা বলুন (Voice Intake)
+          </h1>
+          <p className="text-xs sm:text-sm text-ink/70 mt-0.5">
+            Describe your health symptoms in your regional dialect or select a prepared scenario.
+          </p>
+        </div>
         <ModeBadge mode={mode} />
       </div>
 
-      <div className="inline-flex rounded-xl border border-deep/20 bg-white p-1" role="group" aria-label="Mode">
-        {(['live', 'demo'] as const).map((m) => (
-          <button
-            key={m}
-            onClick={() => setMode(m)}
-            aria-pressed={mode === m}
-            className={`min-h-11 rounded-lg px-5 text-sm font-semibold transition-colors ${
-              mode === m ? 'bg-deep text-white shadow-sm' : 'text-deep hover:bg-soft'
-            }`}
-          >
-            {m === 'live' ? 'Live voice' : 'Demo samples'}
-          </button>
-        ))}
+      <div className="grid gap-6 lg:gap-8 lg:grid-cols-12 lg:items-start">
+        {/* Left Column: Mode Switch, Alerts, Instructions, and Context Selectors */}
+        <div className="space-y-5 lg:col-span-5">
+          {/* Intake Source Switch Tabs */}
+          <div className="rounded-2xl border border-deep/15 bg-white p-3.5 sm:p-4 shadow-xs space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-ink/60 block">
+              ইনটেক মাধ্যম নির্বাচন (Intake Source)
+            </span>
+            <div className="inline-flex w-full rounded-xl border border-deep/20 bg-soft p-1" role="group" aria-label="Mode">
+              {(['live', 'demo'] as const).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  aria-pressed={mode === m}
+                  className={`flex-1 min-h-11 rounded-lg px-3 sm:px-4 text-xs sm:text-sm font-bold transition-all ${
+                    mode === m ? 'bg-deep text-white shadow-sm' : 'text-deep hover:bg-white/70'
+                  }`}
+                >
+                  {m === 'live' ? 'Live voice (মাইক্রোফোন)' : 'Demo samples (নমুনা)'}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {mode === 'live' && health?.ffmpeg && !health.ffmpeg.available && (
+            <ErrorBox
+              title="ffmpeg is not installed on this server"
+              message="Audio processing requires ffmpeg in the system PATH. Install ffmpeg on the server to record live audio, or use Demo samples meanwhile."
+            >
+              <Button variant="secondary" onClick={() => setMode('demo')}>
+                Switch to Demo samples
+              </Button>
+            </ErrorBox>
+          )}
+
+          {mode === 'live' && health && (!health.providers.speech.configured || !health.providers.llm.configured) && (
+            <ErrorBox
+              title="Live processing is not fully configured on this server"
+              message={`Speech provider configured: ${health.providers.speech.configured ? 'yes' : 'no'}. Language model configured: ${health.providers.llm.configured ? 'yes' : 'no'}. Audio processing (ffmpeg) available: ${health.ffmpeg?.available === false ? 'NO (install ffmpeg or run via Docker)' : 'yes'}. For live processing, configure a local model (download only) or API credentials in backend/.env. You can use Demo samples meanwhile.`}
+            >
+              <Button variant="secondary" onClick={() => setMode('demo')}>
+                Switch to Demo samples
+              </Button>
+            </ErrorBox>
+          )}
+          {!health && (
+            <p className="text-sm text-amber-800">
+              Backend not reachable yet — start it with uvicorn (see README).
+            </p>
+          )}
+
+          {/* Simple Bangla instructions */}
+          <div className="rounded-3xl border border-deep/10 bg-white p-5 sm:p-6 shadow-sm space-y-2.5 font-bangla" lang="bn">
+            <h2 className="text-lg sm:text-xl font-bold text-deep">
+              বোতাম চাপুন এবং আপনার সমস্যার কথা নিজের ভাষায় বলুন।
+            </h2>
+            <ul className="list-disc space-y-1.5 pl-5 text-sm sm:text-base text-text leading-relaxed font-bangla">
+              <li>কবে থেকে লক্ষণ শুরু হয়েছে, কোথায় ব্যথা বা কষ্ট, কোনো ওষুধ খেয়েছেন কি না তা স্পষ্ট করে বলুন।</li>
+              <li>অন্তত ৩০ থেকে ৯০ সেকেন্ড নিজের ভাষায় কথা বলুন।</li>
+              <li>কথা শেষ হলে নিচের থামান (Stop) বোতামটি চাপুন।</li>
+            </ul>
+          </div>
+
+          {/* Patient Context Fields */}
+          <div className="rounded-3xl border border-deep/10 bg-white p-5 sm:p-6 shadow-sm space-y-4">
+            <h3 className="text-xs font-bold uppercase tracking-wider text-deep/80">
+              রোগীর প্রাথমিক তথ্য (Optional Patient Context)
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <label htmlFor="age-group" className="block text-sm font-semibold text-deep mb-1">
+                  রোগীর বয়সসীমা (Optional Age Group)
+                </label>
+                <select
+                  id="age-group"
+                  value={ageGroup}
+                  onChange={(e) => setAgeGroup(e.target.value as AgeGroup)}
+                  className="w-full rounded-xl border border-deep/20 bg-soft px-3.5 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white"
+                >
+                  <option value="not_stated">বলা হয়নি / Not stated (Default)</option>
+                  <option value="infant">১ বছরের কম শিশু / Infant (under 1 year)</option>
+                  <option value="child">শিশু ১-১২ বছর / Child (1-12 years)</option>
+                  <option value="adult">প্রাপ্তবয়স্ক ১৩-৫৯ বছর / Adult (13-59 years)</option>
+                  <option value="older_adult">বয়োজ্যেষ্ঠ ৬০+ বছর / Older adult (60+ years)</option>
+                </select>
+                <span className="text-xs text-text/60 mt-1 block">জরুরি লক্ষণ ও শিশুর জ্বর মূল্যায়নে সাহায্য করে।</span>
+              </div>
+
+              <div>
+                <label htmlFor="dialect-hint" className="block text-sm font-semibold text-deep mb-1">
+                  আঞ্চলিক ভাষা বা উপভাষা (Dialect)
+                </label>
+                <select
+                  id="dialect-hint"
+                  value={dialectHint}
+                  onChange={(e) => setDialectHint(e.target.value as DialectHint)}
+                  className="w-full rounded-xl border border-deep/20 bg-soft px-3.5 py-2.5 text-sm text-text focus:outline-none focus:ring-2 focus:ring-brand focus:bg-white"
+                >
+                  <option value="not_sure">নিশ্চিত নই / Not sure</option>
+                  <option value="sylheti">সিলেটি (Sylheti) — টিম-যাচাইকৃত শব্দকোষ; কথা এখনো পরীক্ষিত নয় / team-verified glossary, speech not yet tested</option>
+                  <option value="standard">প্রমিত বাংলা (Standard Bangla)</option>
+                </select>
+                <span className="text-xs text-text/60 mt-1 block">আঞ্চলিক শব্দাবলি প্রমিত রূপান্তরে সহায়তা করে।</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Large Recorder Card or Demo Scenario Picker */}
+        <div className="lg:col-span-7">
+          {mode === 'live' ? (
+            <Recorder onSubmit={(blob) => go({ kind: 'audio', blob, ageGroup, dialectHint })} />
+          ) : (
+            <DemoPicker onPick={(id) => go({ kind: 'demo', scenarioId: id })} />
+          )}
+        </div>
       </div>
-
-      {mode === 'live' && health?.ffmpeg && !health.ffmpeg.available && (
-        <div>
-          <ErrorBox
-            title="ffmpeg is not installed on this server"
-            message="Audio processing requires ffmpeg in the system PATH. Install ffmpeg on the server to record live audio, or use Demo samples meanwhile."
-          >
-            <Button variant="secondary" onClick={() => setMode('demo')}>
-              Switch to Demo samples
-            </Button>
-          </ErrorBox>
-        </div>
-      )}
-
-      {mode === 'live' && health && (!health.providers.speech.configured || !health.providers.llm.configured) && (
-        <div>
-          <ErrorBox
-            title="Live processing is not fully configured on this server"
-            message={`Speech provider configured: ${health.providers.speech.configured ? 'yes' : 'no'}. Language model configured: ${health.providers.llm.configured ? 'yes' : 'no'}. Audio processing (ffmpeg) available: ${health.ffmpeg?.available === false ? 'NO (install ffmpeg or run via Docker)' : 'yes'}. For live processing, configure a local model (download only) or API credentials in backend/.env (configurable via LLM_PROVIDER / LLM_MODEL / LLM_BASE_URL). You can use Demo samples meanwhile.`}
-          >
-            <Button variant="secondary" onClick={() => setMode('demo')}>
-              Switch to Demo samples
-            </Button>
-          </ErrorBox>
-        </div>
-      )}
-      {!health && (
-        <p className="text-sm text-amber-800">
-          Backend not reachable yet — start it with uvicorn (see README).
-        </p>
-      )}
-
-      {mode === 'live' ? (
-        <Recorder
-          ageGroup={ageGroup}
-          setAgeGroup={setAgeGroup}
-          dialectHint={dialectHint}
-          setDialectHint={setDialectHint}
-          onSubmit={(blob) => go({ kind: 'audio', blob, ageGroup, dialectHint })}
-        />
-      ) : (
-        <DemoPicker onPick={(id) => go({ kind: 'demo', scenarioId: id })} />
-      )}
     </div>
   )
 }

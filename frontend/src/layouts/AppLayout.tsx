@@ -27,17 +27,17 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-bg text-ink selection:bg-brand/20">
       <header className="no-print sticky top-0 z-20 border-b border-deep/10 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2.5">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
           <Logo />
 
-          <nav className="hidden md:flex items-center gap-1 text-sm" aria-label="Main navigation">
-            <a href="/#how-it-works" className="rounded-lg px-2.5 py-1.5 text-ink/70 hover:text-deep transition-colors">
+          <nav className="hidden md:flex items-center gap-1.5 lg:gap-4 text-sm" aria-label="Main navigation">
+            <a href="/#how-it-works" className="rounded-lg px-3 py-1.5 text-ink/70 hover:text-deep hover:bg-soft transition-colors font-medium">
               How it works
             </a>
-            <a href="/#dialects" className="rounded-lg px-2.5 py-1.5 text-ink/70 hover:text-deep transition-colors">
+            <a href="/#dialects" className="rounded-lg px-3 py-1.5 text-ink/70 hover:text-deep hover:bg-soft transition-colors font-medium">
               Dialects
             </a>
-            <a href="/#privacy" className="rounded-lg px-2.5 py-1.5 text-ink/70 hover:text-deep transition-colors">
+            <a href="/#privacy" className="rounded-lg px-3 py-1.5 text-ink/70 hover:text-deep hover:bg-soft transition-colors font-medium">
               Privacy
             </a>
             <NavLink to="/about" className={linkClass}>
@@ -45,7 +45,7 @@ export default function AppLayout() {
             </NavLink>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Live / Demo Mode Switch */}
             <div
               className="inline-flex rounded-xl border border-deep/20 bg-soft p-0.5 text-xs font-semibold"
@@ -56,36 +56,36 @@ export default function AppLayout() {
                 type="button"
                 onClick={() => setMode('live')}
                 aria-pressed={mode === 'live'}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-all ${
+                className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 transition-all ${
                   mode === 'live'
                     ? 'bg-ok text-white shadow-sm font-bold'
                     : 'text-ink/70 hover:text-deep'
                 }`}
               >
-                <Radio className="h-3.5 w-3.5" aria-hidden />
+                <Radio className="h-3 sm:h-3.5 w-3 sm:w-3.5" aria-hidden />
                 <span>Live</span>
               </button>
               <button
                 type="button"
                 onClick={() => setMode('demo')}
                 aria-pressed={mode === 'demo'}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-all ${
+                className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 transition-all ${
                   mode === 'demo'
                     ? 'bg-amber-600 text-white shadow-sm font-bold'
                     : 'text-ink/70 hover:text-deep'
                 }`}
               >
-                <FlaskConical className="h-3.5 w-3.5" aria-hidden />
+                <FlaskConical className="h-3 sm:h-3.5 w-3 sm:w-3.5" aria-hidden />
                 <span>Demo</span>
               </button>
             </div>
 
             <Link
               to="/intake"
-              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-3.5 sm:px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-deep transition-colors"
+              className="inline-flex min-h-8 sm:min-h-10 items-center justify-center rounded-xl bg-brand px-2.5 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-deep transition-colors"
             >
-              <span className="sm:hidden">Start</span>
-              <span className="hidden sm:inline">Start / শুরু করুন</span>
+              <span className="lg:hidden">Start</span>
+              <span className="hidden lg:inline">Start / শুরু করুন</span>
             </Link>
           </div>
         </div>
@@ -103,21 +103,21 @@ export default function AppLayout() {
         )}
       </header>
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         <Outlet />
       </main>
 
       <footer className="border-t border-deep/10 bg-white">
-        <div className="mx-auto max-w-6xl space-y-3 px-4 py-6">
+        <div className="mx-auto max-w-7xl space-y-4 px-4 sm:px-6 lg:px-8 py-8">
           <Disclaimer />
-          <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-ink/60 border-t border-deep/5 pt-3">
-            <p>
+          <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-ink/60 border-t border-deep/5 pt-4">
+            <p className="max-w-xl">
               Hackathon prototype. Not a certified medical system. Zero-storage architecture: no audio or transcripts are saved to disk.
             </p>
-            <div className="flex items-center gap-3">
-              <NavLink to="/about" className="hover:underline">About Kotha</NavLink>
+            <div className="flex items-center gap-3 font-medium">
+              <NavLink to="/about" className="hover:underline hover:text-deep">About Kotha</NavLink>
               <span>·</span>
-              <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:underline">Documentation</a>
+              <a href="https://github.com" target="_blank" rel="noreferrer" className="hover:underline hover:text-deep">Documentation</a>
             </div>
           </div>
         </div>

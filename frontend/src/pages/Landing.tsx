@@ -115,8 +115,8 @@ export default function Landing() {
   return (
     <div className="space-y-16 sm:space-y-20 pb-12">
       {/* Hero Section */}
-      <section className="grid items-center gap-8 pt-4 md:grid-cols-2">
-        <div>
+      <section className="grid items-center gap-8 lg:gap-12 pt-4 lg:grid-cols-12">
+        <div className="lg:col-span-7">
           <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-brand/10 px-3.5 py-1 text-xs sm:text-sm font-semibold text-deep">
             <Sparkles className="h-4 w-4 text-brand shrink-0" aria-hidden />
             <span>Healthcare Accessibility · Hackathon Prototype</span>
@@ -134,7 +134,7 @@ export default function Landing() {
             Your Voice. Your Language. Better Understanding.
           </p>
 
-          <p className="mt-4 text-base sm:text-lg text-ink/90 leading-relaxed">
+          <p className="mt-4 text-base sm:text-lg text-ink/90 leading-relaxed max-w-2xl">
             Kotha helps rural and regional patients speak in their natural Bangla dialect, ensures they verify every word, and provides doctors with an immediate, bilingual clinical summary with deterministic safety alerts.
           </p>
 
@@ -156,7 +156,7 @@ export default function Landing() {
         </div>
 
         {/* Illustrative Live Comparison Visual */}
-        <div className="rounded-3xl bg-gradient-to-br from-deep via-deep to-brand p-6 sm:p-7 text-white shadow-xl">
+        <div className="lg:col-span-5 rounded-3xl bg-gradient-to-br from-deep via-deep to-brand p-6 sm:p-7 text-white shadow-xl">
           <div className="space-y-4">
             <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm border border-white/10">
               <p className="text-xs font-semibold uppercase tracking-wider text-emerald-300">
@@ -249,20 +249,20 @@ export default function Landing() {
           </p>
         </div>
 
-        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8">
           {STEPS.map((s, i) => (
             <li
               key={s.t_en}
-              className="flex flex-col rounded-2xl border border-deep/10 bg-white p-5 shadow-sm hover:border-brand/40 transition-colors"
+              className="flex flex-col rounded-2xl border border-deep/10 bg-white p-4 lg:p-5 shadow-sm hover:border-brand/40 transition-colors"
             >
               <div className="flex items-center justify-between">
-                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-soft text-brand">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-soft text-brand shrink-0">
                   <s.icon className="h-5 w-5" aria-hidden />
                 </span>
                 <span className="text-xs font-bold text-ink/40">Step {i + 1}</span>
               </div>
-              <p className="mt-3 font-bold text-deep text-base">
-                {s.t_en} <span className="font-bangla font-normal text-sm text-brand">({s.t_bn})</span>
+              <p className="mt-3 font-bold text-deep text-sm lg:text-base">
+                {s.t_en} <span className="font-bangla font-normal text-xs lg:text-sm text-brand block sm:inline">({s.t_bn})</span>
               </p>
               <p className="mt-1 text-xs text-ink/75 leading-relaxed flex-1">
                 {s.d}
@@ -292,7 +292,7 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
           {DIALECT_CARDS.map((card) => {
             const vocabCount =
               stats?.by_dialect?.[card.key]?.total ?? card.default_vocab
@@ -329,7 +329,7 @@ export default function Landing() {
       </section>
 
       {/* Patient & Doctor Benefits */}
-      <section className="grid gap-6 md:grid-cols-2">
+      <section className="grid gap-6 lg:grid-cols-2 lg:gap-8">
         <div className="rounded-3xl border border-deep/10 bg-white p-6 sm:p-8 shadow-sm space-y-4">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand/10 text-brand">

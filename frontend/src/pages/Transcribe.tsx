@@ -128,7 +128,19 @@ export default function Transcribe() {
       {error && !showTypedFallback && (
         <div>
           <ErrorBox
-            title={error.code === 'NO_SPEECH_DETECTED' ? 'কোনো কথা শনাক্ত করা যায়নি' : 'Processing failed'}
+            title={
+              error.code === 'NO_SPEECH_DETECTED'
+                ? 'কোনো কথা শনাক্ত করা যায়নি'
+                : error.code === 'ASR_NON_BANGLA'
+                  ? 'কথা বোঝা যায়নি (Speech not recognized as Bangla)'
+                  : error.code === 'ASR_PROVIDER_REJECTED'
+                    ? 'স্পিচ রিকগনিশন সেবা অনুরোধ প্রত্যাখ্যান করেছে (Provider Rejected)'
+                    : error.code === 'ASR_PROVIDER_UNAVAILABLE'
+                      ? 'স্পিচ রিকগনিশন সেবা এই মুহূর্তে অনুপলব্ধ (Provider Unavailable)'
+                      : error.code === 'ASR_TIMEOUT'
+                        ? 'স্পিচ রিকগনিশন সময়সীমা পার হয়েছে (Provider Timeout)'
+                        : 'Processing failed'
+            }
             message={error.message}
           >
             {error.code !== 'NO_SPEECH_DETECTED' && error.code !== 'AUDIO_TOO_SHORT' && (
@@ -162,13 +174,13 @@ export default function Transcribe() {
         <div className="rounded-2xl border border-deep/20 bg-white p-5 shadow-sm space-y-4 font-bangla">
           <p className="font-semibold text-deep text-lg">সহায়তাকারী বা রোগীর মুখের কথা টাইপ করুন (Manual Entry)</p>
           <p className="text-xs text-ink/70">
-            স্পিচ রিকগনিশন কাজ না করলে রোগীর বলা কথাটি সরাসরি এখানে লিখুন। এটি "typed_by_user" হিসেবে সংরক্ষিত হবে।
+            স্পিচ রিকগনিশন কাজ না করলে রোগীর বলা কথাটি সরাসরি এখানে লিখুন। বাংলা অক্ষরে লিখুন (Roman letters will be converted, please check)। এটি "typed_by_user" হিসেবে সংরক্ষিত হবে।
           </p>
           <textarea
             value={typedText}
             onChange={(e) => setTypedText(e.target.value)}
             rows={4}
-            placeholder="রোগী যা বলেছেন তা এখানে লিখুন..."
+            placeholder="বাংলা অক্ষরে লিখুন (Roman letters will be converted, please check)..."
             className="w-full rounded-xl border border-deep/20 p-3 text-base text-text focus:outline-none focus:ring-2 focus:ring-brand"
           />
           <div className="flex flex-wrap gap-3">

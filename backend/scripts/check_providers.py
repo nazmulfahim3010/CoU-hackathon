@@ -72,7 +72,7 @@ async def check_normalization(settings: Settings) -> tuple[bool, str]:
     if settings.llm_provider == "none":
         raise KothaError(503, "PROVIDER_NOT_CONFIGURED", "LLM provider is set to none")
 
-    res = await normalize("মোর মাতাত ব্যতা", settings)
+    res = await normalize("মোর মাতাত ব্যতা", settings, use_llm=True)
     if res.source != "llm_with_glossary":
         warnings_str = "; ".join(res.warnings) if res.warnings else "fallback used"
         raise RuntimeError(f"Normalization did not use LLM (source: {res.source}; {warnings_str})")

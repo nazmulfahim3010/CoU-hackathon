@@ -372,7 +372,7 @@ All requests and responses use JSON (except multipart audio uploads and audio by
    - `gTTS` (Google Translate TTS web API, language `bn`). Synthesizes static reassurance templates without transmitting patient health data.
 
 ### Known Limitations
-- **Dialect ASR Accuracy**: Zero-shot standard Bangla Whisper models exhibit high Word Error Rates (WER) on regional phonetics (e.g., Sylheti phonology). The system mitigates this via the mandatory confirmation gate and typed fallback.
+- **Dialect ASR Accuracy**: Dialect ASR (especially Sylheti) is unreliable zero-shot; speech recognition models trained on standard Bangla exhibit high error rates or hallucinate Latin/non-Bangla script on regional phonetics. Do not claim a dialect works without native-speaker testing. Kotha mitigates this by enforcing a deterministic script check (rejecting transcripts with <50% Bangla characters with an `ASR_NON_BANGLA` warning), a mandatory human confirmation gate, and a manual typed fallback.
 - **Negation Heuristics**: Clause-bounded negation detection uses token distance windows (3 tokens) and punctuation clause splitting. Complex multi-clause or idiomatic double-negations in dialectal speech may over-alert (by design, prioritizing sensitivity over specificity).
 - **Rule Clinical Status**: All 10 red-flag rules are currently marked `pending_clinical_review`. They are engineering heuristics, not validated triage algorithms.
 - **In-Memory Volatility**: Single-server process memory. Server restart clears active sessions.
