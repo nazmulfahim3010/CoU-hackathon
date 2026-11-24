@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import re
 import shutil
 import subprocess
 import tempfile
@@ -134,23 +135,56 @@ def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
 
 
 def raise_for_stt(exc: Exception, provider: str) -> None:
-    """Translate transport and provider errors into clean KothaError without leaking credentials."""
+    """Translate transport and provider errors into clean KothaError without leaking credentials or transcripts."""
     if isinstance(exc, (httpx.TimeoutException, asyncio.TimeoutError)):
         raise KothaError(
             504,
-            "PROVIDER_TIMEOUT",
+            "ASR_TIMEOUT",
             "স্পিচ রিকগনিশন সার্ভার সময়মতো সাড়া দেয়নি (ASR provider timed out). অনুগ্রহ করে আবার চেষ্টা করুন বা টাইপ করুন।",
         ) from exc
     if isinstance(exc, httpx.HTTPStatusError):
-        log.warning("provider=%s status=%s", provider, exc.response.status_code)
+        status = exc.response.status_code
+        error_type = "unknown_error"
+        safe_reason = f"HTTP {status}"
+        try:
+            body = exc.response.json()
+            if isinstance(body, dict):
+                err = body.get("error")
+                if isinstance(err, dict):
+                    error_type = str(err.get("type") or err.get("code") or "error")
+                    raw_msg = str(err.get("message") or "")
+                    # Sanitize: strip any potential user text / transcripts, keep short parameter/type description
+                    safe_msg = re.sub(r"[^a-zA-Z0-9_\-\.\:\s`]", "", raw_msg)[:100].strip()
+                    safe_reason = f"{error_type}: {safe_msg}" if safe_msg else error_type
+                elif isinstance(err, str):
+                    error_type = "error"
+                    safe_reason = re.sub(r"[^a-zA-Z0-9_\-\.\:\s`]", "", err)[:100].strip()
+        except Exception:
+            pass
+
+        log.warning(
+            "stt_upstream_error provider=%s status=%s error_type=%s reason=%s",
+            provider,
+            status,
+            error_type,
+            safe_reason,
+        )
+
+        if 400 <= status < 500:
+            raise KothaError(
+                502,
+                "ASR_PROVIDER_REJECTED",
+                f"স্পিচ রিকগনিশন সেবা অনুরোধটি প্রত্যাখ্যান করেছে ({safe_reason}). অনুগ্রহ করে আবার চেষ্টা করুন বা টাইপ করে লিখুন।",
+            ) from exc
         raise KothaError(
             502,
-            "PROVIDER_ERROR",
-            f"স্পিচ রিকগনিশন সেবা ত্রুটি দিয়েছে (HTTP {exc.response.status_code}). অনুগ্রহ করে টাইপ করুন বা ডেমো মোড ব্যবহার করুন।",
+            "ASR_PROVIDER_UNAVAILABLE",
+            f"স্পিচ রিকগনিশন সেবা সাময়িকভাবে অনুপলব্ধ ({safe_reason}). অনুগ্রহ করে কিছুক্ষণ পর চেষ্টা করুন বা টাইপ করে লিখুন।",
         ) from exc
+
     raise KothaError(
         502,
-        "PROVIDER_UNREACHABLE",
+        "ASR_PROVIDER_UNAVAILABLE",
         f"স্পিচ রিকগনিশন সেবা এই মুহূর্তে অনুপলব্ধ ({provider} unreachable). অনুগ্রহ করে টাইপ করে লিখুন বা ডেমো মোড ব্যবহার করুন।",
     ) from exc
 
@@ -246,7 +280,6 @@ class OpenAICompatSTT:
                     data={
                         "model": self._model,
                         "language": "bn",
-                        "task": "transcribe",
                         "response_format": "json",
                         "prompt": "বাংলায় বলুন।",
                     },

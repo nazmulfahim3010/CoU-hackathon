@@ -6,6 +6,7 @@ from app.core.session_manager import SessionManager, Stage
 from app.schemas.clinical import ConfirmationRequest, ConfirmationResponse
 from app.services.dialect_normalizer import check_meaning_preservation
 from app.services.glossary_service import clean_text
+from app.services.transliteration import classify_script
 
 router = APIRouter(prefix="/api", tags=["confirmation"])
 _DOWNSTREAM = ("extraction", "extraction_source", "safety", "summary")
@@ -24,6 +25,12 @@ def confirmation(req: ConfirmationRequest, sessions: SessionManager = Depends(ge
         raise KothaError(422, "EMPTY_TEXT", "The confirmed text cannot be empty.")
     if len(confirmed) > 5000:
         raise KothaError(413, "TEXT_TOO_LONG", "The confirmed text exceeds the 5,000 character limit.")
+    if classify_script(confirmed) != "bangla_script":
+        raise KothaError(
+            422,
+            "CONFIRMATION_NON_BANGLA",
+            "নিশ্চিতকরণের জন্য লেখাটি অবশ্যই বাংলা লিপিতে হতে হবে (Please edit text into Bangla script before confirming). রোমান অক্ষরে নিশ্চিত করলে জরুরি সতর্কসংকেত বা ক্লিনিক্যাল সারসংক্ষেপ সঠিকভাবে মূল্যায়ন করা যায় না।",
+        )
 
     original = clean_text(req.original_text) if req.original_text else session.data.get("original", "")
     normalized_prev = session.data.get("normalized", "")
@@ -42,8 +49,10 @@ def confirmation(req: ConfirmationRequest, sessions: SessionManager = Depends(ge
 
     # Re-running deterministic checks on edited text for advisory warnings (never overwriting confirmed text)
     warnings: list[str] = []
-    if original and confirmed:
-        problems = check_meaning_preservation(original, confirmed)
+    transliterated = session.data.get("transliterated")
+    compare_base = transliterated if (transliterated and classify_script(original) != "bangla_script") else original
+    if compare_base and confirmed:
+        problems = check_meaning_preservation(compare_base, confirmed)
         if problems:
             warnings.append(f"Notice: Edited text changes clinical details: {', '.join(problems)}.")
     session.data["confirmation_warnings"] = warnings

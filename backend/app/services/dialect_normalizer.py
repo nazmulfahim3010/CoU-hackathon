@@ -18,6 +18,7 @@ from app.schemas.normalization import (
 )
 from app.services.glossary_service import Glossary, clean_text, load_glossary
 from app.services.llm_provider import get_llm
+from app.services.transliteration import classify_script, transliterate_roman_to_bangla
 
 log = get_logger("normalizer")
 
@@ -108,6 +109,15 @@ def _remove_spans(text: str, spans: list[str]) -> str:
     return text
 
 
+def _symptom_tokens(text: str) -> set[str]:
+    toks = set()
+    for t in re.findall(r"[ঀ-৿]+", text):
+        stem = re.sub(r"[েতয়র]$", "", t)
+        if len(stem) >= 2:
+            toks.add(stem)
+    return toks
+
+
 def check_meaning_preservation(original: str, normalized: str, glossary: Glossary | None = None) -> list[str]:
     """Return a list of problems; an empty list means the deterministic guards passed.
 
@@ -160,9 +170,17 @@ def check_meaning_preservation(original: str, normalized: str, glossary: Glossar
         e.standard_bangla for e in glossary.entries if e.category in _SYMPTOM_CATEGORIES and len(e.standard_bangla) >= 3
     )
     for sym in symptoms:
-        if sym in normalized and sym not in original and not any(sym in m.standard for m in matches):
-            problems.append("invented_symptom")
-            break
+        if sym in normalized and sym not in original:
+            sym_toks = _symptom_tokens(sym)
+            excused = any(
+                sym in m.standard or (bool(sym_toks) and sym_toks.issubset(_symptom_tokens(m.standard)))
+                for m in matches
+            )
+            if not excused and sym_toks and sym_toks.issubset(_symptom_tokens(original)):
+                excused = True
+            if not excused:
+                problems.append("invented_symptom")
+                break
 
     return problems
 
@@ -236,10 +254,21 @@ async def normalize(
     original: str, settings: Settings, use_llm: bool, glossary: Glossary | None = None
 ) -> NormalizationResponse:
     glossary = glossary or load_glossary()
-    text = clean_text(original)
-    matches: list[GlossaryMatch] = glossary.match(text)
-    glossary_only = Glossary.apply(text, matches)
+    script_type = classify_script(original)
     warnings: list[str] = []
+
+    if script_type != "bangla_script":
+        transliterated_text, trans_warnings = await transliterate_roman_to_bangla(
+            original, settings, use_llm=use_llm
+        )
+        warnings.extend(trans_warnings)
+        working_text = transliterated_text
+    else:
+        transliterated_text = None
+        working_text = clean_text(original)
+
+    matches: list[GlossaryMatch] = glossary.match(working_text)
+    glossary_only = Glossary.apply(working_text, matches)
     uncertain_segments: list[UncertainSegment] = [
         UncertainSegment(text=m.regional, reason=f"Unverified dialect term ({m.dialect})")
         for m in matches
@@ -265,12 +294,12 @@ async def normalize(
             "\n".join(f"- {m.regional} → {m.standard} ({m.english}) [{m.dialect}, {m.verification}]" for m in matches)
             or "(none)"
         )
-        user_prompt = f"{few_shot}\n\nGlossary hints for this input:\n{hints}\n\nInput: {text}\nOutput:"
+        user_prompt = f"{few_shot}\n\nGlossary hints for this input:\n{hints}\n\nInput: {working_text}\nOutput:"
 
         try:
             raw_reply = await llm.complete(SYSTEM_PROMPT, user_prompt)
             parsed = parse_llm_response(raw_reply)
-            problems = check_meaning_preservation(text, parsed.final_normalized, glossary)
+            problems = check_meaning_preservation(working_text, parsed.final_normalized, glossary)
 
             # If check fails, retry ONCE with targeted feedback
             if problems:
@@ -282,7 +311,7 @@ async def normalize(
                 )
                 raw_retry = await llm.complete(SYSTEM_PROMPT, retry_user)
                 retry_parsed = parse_llm_response(raw_retry)
-                retry_problems = check_meaning_preservation(text, retry_parsed.final_normalized, glossary)
+                retry_problems = check_meaning_preservation(working_text, retry_parsed.final_normalized, glossary)
 
                 if not retry_problems:
                     parsed = retry_parsed
@@ -322,7 +351,10 @@ async def normalize(
 
     return NormalizationResponse(
         session_id="",
-        original=text,
+        original=original,
+        original_text=original,
+        transliterated_text=transliterated_text,
+        script_type=script_type,
         normalized=normalized,
         source=source,
         glossary_matches=matches,

@@ -345,7 +345,7 @@ def test_stt_providers_force_language_and_task(monkeypatch):
     monkeypatch.setattr("httpx.AsyncClient", DummyOAIClient)
     res_oai = asyncio.run(oai.transcribe(b"dummy_wav"))
     assert captured_oai["data"]["language"] == "bn"
-    assert captured_oai["data"]["task"] == "transcribe"
+    assert "task" not in captured_oai["data"]  # task param causes HTTP 400 on Groq/OpenAI transcriptions
     assert res_oai.text == "আমার জ্বর আছে"
 
 
@@ -376,3 +376,69 @@ def test_transcription_endpoint_rejects_non_bangla_hallucination(monkeypatch):
     session = sm.get(sid)
     assert session.stage == Stage.CREATED
     assert not session.original_transcript
+
+
+@requires_ffmpeg
+def test_stt_provider_error_mapping_and_temp_cleanup(monkeypatch):
+    """Test with mocked provider returning 400, 500, and timeout.
+    Asserts distinct error codes (ASR_PROVIDER_REJECTED, ASR_PROVIDER_UNAVAILABLE, ASR_TIMEOUT),
+    temp files are strictly deleted, and no fake transcript is returned.
+    """
+    import httpx
+    from app.services.speech_to_text import raise_for_stt
+
+    # 1. Direct raise_for_stt error code mapping tests
+    req = httpx.Request("POST", "https://api.groq.com/openai/v1/audio/transcriptions")
+    resp_400 = httpx.Response(400, request=req, json={"error": {"type": "invalid_request_error", "message": "unknown param `task`"}})
+    err_400 = httpx.HTTPStatusError("Bad Request", request=req, response=resp_400)
+    with pytest.raises(KothaError) as exc_400:
+        raise_for_stt(err_400, "openai_compatible")
+    assert exc_400.value.code == "ASR_PROVIDER_REJECTED"
+    assert exc_400.value.status_code == 502
+    assert "invalid_request_error" in exc_400.value.message
+
+    resp_500 = httpx.Response(500, request=req, json={"error": {"type": "server_error", "message": "Internal error"}})
+    err_500 = httpx.HTTPStatusError("Internal Error", request=req, response=resp_500)
+    with pytest.raises(KothaError) as exc_500:
+        raise_for_stt(err_500, "openai_compatible")
+    assert exc_500.value.code == "ASR_PROVIDER_UNAVAILABLE"
+    assert exc_500.value.status_code == 502
+
+    timeout_exc = httpx.TimeoutException("Read timed out")
+    with pytest.raises(KothaError) as exc_tout:
+        raise_for_stt(timeout_exc, "openai_compatible")
+    assert exc_tout.value.code == "ASR_TIMEOUT"
+    assert exc_tout.value.status_code == 504
+
+    # 2. End-to-end endpoint test verifying temp file cleanup on provider 400/500/timeout
+    temp_dir = tempfile.gettempdir()
+    for status_or_timeout, expected_code in [
+        (400, "ASR_PROVIDER_REJECTED"),
+        (500, "ASR_PROVIDER_UNAVAILABLE"),
+        ("timeout", "ASR_TIMEOUT"),
+    ]:
+        class FailingSTT:
+            name = "mock_failing_stt"
+            async def transcribe(self, audio_bytes, content_type="audio/wav"):
+                if status_or_timeout == "timeout":
+                    raise_for_stt(httpx.TimeoutException("Mock timeout"), self.name)
+                elif status_or_timeout == 400:
+                    resp = httpx.Response(400, request=req, json={"error": {"type": "invalid_request_error", "message": "unknown param"}})
+                    raise_for_stt(httpx.HTTPStatusError("Bad Request", request=req, response=resp), self.name)
+                else:
+                    resp = httpx.Response(500, request=req, json={"error": {"type": "server_error"}})
+                    raise_for_stt(httpx.HTTPStatusError("Server Error", request=req, response=resp), self.name)
+
+        monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FailingSTT())
+
+        before_files = set(os.listdir(temp_dir))
+        test_wav = make_test_wav(1.0)
+        r = client.post("/api/transcription", files={"audio": ("sample.wav", test_wav, "audio/wav")})
+        assert r.status_code in (502, 504)
+        data = r.json()
+        assert data["error"]["code"] == expected_code
+        assert "transcript" not in data  # Never return a fake transcript
+
+        after_files = set(os.listdir(temp_dir))
+        new_files = [f for f in after_files - before_files if f.endswith(".raw") or "_converted.wav" in f]
+        assert new_files == []

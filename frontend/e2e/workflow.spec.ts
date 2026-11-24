@@ -399,7 +399,11 @@ test.describe('End-to-End Workflow Sequence (Mocked Providers)', () => {
     await textarea.fill('দুই ঘণ্টা ধরে বুকে খুব ব্যথা, নিঃশ্বাস নিতে কষ্ট হয়। (রোগীর যাচাইকৃত)')
 
     // 7. Verify checkbox & confirm
-    const checkbox = page.getByRole('checkbox')
+    const ack1 = page.getByTestId('ack-warning-checkbox')
+    if (await ack1.isVisible()) {
+      await ack1.check()
+    }
+    const checkbox = page.getByRole('checkbox', { name: /আমি পড়েছি এবং এটি সঠিক/ })
     await checkbox.check()
     const confirmBtn = page.getByRole('button', { name: /ঠিক আছে, নিশ্চিত করছি/ })
     await expect(confirmBtn).toBeEnabled()
@@ -451,7 +455,11 @@ test.describe('End-to-End Workflow Sequence (Mocked Providers)', () => {
     await expect(page.getByRole('heading', { name: /আপনার কথা যাচাই ও নিশ্চিতকরণ/ })).toBeVisible()
 
     // 5. Confirm directly
-    await page.getByRole('checkbox').check()
+    const ack2 = page.getByTestId('ack-warning-checkbox')
+    if (await ack2.isVisible()) {
+      await ack2.check()
+    }
+    await page.getByRole('checkbox', { name: /আমি পড়েছি এবং এটি সঠিক/ }).check()
     await page.getByRole('button', { name: /ঠিক আছে, নিশ্চিত করছি/ }).click()
 
     // 6. Navigates to summary
@@ -490,7 +498,11 @@ test.describe('Live Backend Integration (@live)', () => {
     await expect(page.getByRole('heading', { name: /আপনার কথা যাচাই ও নিশ্চিতকরণ/ })).toBeVisible()
 
     // Confirm
-    await page.getByRole('checkbox').check()
+    const ack3 = page.getByTestId('ack-warning-checkbox')
+    if (await ack3.isVisible()) {
+      await ack3.check()
+    }
+    await page.getByRole('checkbox', { name: /আমি পড়েছি এবং এটি সঠিক/ }).check()
     await page.getByRole('button', { name: /ঠিক আছে, নিশ্চিত করছি/ }).click()
 
     // Wait for summary

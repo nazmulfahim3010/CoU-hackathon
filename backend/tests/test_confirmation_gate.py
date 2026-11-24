@@ -120,3 +120,20 @@ def test_demo_extraction_refuses_edited_text(client):
     sid = demo_confirmed(client, "A_ordinary", edit="আজ মাথা ব্যথা")
     r = client.post("/api/clinical/extract", json={"session_id": sid})
     assert r.status_code == 409 and r.json()["error"]["code"] == "DEMO_TEXT_EDITED"
+
+
+def test_confirmation_rejects_non_bangla_script(client):
+    """Safety invariant: non-Bangla script cannot be confirmed, preventing bypass of red-flag rules."""
+    sid = demo_session(client)
+    client.post("/api/normalization", json={"session_id": sid})
+    r = client.post(
+        "/api/confirmation",
+        json={
+            "session_id": sid,
+            "confirmed_text": "buke betha khub beshi",
+            "confirmed": True,
+        },
+    )
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "CONFIRMATION_NON_BANGLA"
+    assert "বাংলা লিপিতে" in r.json()["error"]["message"]

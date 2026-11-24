@@ -122,7 +122,7 @@ export default function Summary() {
   }
 
   return (
-    <div className="space-y-5 max-w-5xl mx-auto pb-10">
+    <div className="space-y-6 w-full max-w-7xl mx-auto pb-12">
       {/* Step Indicator (Hidden in Print) */}
       <div className="no-print">
         <StepDots step={3} />
@@ -292,158 +292,167 @@ export default function Summary() {
         )}
       </section>
 
-      {/* 2. Structured Clinical Fields (Information-Dense, Skimmable in 30s) */}
-      <div className="grid gap-4 md:grid-cols-2">
-        {summary.sections.map((s) => {
-          const isNotReported = s.status === 'not_reported'
-          const isUncertain = s.status === 'uncertain'
+      {/* Dashboard Layout on lg+: Main Column (Clinical Fields & Disclaimers) + Side Column (Spoken Reply, Transcript Comparison, Evidence Quotes) */}
+      <div className="grid gap-6 lg:grid-cols-12 items-start print:block">
+        {/* Main Column: Clinical Fields & Notices (Doctor Primary Focus) */}
+        <div className="lg:col-span-7 xl:col-span-8 space-y-6 print:w-full">
+          {/* 2. Structured Clinical Fields (Information-Dense, Skimmable in 30s) */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            {summary.sections.map((s) => {
+              const isNotReported = s.status === 'not_reported'
+              const isUncertain = s.status === 'uncertain'
 
-          return (
-            <section
-              key={s.key}
-              className={`print-card rounded-2xl bg-white p-4 shadow-sm border transition-all ${
-                isUncertain
-                  ? 'border-l-4 border-l-[#e5a000] border-amber-200 bg-amber-50/20'
-                  : 'border-deep/10'
-              }`}
-              data-testid={`section-${s.key}`}
+              return (
+                <section
+                  key={s.key}
+                  className={`print-card rounded-2xl bg-white p-4 shadow-sm border transition-all ${
+                    isUncertain
+                      ? 'border-l-4 border-l-[#e5a000] border-amber-200 bg-amber-50/20'
+                      : 'border-deep/10'
+                  }`}
+                  data-testid={`section-${s.key}`}
+                >
+                  <div className="flex items-center justify-between gap-2 border-b border-deep/5 pb-1.5 mb-2">
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-deep/80 font-sans" lang={lang}>
+                      {bn ? s.title_bn : s.title_en}
+                    </h3>
+                    {isUncertain && (
+                      <span className="rounded bg-amber-100 text-amber-900 px-2 py-0.5 text-xs font-semibold">
+                        Uncertain
+                      </span>
+                    )}
+                  </div>
+
+                  <ul className="space-y-1" lang={lang}>
+                    {(bn ? s.bn : s.en).map((val, i) => (
+                      <li
+                        key={i}
+                        className={`font-bangla text-base leading-relaxed ${
+                          isNotReported ? 'text-ink/40 italic font-normal' : 'text-deep font-medium'
+                        }`}
+                      >
+                        {val}
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )
+            })}
+          </div>
+
+          {/* Legal & Medical Disclaimers */}
+          <div className="rounded-xl border border-deep/15 bg-white p-4 text-xs text-ink/80 leading-relaxed font-bangla" lang={lang}>
+            <p className="font-semibold text-deep mb-1">
+              {bn ? 'দায়মুক্তি ও ক্লিনিক্যাল নির্দেশিকা:' : 'Disclaimer & Clinical Notice:'}
+            </p>
+            <p>{bn ? summary.disclaimer_bn : summary.disclaimer_en}</p>
+          </div>
+
+          {/* Navigation Footer (Hidden in Print) */}
+          <div className="no-print flex flex-wrap items-center justify-between gap-3 pt-2">
+            <Link
+              to="/about"
+              className="inline-flex min-h-10 items-center rounded-xl px-4 text-xs font-semibold text-deep underline hover:text-brand"
             >
-              <div className="flex items-center justify-between gap-2 border-b border-deep/5 pb-1.5 mb-2">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-deep/80 font-sans" lang={lang}>
-                  {bn ? s.title_bn : s.title_en}
-                </h3>
-                {isUncertain && (
-                  <span className="rounded bg-amber-100 text-amber-900 px-2 py-0.5 text-xs font-semibold">
-                    Uncertain
-                  </span>
-                )}
-              </div>
-
-              <ul className="space-y-1" lang={lang}>
-                {(bn ? s.bn : s.en).map((val, i) => (
-                  <li
-                    key={i}
-                    className={`font-bangla text-base leading-relaxed ${
-                      isNotReported ? 'text-ink/40 italic font-normal' : 'text-deep font-medium'
-                    }`}
-                  >
-                    {val}
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )
-        })}
-      </div>
-
-      {/* 3. Collapsible Transcript Comparison Panel */}
-      <details open className="print-card rounded-2xl bg-white p-5 shadow-sm border border-deep/15 group">
-        <summary className="flex cursor-pointer list-none items-center justify-between font-bold text-deep text-sm uppercase tracking-wider focus:outline-none">
-          <span className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-brand" /> {t.compare}
-          </span>
-          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-        </summary>
-
-        <div className="mt-4 space-y-4 pt-3 border-t border-deep/10">
-          <div className="grid gap-3 md:grid-cols-3">
-            {/* Original Dialect */}
-            <div className="rounded-xl border border-deep/10 bg-soft p-3.5">
-              <p className="text-xs font-bold uppercase text-ink/60 mb-1">{t.original}</p>
-              <p className="font-bangla text-sm text-deep leading-relaxed" lang="bn" data-testid="original-statement">
-                {summary.original_statement || '(None)'}
-              </p>
-            </div>
-
-            {/* Normalized Standard Bangla */}
-            <div className="rounded-xl border border-brand/20 bg-brand/5 p-3.5">
-              <p className="text-xs font-bold uppercase text-brand mb-1">{t.normalized}</p>
-              <p className="font-bangla text-sm text-deep leading-relaxed" lang="bn" data-testid="normalized-statement">
-                {summary.normalized_statement || '(None)'}
-              </p>
-            </div>
-
-            {/* Patient Confirmed Statement */}
-            <div className="rounded-xl border border-ok/30 bg-emerald-50/50 p-3.5">
-              <p className="text-xs font-bold uppercase text-ok mb-1">{t.confirmed}</p>
-              <p className="font-bangla text-sm text-deep leading-relaxed font-semibold" lang="bn" data-testid="confirmed-statement">
-                {summary.confirmed_statement || summary.normalized_statement || '(None)'}
-              </p>
-            </div>
+              Models, Limitations, and Ethical Architecture
+            </Link>
+            <Button variant="secondary" onClick={endSession}>
+              <RefreshCw className="h-4 w-4 mr-1.5" /> Start New Consultation
+            </Button>
           </div>
 
-          {/* Provenance Details */}
-          <div className="text-xs text-ink/70 bg-soft p-3 rounded-xl border border-deep/10">
-            <p className="font-bold uppercase tracking-wider text-deep mb-1">{t.provenance}:</p>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              <div>
-                <span className="text-ink/50">Speech:</span> {PROV[summary.provenance?.speech_to_text] ?? summary.provenance?.speech_to_text}
-              </div>
-              <div>
-                <span className="text-ink/50">Normalization:</span> {PROV[summary.provenance?.normalization] ?? summary.provenance?.normalization}
-              </div>
-              <div>
-                <span className="text-ink/50">Extraction:</span> {PROV[summary.provenance?.extraction] ?? summary.provenance?.extraction}
-              </div>
-              <div>
-                <span className="text-ink/50">Edited by patient:</span> {PROV[summary.provenance?.patient_edited_text] ?? summary.provenance?.patient_edited_text}
-              </div>
-            </div>
+          <div className="no-print">
+            <Disclaimer />
           </div>
         </div>
-      </details>
 
-      {/* 4. Collapsible Extraction Details Panel (Evidence Quotes) */}
-      <details className="print-card rounded-2xl bg-white p-5 shadow-sm border border-deep/15 group">
-        <summary className="flex cursor-pointer list-none items-center justify-between font-bold text-deep text-sm uppercase tracking-wider focus:outline-none">
-          <span className="flex items-center gap-2">
-            <Quote className="h-4 w-4 text-brand" /> {t.extractionDetails}
-          </span>
-          <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
-        </summary>
+        {/* Side Column: Spoken Reply Player, Transcript Comparison, Extraction Details */}
+        <div className="lg:col-span-5 xl:col-span-4 space-y-6 print:w-full print:mt-6">
+          {/* 5. Patient Spoken Reply (TTS) */}
+          <SpokenReply sessionId={sessionId} />
 
-        <div className="mt-4 pt-3 border-t border-deep/10 space-y-3">
-          <div className="grid gap-2.5 sm:grid-cols-2">
-            {summary.sections
-              .filter((s) => s.status !== 'not_reported' && s.evidence)
-              .map((s) => (
-                <div key={s.key} className="rounded-xl border border-deep/10 p-3 bg-soft/50">
-                  <p className="text-xs font-bold text-deep uppercase">{bn ? s.title_bn : s.title_en}</p>
-                  <blockquote className="mt-1 text-sm font-bangla text-ink/90 border-l-2 border-brand pl-2.5 italic">
-                    “{s.evidence}”
-                  </blockquote>
+          {/* 3. Collapsible Transcript Comparison Panel */}
+          <details open className="print-card rounded-2xl bg-white p-5 shadow-sm border border-deep/15 group">
+            <summary className="flex cursor-pointer list-none items-center justify-between font-bold text-deep text-sm uppercase tracking-wider focus:outline-none">
+              <span className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-brand" /> {t.compare}
+              </span>
+              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+            </summary>
+
+            <div className="mt-4 space-y-4 pt-3 border-t border-deep/10">
+              <div className="grid gap-3">
+                {/* Original Dialect */}
+                <div className="rounded-xl border border-deep/10 bg-soft p-3.5">
+                  <p className="text-xs font-bold uppercase text-ink/60 mb-1">{t.original}</p>
+                  <p className="font-bangla text-sm text-deep leading-relaxed" lang="bn" data-testid="original-statement">
+                    {summary.original_statement || '(None)'}
+                  </p>
                 </div>
-              ))}
-          </div>
+
+                {/* Normalized Standard Bangla */}
+                <div className="rounded-xl border border-brand/20 bg-brand/5 p-3.5">
+                  <p className="text-xs font-bold uppercase text-brand mb-1">{t.normalized}</p>
+                  <p className="font-bangla text-sm text-deep leading-relaxed" lang="bn" data-testid="normalized-statement">
+                    {summary.normalized_statement || '(None)'}
+                  </p>
+                </div>
+
+                {/* Patient Confirmed Statement */}
+                <div className="rounded-xl border border-ok/30 bg-emerald-50/50 p-3.5">
+                  <p className="text-xs font-bold uppercase text-ok mb-1">{t.confirmed}</p>
+                  <p className="font-bangla text-sm text-deep leading-relaxed font-semibold" lang="bn" data-testid="confirmed-statement">
+                    {summary.confirmed_statement || summary.normalized_statement || '(None)'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Provenance Details */}
+              <div className="text-xs text-ink/70 bg-soft p-3 rounded-xl border border-deep/10">
+                <p className="font-bold uppercase tracking-wider text-deep mb-1">{t.provenance}:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <span className="text-ink/50">Speech:</span> {PROV[summary.provenance?.speech_to_text] ?? summary.provenance?.speech_to_text}
+                  </div>
+                  <div>
+                    <span className="text-ink/50">Normalization:</span> {PROV[summary.provenance?.normalization] ?? summary.provenance?.normalization}
+                  </div>
+                  <div>
+                    <span className="text-ink/50">Extraction:</span> {PROV[summary.provenance?.extraction] ?? summary.provenance?.extraction}
+                  </div>
+                  <div>
+                    <span className="text-ink/50">Edited:</span> {PROV[summary.provenance?.patient_edited_text] ?? summary.provenance?.patient_edited_text}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          {/* 4. Collapsible Extraction Details Panel (Evidence Quotes) */}
+          <details className="print-card rounded-2xl bg-white p-5 shadow-sm border border-deep/15 group">
+            <summary className="flex cursor-pointer list-none items-center justify-between font-bold text-deep text-sm uppercase tracking-wider focus:outline-none">
+              <span className="flex items-center gap-2">
+                <Quote className="h-4 w-4 text-brand" /> {t.extractionDetails}
+              </span>
+              <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+            </summary>
+
+            <div className="mt-4 pt-3 border-t border-deep/10 space-y-3">
+              <div className="grid gap-2.5">
+                {summary.sections
+                  .filter((s) => s.status !== 'not_reported' && s.evidence)
+                  .map((s) => (
+                    <div key={s.key} className="rounded-xl border border-deep/10 p-3 bg-soft/50">
+                      <p className="text-xs font-bold text-deep uppercase">{bn ? s.title_bn : s.title_en}</p>
+                      <blockquote className="mt-1 text-sm font-bangla text-ink/90 border-l-2 border-brand pl-2.5 italic">
+                        “{s.evidence}”
+                      </blockquote>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </details>
         </div>
-      </details>
-
-      {/* 5. Patient Spoken Reply (TTS) */}
-      <SpokenReply sessionId={sessionId} />
-
-      {/* Legal & Medical Disclaimers */}
-      <div className="rounded-xl border border-deep/15 bg-white p-4 text-xs text-ink/80 leading-relaxed font-bangla" lang={lang}>
-        <p className="font-semibold text-deep mb-1">
-          {bn ? 'দায়মুক্তি ও ক্লিনিক্যাল নির্দেশিকা:' : 'Disclaimer & Clinical Notice:'}
-        </p>
-        <p>{bn ? summary.disclaimer_bn : summary.disclaimer_en}</p>
-      </div>
-
-      {/* Navigation Footer (Hidden in Print) */}
-      <div className="no-print flex flex-wrap items-center justify-between gap-3 pt-2">
-        <Link
-          to="/about"
-          className="inline-flex min-h-10 items-center rounded-xl px-4 text-xs font-semibold text-deep underline hover:text-brand"
-        >
-          Models, Limitations, and Ethical Architecture
-        </Link>
-        <Button variant="secondary" onClick={endSession}>
-          <RefreshCw className="h-4 w-4 mr-1.5" /> Start New Consultation
-        </Button>
-      </div>
-
-      <div className="no-print">
-        <Disclaimer />
       </div>
     </div>
   )

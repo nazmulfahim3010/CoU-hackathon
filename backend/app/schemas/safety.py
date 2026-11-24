@@ -78,4 +78,5 @@ class SafetyResponse(BaseModel):
     engine: str = "deterministic-keyword-rules (no LLM)"
     notice_en: str
     notice_bn: str
+    warnings: list[str] = Field(default_factory=list)
     mode: str = "live"

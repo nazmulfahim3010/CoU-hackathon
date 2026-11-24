@@ -78,18 +78,18 @@ export function Disclaimer({ className = '' }: { className?: string }) {
 export function StepDots({ step }: { step: number }) {
   const labels = ['কথা বলুন', 'যাচাই', 'প্রক্রিয়া', 'সারসংক্ষেপ']
   return (
-    <ol className="mb-6 flex items-center gap-2 text-sm" aria-label="Progress">
+    <ol className="mb-6 flex items-center justify-between sm:justify-start gap-2 sm:gap-4 lg:gap-6 text-sm w-full max-w-3xl" aria-label="Progress">
       {labels.map((l, i) => (
-        <li key={l} className="flex items-center gap-2" aria-current={i === step ? 'step' : undefined}>
+        <li key={l} className="flex items-center gap-2 lg:gap-3" aria-current={i === step ? 'step' : undefined}>
           <span
-            className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
-              i <= step ? 'bg-brand text-white' : 'bg-deep/10 text-deep'
+            className={`flex h-7 w-7 lg:h-8 lg:w-8 items-center justify-center rounded-full text-xs font-bold transition-all ${
+              i <= step ? 'bg-brand text-white shadow-xs' : 'bg-deep/10 text-deep'
             }`}
           >
             {i + 1}
           </span>
-          <span className={`hidden sm:inline ${i === step ? 'font-semibold' : 'text-ink/60'}`}>{l}</span>
-          {i < labels.length - 1 && <span className="h-px w-4 bg-deep/20 sm:w-8" />}
+          <span className={`hidden sm:inline text-xs sm:text-sm font-bangla ${i === step ? 'font-bold text-deep' : 'text-ink/60'}`}>{l}</span>
+          {i < labels.length - 1 && <span className="h-0.5 w-6 sm:w-12 lg:w-20 bg-deep/20" aria-hidden />}
         </li>
       ))}
     </ol>

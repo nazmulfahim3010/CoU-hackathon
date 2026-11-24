@@ -184,3 +184,65 @@ def test_glossary_stats_endpoint(client):
 def test_stats_helper_matches_endpoint_logic():
     s = get_glossary_stats()
     assert s.by_dialect["sylheti"].total == 120
+
+
+def test_script_classification():
+    from app.services.transliteration import classify_script
+
+    assert classify_script("আমার মাথা ব্যথা করছে") == "bangla_script"
+    assert classify_script("amar mathat bedna korer") == "romanized"
+    assert classify_script("amar mathat ব্যথা korer") == "mixed"
+    assert classify_script("123 456") == "romanized"
+    assert classify_script("১২৩ ৪৫৬") == "bangla_script"
+
+
+def test_banglish_transliteration_no_invented_symptom():
+    """'amar peto bedna korer' gets transliterated and normalized without invented_symptom flag."""
+    out = asyncio.run(normalize("amar peto bedna korer", Settings(), use_llm=False))
+    assert out.script_type == "romanized"
+    assert out.transliterated_text is not None
+    assert "পেট" in out.normalized or "পেটে" in out.normalized
+    assert "ব্যথা" in out.normalized or "বেদনা" in out.transliterated_text
+    assert not any("invented_symptom" in w for w in out.warnings)
+    assert any("Roman letters detected" in w for w in out.warnings)
+
+
+def test_banglish_negation_words_survive_transliteration():
+    """Negation words (na, nai, nei, ni, noy) survive transliteration and keep negation intact."""
+    from app.services.transliteration import deterministic_transliterate
+    from app.services.dialect_normalizer import count_negations, negation_forms
+
+    forms = negation_forms(load_glossary())
+    for text in ["mathat betha nai", "amar peto bedna na", "kashi nei", "jor hoy ni"]:
+        trans = deterministic_transliterate(text)
+        assert count_negations(trans, forms) >= 1
+        assert any(neg in trans for neg in ["না", "নাই", "নেই", "নি", "নয়"])
+
+
+def test_banglish_chest_pain_triggers_red_flag_and_blocks_raw_roman_at_confirmation(client):
+    """A Roman chest-pain sentence ('buke betha') triggers CHEST_PAIN after normalization,
+    and if submitted directly in Roman script to /api/confirmation it is blocked."""
+    from app.services.red_flag_engine import evaluate
+
+    out = asyncio.run(normalize("buke betha", Settings(), use_llm=False))
+    assert "বুকে" in out.normalized and "ব্যথা" in out.normalized
+    safety = evaluate("test_sess", out.normalized)
+    assert any(t.rule_id == "CHEST_PAIN" for t in safety.triggered)
+
+    # Check that confirmation endpoint blocks raw Roman script
+    sid = demo_session(client)
+    client.post("/api/normalization", json={"session_id": sid})
+    r = client.post(
+        "/api/confirmation",
+        json={"session_id": sid, "confirmed_text": "buke betha", "confirmed": True},
+    )
+    assert r.status_code == 422
+    assert r.json()["error"]["code"] == "CONFIRMATION_NON_BANGLA"
+
+
+def test_banglish_llm_unavailable_falls_back_to_table_with_warning():
+    """When LLM is unavailable, transliteration falls back to the deterministic table with a visible warning."""
+    out = asyncio.run(normalize("amar peto bedna korer", Settings(), use_llm=False))
+    assert out.source == "glossary_only"
+    assert any("deterministic table fallback used" in w for w in out.warnings)
+    assert any("Roman letters detected" in w for w in out.warnings)

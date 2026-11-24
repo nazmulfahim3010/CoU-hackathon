@@ -28,6 +28,7 @@ from app.schemas.safety import (
     SafetyRulesetConfig,
 )
 from app.services.glossary_service import DATA_DIR, clean_text
+from app.services.transliteration import classify_script
 
 NOTICE_EN = "No alert does not mean the patient is safe. Clinician assessment is required."
 NOTICE_BN = "কোনো সতর্কতা না থাকার অর্থ এই নয় যে রোগী নিরাপদ। চিকিৎসকের সরাসরি পর্যবেক্ষণ ও মূল্যায়ন আবশ্যক।"
@@ -274,6 +275,10 @@ def evaluate(
     insufficient_info = [r for r in results if r.status == "insufficient_information"]
     not_mentioned = [r for r in results if r.status == "not_mentioned"]
 
+    warnings: list[str] = []
+    if classify_script(text) != "bangla_script":
+        warnings.append("Text is not in Bangla script; red-flag check may be unreliable.")
+
     return SafetyResponse(
         session_id=session_id,
         triggered=triggered,
@@ -287,4 +292,5 @@ def evaluate(
         engine="deterministic-keyword-rules (no LLM)",
         notice_en=NOTICE_EN,
         notice_bn=NOTICE_BN,
+        warnings=warnings,
     )

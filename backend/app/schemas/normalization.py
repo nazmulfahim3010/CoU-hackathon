@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class GlossaryMatch(BaseModel):
@@ -40,6 +40,9 @@ class NormalizationRequest(BaseModel):
 class NormalizationResponse(BaseModel):
     session_id: str
     original: str
+    original_text: str | None = None
+    transliterated_text: str | None = None
+    script_type: Literal["bangla_script", "romanized", "mixed"] = "bangla_script"
     normalized: str
     source: Literal["llm_with_glossary", "glossary_only", "demo_prepared", "cached_demo_output"]
     glossary_matches: list[GlossaryMatch] = Field(default_factory=list)
@@ -50,6 +53,12 @@ class NormalizationResponse(BaseModel):
     provider: str
     mode: Literal["live", "demo"] = "live"
     disclaimer: str
+
+    @model_validator(mode="after")
+    def _sync_original(self):
+        if self.original_text is None:
+            self.original_text = self.original
+        return self
 
 
 class LLMNormalization(BaseModel):
