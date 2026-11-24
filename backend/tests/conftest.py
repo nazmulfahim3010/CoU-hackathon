@@ -84,3 +84,12 @@ def valid_extraction_json(**over):
     }
     base.update(over)
     return json.dumps(base, ensure_ascii=False)
+
+
+@pytest.fixture(autouse=True)
+def _no_network_tts(monkeypatch):
+    """The suite must never call the real gTTS web service (slow, rate-limited, needs internet).
+    Individual tests may still override this to simulate TTS failures."""
+    from app.services import text_to_speech
+
+    monkeypatch.setattr(text_to_speech, "_synthesize_gtts", lambda text: b"ID3" + bytes(2048))  # fake MP3-like bytes (header + padding)

@@ -161,7 +161,7 @@ flowchart TD
 │   │   └── data/
 │   │       ├── dialects/            # sylheti.json (120 entries) + standard_bangla.json (reference list)
 │   │       └── safety_rules/        # red_flags.json (10 emergency/urgent rules)
-│   └── tests/                       # unit/integration tests (305 passing in Docker)
+│   └── tests/                       # unit/integration tests (460 passing in Docker)
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/                   # Landing, Intake, Confirm, Summary, About
@@ -259,6 +259,8 @@ All backend configurations are managed via `backend/.env` (read by `app/config.p
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
+| `SHARE_TTL_MINUTES` | `int` | `30` | How long a shared summary (and voice clip) stays in memory before it is deleted. |
+| `PUBLIC_BASE_URL` | `string` | *(empty)* | Address a phone can reach (e.g. `http://192.168.1.20:8080`) so share links and QR codes work. |
 | `APP_MODE` | `string` | `demo` | Application mode: `demo` (prepared scenarios) or `live` (calls real APIs). |
 | `SESSION_TTL_MINUTES` | `int` | `30` | In-memory session time-to-live before automatic garbage collection. |
 | `SESSION_TTL_SECONDS` | `int` | `1800` | In-memory session TTL in seconds. |
@@ -392,6 +394,42 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 
 ---
 
+## 11b. Sharing with a health worker, and never inventing a symptom
+
+**Share a summary (and optionally the voice clip) with a health worker's phone.** On the summary page the
+patient or helper ticks an explicit consent box and presses *Create share link*. Kotha returns a short code
+(`ABCD-EFGH-JKMN`), a link and a QR code. The health worker opens it on their phone (or types the code at `/s`)
+and sees the **same summary card**, read-only, with a countdown.
+
+- **Consent first:** the API returns `400 CONSENT_REQUIRED` without it. The voice clip is only kept if the patient
+  also ticks *Also share my voice recording*; otherwise an uploaded clip is discarded immediately.
+- **Memory only:** shares live in server memory (never on disk or in logs), expire after `SHARE_TTL_MINUTES`
+  (default 30), and can be revoked at any time (*Stop sharing & delete*, or ending the consultation).
+- **Unguessable:** 12-character code (about 60 bits), uniform `404` for unknown/expired codes, per-client rate limit
+  on failed guesses, `Cache-Control: no-store`.
+- **Phones:** the link must use an address the phone can reach. Open Kotha via your computer's Wi-Fi address or set
+  `PUBLIC_BASE_URL`; the UI warns when the link only says `localhost`.
+- Endpoints: `POST /api/share`, `GET /api/share/{code}`, `GET /api/share/{code}/audio`, `DELETE /api/share/{code}`.
+
+**Never turning a dialect phrase into a symptom the patient did not say.** Defence in depth, all deterministic:
+
+1. *Normalization guards* reject LLM rewrites that drop a negation, lose a number/duration, or add a symptom that no
+   verified glossary entry maps to (`dialect_normalizer.py`).
+2. *Confirmation screen:* every dialect word that was changed into a **symptom term** is highlighted with an **Undo**
+   button, and the patient must confirm the final text.
+3. *Evidence grounding* (`grounding.py`): the LLM must attach a **verbatim quote** from the confirmed text to every
+   symptom and field. A claim with no real quote, or one that names a symptom (head/chest/stomach pain, vomiting,
+   cough, fever, breathing, bleeding, ...) that the patient never mentioned, is **removed**, retried with feedback, and
+   shown to the clinician under *Removed: not said by the patient*. Fields without a real quote are demoted to
+   *uncertain*, never shown as reported facts.
+4. A test checks that glossary normalization of every one of the 120 verified Sylheti examples never introduces a
+   symptom absent from the patient's original words.
+
+Limits: grounding covers the symptom groups listed in `grounding.py` and verbatim quoting; it cannot judge subtler
+meaning changes. The live LLM path is tested with scripted fake models only. It has not been run against a real model.
+
+---
+
 ## 12. Demo Walkthrough: 3 Scenarios
 
 To demonstrate Kotha during evaluation, toggle to **Demo mode** in the top navigation bar or intake screen:
@@ -438,11 +476,11 @@ Test status (measured 2026-11-24). Without ffmpeg on the host, run the backend s
 ```powershell
 # Backend test suite, inside Docker (includes the ffmpeg-dependent tests)
 docker compose --profile test run --rm backend-test
-# Result: 305 passed in ~31 s
+# Result: 460 passed in ~11 s (TTS is mocked, so no internet is needed)
 
-# Frontend Unit & Component Tests (33 tests)
+# Frontend Unit & Component Tests (49 tests)
 cd frontend; npm test
-# Result: 33 passed
+# Result: 49 passed
 
 # Frontend Production Build
 cd frontend; npm run build
