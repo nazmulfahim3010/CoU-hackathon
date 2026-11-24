@@ -5,16 +5,16 @@
       "id": "A_ordinary",
       "title": "Scenario A — Ordinary symptoms",
       "purpose": "Fever, cold and headache; no red-flag rule should trigger.",
-      "dialect_label": "Sylheti — sentences copied from the team-verified glossary; standard-Bangla rendering prepared by the project team (not independently verified)",
-      "patient_note": "Fictional patient. Synthetic sample. Audio is a standard-Bangla synthetic voice, not a Sylheti speaker.",
-      "original": "৩ দিন থাকি আমার জ্বর আর সর্দি কমের না। সকাল থাকি আমার মাথাত বেদনা করের।",
-      "normalized": "তিন দিন ধরে আমার জ্বর আর সর্দি কমছে না। সকাল থেকে আমার মাথাব্যথা করছে।",
+      "dialect_label": "Sylheti — authentic native speaker recording (S1); verified by S2",
+      "patient_note": "Fictional patient. Authentic recording of a native Sylheti speaker (S1), verified by S2.",
+      "original": "গত তিন দিন থাকি আমার জ্বর, সর্দি কমের না। বিয়ান থাকি আমার মাথাতও বেদনা করের।",
+      "normalized": "গত তিন দিন ধরে আমার জ্বর ও সর্দি কমছে না। সকাল থেকে আমার মাথায়ও ব্যথা করছে।",
       "extraction": {
         "chief_complaint": {
           "status": "reported",
           "bn": "জ্বর ও সর্দি, কমছে না",
           "en": "Fever and cold that are not improving",
-          "evidence": "জ্বর আর সর্দি কমছে না"
+          "evidence": "জ্বর ও সর্দি কমছে না"
         },
         "symptoms": [
           {
@@ -30,7 +30,7 @@
           {
             "bn": "মাথাব্যথা",
             "en": "Headache",
-            "evidence": "মাথাব্যথা"
+            "evidence": "মাথায়ও ব্যথা"
           }
         ],
         "duration": {
@@ -70,9 +70,9 @@
       "id": "B_red_flag",
       "title": "Scenario B — Red-flag symptoms",
       "purpose": "Chest pain with a feeling of suffocation; deterministic rules should trigger.",
-      "dialect_label": "Sylheti — sentences copied from the team-verified glossary; standard-Bangla rendering prepared by the project team (not independently verified)",
-      "patient_note": "Fictional patient. Synthetic sample. Audio is a standard-Bangla synthetic voice, not a Sylheti speaker.",
-      "original": "গত রাইত থাকি আমার বুক বেদনা করের। শুইয়া থাকলে মনে অয় আমার দম বন্ধ অইজার।",
+      "dialect_label": "Sylheti — authentic native speaker recording (S1); verified by S2",
+      "patient_note": "Fictional patient. Authentic recording of a native Sylheti speaker (S1), verified by S2.",
+      "original": "গত রাইত থেকে আমার বুকো বেদনা করে। শুইয়া থাকলে মনে হয় আমার দম বন্ধ অই যার।",
       "normalized": "গত রাত থেকে আমার বুকে ব্যথা করছে। শুয়ে থাকলে মনে হয় আমার দম বন্ধ হয়ে আসছে।",
       "extraction": {
         "chief_complaint": {
@@ -142,22 +142,22 @@
       "id": "C_uncertain",
       "title": "Scenario C — Uncertain / incomplete information",
       "purpose": "Patient cannot remember a test name and gives no duration; unknowns must stay 'uncertain' or 'not reported', never 'absent'.",
-      "dialect_label": "Sylheti — sentences copied from the team-verified glossary; standard-Bangla rendering prepared by the project team (not independently verified)",
-      "patient_note": "Fictional patient. Synthetic sample. Audio is a standard-Bangla synthetic voice, not a Sylheti speaker.",
-      "original": "বাইরের খাবার খাওয়ার বাদে আমার পেটো বেদনা শুরু অইসে। ডাক্তারে কিতা কইতাম একটা টেস্টর নাম কইসইন, আমার মনে নাই।",
-      "normalized": "বাইরের খাবার খাওয়ার পরে আমার পেট ব্যথা শুরু হয়েছে। ডাক্তার কী যেন একটা টেস্টের নাম বলেছেন, আমার মনে নেই।",
+      "dialect_label": "Sylheti — authentic native speaker recording (S1); verified by S2",
+      "patient_note": "Fictional patient. Authentic recording of a native Sylheti speaker (S1), verified by S2.",
+      "original": "বাইরের খাবার খাওয়ার বাদে আমার পেটো বেদনা করে, বেদনা করা শুরু করছে। ডাক্তারে কিতা কইতাম একটা টেস্টের নাম কইছইন, এখন আমার মনে নাই।",
+      "normalized": "বাইরের খাবার খাওয়ার পর আমার পেটে ব্যথা শুরু হয়েছে। ডাক্তার কী যেন একটা টেস্টের নাম বলেছিলেন, এখন আমার মনে নেই।",
       "extraction": {
         "chief_complaint": {
           "status": "reported",
-          "bn": "পেট ব্যথা",
+          "bn": "পেটে ব্যথা, বাইরের খাবার খাওয়ার পর",
           "en": "Stomach pain",
-          "evidence": "পেট ব্যথা শুরু হয়েছে"
+          "evidence": "পেটে ব্যথা"
         },
         "symptoms": [
           {
-            "bn": "পেট ব্যথা",
+            "bn": "পেটে ব্যথা",
             "en": "Stomach pain",
-            "evidence": "পেট ব্যথা"
+            "evidence": "পেটে ব্যথা"
           }
         ],
         "duration": {

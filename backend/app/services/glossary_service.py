@@ -50,9 +50,11 @@ class Glossary:
         for m in self._re.finditer(text):
             entries = self.by_term[m.group(0)]
             first = entries[0]
+            matched_term = m.group(0)
+            is_multiword = " " in matched_term
             out.append(
                 GlossaryMatch(
-                    regional=m.group(0),
+                    regional=matched_term,
                     standard=first["standard"],
                     english=first["english"],
                     dialect="+".join(dict.fromkeys(e["dialect"] for e in entries)),
@@ -60,6 +62,9 @@ class Glossary:
                     verification="verified" if all(e["verification"] == "verified" for e in entries) else "unverified",
                     start=m.start(),
                     end=m.end(),
+                    glossary_id=first.get("id"),
+                    verification_status=first.get("verification_status") or first.get("verification") or "unverified",
+                    matching_method="exact_phrase" if is_multiword else "word_boundary",
                 )
             )
         return out
@@ -95,26 +100,39 @@ def load_glossary() -> Glossary:
 
 
 def get_glossary_stats() -> GlossaryStatsResponse:
-    """Calculate counts per dialect and verification status."""
+    """Calculate counts per dialect, verification status, and category distribution."""
+    from collections import Counter
+
     by_dialect: dict[str, DialectCount] = {}
     total_verified = 0
     total_unverified = 0
+    overall_categories: Counter[str] = Counter()
 
     for path in _dialect_files(include_standard=True):
         data = json.loads(path.read_text(encoding="utf-8"))
         entries = data.get("entries", [])
         verified = sum(1 for e in entries if (e.get("verification_status") or e.get("verification")) == "verified")
         unverified = len(entries) - verified
-        by_dialect[path.stem] = DialectCount(total=len(entries), verified=verified, unverified=unverified)
+        cat_counts = dict(Counter(e.get("category", "common_medical") for e in entries))
+        
+        by_dialect[path.stem] = DialectCount(
+            total=len(entries),
+            verified=verified,
+            unverified=unverified,
+            by_category=cat_counts,
+        )
         if path.stem != STANDARD_FILE:  # the standard list is a reference, not dialect coverage
             total_verified += verified
             total_unverified += unverified
+            for cat, count in cat_counts.items():
+                overall_categories[cat] += count
 
     return GlossaryStatsResponse(
         total_entries=total_verified + total_unverified,
         by_dialect=by_dialect,
         verified_total=total_verified,
         unverified_total=total_unverified,
+        by_category=dict(overall_categories),
         disclaimer=(
             "Dialect entries marked verified were reviewed by named team members (see verified_by); "
             "this is a text-level review, not independent linguistic validation, and the glossary has "

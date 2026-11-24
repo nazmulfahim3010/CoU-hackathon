@@ -1,0 +1,208 @@
+{
+  "dataset_name": "Sylheti Audio Recording & CSV Corpus",
+  "csv_path": "C:\\Users\\ASUS\\Desktop\\CoU\\CoU-hackathon\\dataset\\Audio_Record_and_Csv\\sylheti_recordings_log_completeV2.csv",
+  "audio_dir": "C:\\Users\\ASUS\\Desktop\\CoU\\CoU-hackathon\\dataset\\Audio_Record_and_Csv\\human_varified_audio.m4a",
+  "is_valid": true,
+  "total_csv_records": 16,
+  "total_audio_files": 16,
+  "matched_records": 16,
+  "missing_audio_files": [],
+  "missing_transcript_records": [],
+  "duplicate_ids": [],
+  "duplicate_filenames": [],
+  "duration_mismatches": [
+    {
+      "id": "rec_015",
+      "file": "New Recording 15.m4a.wav",
+      "csv_duration": 9.47,
+      "measured_duration": 15.872,
+      "difference": 6.4
+    },
+    {
+      "id": "rec_016",
+      "file": "New Recording 16.m4a.wav",
+      "csv_duration": 15.87,
+      "measured_duration": 9.472,
+      "difference": 6.4
+    }
+  ],
+  "validation_errors": [],
+  "records_summary": [
+    {
+      "id": "rec_001",
+      "file": "New Recording.wav",
+      "scenario": "A1",
+      "duration_csv": 8.28,
+      "duration_measured": 8.277,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 85,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_002",
+      "file": "New Recording 2.wav",
+      "scenario": "A1",
+      "duration_csv": 9.22,
+      "duration_measured": 9.216,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 76,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_003",
+      "file": "New Recording 3.wav",
+      "scenario": "A2",
+      "duration_csv": 8.7,
+      "duration_measured": 8.704,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 107,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_004",
+      "file": "New Recording 4.wav",
+      "scenario": "A2",
+      "duration_csv": 6.83,
+      "duration_measured": 6.827,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 98,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_005",
+      "file": "New Recording 5.wav",
+      "scenario": "A3",
+      "duration_csv": 7.85,
+      "duration_measured": 7.851,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 86,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_006",
+      "file": "New Recording 6.wav",
+      "scenario": "A3",
+      "duration_csv": 7.85,
+      "duration_measured": 7.851,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 88,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_007",
+      "file": "New Recording 7.wav",
+      "scenario": "B1",
+      "duration_csv": 12.29,
+      "duration_measured": 12.288,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 84,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_008",
+      "file": "New Recording 8.wav",
+      "scenario": "B1",
+      "duration_csv": 9.3,
+      "duration_measured": 9.301,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 97,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_009",
+      "file": "New Recording 9.wav",
+      "scenario": "B2",
+      "duration_csv": 8.87,
+      "duration_measured": 8.875,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 106,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_010",
+      "file": "New Recording 10.wav",
+      "scenario": "B2",
+      "duration_csv": 11.95,
+      "duration_measured": 11.947,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 103,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_011",
+      "file": "New Recording 11.wav",
+      "scenario": "B3",
+      "duration_csv": 8.45,
+      "duration_measured": 8.448,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 81,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_012",
+      "file": "New Recording 12.wav",
+      "scenario": "C1",
+      "duration_csv": 13.99,
+      "duration_measured": 13.995,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 129,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_013",
+      "file": "New Recording 13.m4a.wav",
+      "scenario": "C1",
+      "duration_csv": 9.05,
+      "duration_measured": 9.045,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 82,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_014",
+      "file": "New Recording 14.m4a.wav",
+      "scenario": "C1",
+      "duration_csv": 13.31,
+      "duration_measured": 13.312,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 122,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_015",
+      "file": "New Recording 15.m4a.wav",
+      "scenario": "C2",
+      "duration_csv": 9.47,
+      "duration_measured": 15.872,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 97,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_016",
+      "file": "New Recording 16.m4a.wav",
+      "scenario": "C2",
+      "duration_csv": 15.87,
+      "duration_measured": 9.472,
+      "sample_rate": 48000,
+      "channels": 2,
+      "transcript_length": 108,
+      "reviewer": "Fahim"
+    }
+  ]
+}

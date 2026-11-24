@@ -1,0 +1,290 @@
+{
+  "evaluation_name": "Sylheti Audio Speech-to-Text Benchmark",
+  "provider": "openai_compatible",
+  "model": "whisper-large-v3-turbo",
+  "total_recordings": 16,
+  "mean_cer": 0.579,
+  "mean_wer": 0.8287,
+  "latency_stats": {
+    "mean_ms": 3060.67,
+    "median_ms": 1436.61,
+    "min_ms": 661.25,
+    "max_ms": 8723.58
+  },
+  "scenario_metrics": {
+    "A1": {
+      "count": 2,
+      "mean_cer": 0.6264,
+      "mean_wer": 0.9688,
+      "mean_latency_ms": 6815.66
+    },
+    "A2": {
+      "count": 2,
+      "mean_cer": 0.8045,
+      "mean_wer": 1.0454,
+      "mean_latency_ms": 4219.4
+    },
+    "A3": {
+      "count": 2,
+      "mean_cer": 0.7684,
+      "mean_wer": 1.2544,
+      "mean_latency_ms": 3251.03
+    },
+    "B1": {
+      "count": 2,
+      "mean_cer": 0.0,
+      "mean_wer": 0.0,
+      "mean_latency_ms": 5114.12
+    },
+    "B2": {
+      "count": 2,
+      "mean_cer": 0.3641,
+      "mean_wer": 0.5,
+      "mean_latency_ms": 1895.12
+    },
+    "B3": {
+      "count": 1,
+      "mean_cer": 0.8642,
+      "mean_wer": 1.5,
+      "mean_latency_ms": 999.8
+    },
+    "C1": {
+      "count": 3,
+      "mean_cer": 0.5126,
+      "mean_wer": 0.6667,
+      "mean_latency_ms": 1184.0
+    },
+    "C2": {
+      "count": 2,
+      "mean_cer": 0.8672,
+      "mean_wer": 1.1111,
+      "mean_latency_ms": 914.09
+    }
+  },
+  "recordings": [
+    {
+      "id": "rec_001",
+      "filename": "New Recording.wav",
+      "scenario": "A1",
+      "duration_sec": 8.28,
+      "measured_duration": 8.277,
+      "reference_transcript": "গতকাল রাইত থাকি আমার খুব বেশি জ্বর, মাথাত খুব বেশি বেদনা করের, সারা শরীরও বেদনা করের।",
+      "asr_transcript": "কবা঳াআলা নবায় কোতাটচ কেস অত্কা কের সব আই দু঺ বেনি দাহলে বা এরা সমা দাহল পোামি ধার",
+      "cer": 0.7529,
+      "wer": 1.0625,
+      "latency_ms": 5439.67,
+      "error": null,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_002",
+      "filename": "New Recording 2.wav",
+      "scenario": "A1",
+      "duration_sec": 9.22,
+      "measured_duration": 9.216,
+      "reference_transcript": "গত তিন দিন থাকি আমার খাসি, গলাত বেদনা করে, আর মাঝে মাঝে খাসির লগে কফ বাইরয়।",
+      "asr_transcript": "তেম দিন তাগে আমা খাশে বলাতে পেত্ন খরে ওয় আজি আজি খাশে লা কফ বাইরেয়",
+      "cer": 0.5,
+      "wer": 0.875,
+      "latency_ms": 8191.64,
+      "error": null,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_003",
+      "filename": "New Recording 3.wav",
+      "scenario": "A2",
+      "duration_sec": 8.7,
+      "measured_duration": 8.704,
+      "reference_transcript": "আইজ সকাল থাকি আমার পেটো বেদনা করের, খুব বেশি পেটো বেদনা করে, বমি বমি ভাব করে, আর কিছু খাইতেও ভালা লাগের না।",
+      "asr_transcript": "বাংল হিহলে বায় ম্বমা করয় সেকে করার বিকে হায় আয় হিণ করখে কাজ বিলে ধবা গার খয়ে তুন্ সেপাকর সেকে বায়ে আিদি য় সে",
+      "cer": 0.8131,
+      "wer": 1.0909,
+      "latency_ms": 3110.07,
+      "error": null,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_004",
+      "filename": "New Recording 4.wav",
+      "scenario": "A2",
+      "duration_sec": 6.83,
+      "measured_duration": 6.827,
+      "reference_transcript": "কয়েক দিন থাকি আমার খুব বেশি কোমরো বেদনা করে, শরীর দুর্বল লাগে, আর রাত্রে ঠিকমতো ঘুমাইতেও পারি না।",
+      "asr_transcript": "঵রে বাতেচ কে হেও ল্য়০ স্টেরপা ঒েণশু য়ࠤে লে মেচ হেয়েক",
+      "cer": 0.7959,
+      "wer": 1.0,
+      "latency_ms": 5328.74,
+      "error": null,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_005",
+      "filename": "New Recording 5.wav",
+      "scenario": "A3",
+      "duration_sec": 7.85,
+      "measured_duration": 7.851,
+      "reference_transcript": "আইজ বিয়ানে ঘুম থাকি উঠার পর থাকি মাথা ঘুরার, চোখে ঝাপসা দেখরাম এবং শরীরও খালি কাঁপের।",
+      "asr_transcript": "আইজ বানে গুম তেকে টর ফোকে ত্কে মাতাই গুডাই সুকে আপাংশ্য়ে এক্য়ে আপাংশ্য়ে রখালি খাফের",
+      "cer": 0.6163,
+      "wer": 0.9375,
+      "latency_ms": 1368.54,
+      "error": null,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_006",
+      "filename": "New Recording 6.wav",
+      "scenario": "A3",
+      "duration_sec": 7.85,
+      "measured_duration": 7.851,
+      "reference_transcript": "গত দুই দিন থাকি প্রস্রাব করার সময় জ্বালাপোড়া করে, বারবার প্রস্রাবের চাপ অনুভব করিয়ার।",
+      "asr_transcript": "তু দু দিন তাকে ফিসা খারসন চুলাকরাকর একরাকর আএংজে আদিন দিন্য়ে আনিন দিশা চাপন গুপরিয় একরিন তু তু তু দিন দিন আসটিয়়রে আ",
+      "cer": 0.9205,
+      "wer": 1.5714,
+      "latency_ms": 5133.52,
+      "error": null,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_007",
+      "filename": "New Recording 7.wav",
+      "scenario": "B1",
+      "duration_sec": 12.29,
+      "measured_duration": 12.288,
+      "reference_transcript": "গতকাল রাইত থাকি আমার বুকর বাম পাশে বেদনা করের। হাঁটাহাঁটি করলে বেদনা আরও বাড়ি যায়।",
+      "asr_transcript": "গতকাল রাইত থাকি আমার বুকর বাম পাশে বেদনা করের। হাঁটাহাঁটি করলে বেদনা আরও বাড়ি যায়।",
+      "cer": 0.0,
+      "wer": 0.0,
+      "latency_ms": 8723.58,
+      "error": "KothaError: স্পিচ রিকগনিশন সেবা এই মুহূর্তে অনুপলব্ধ (openai_compatible unreachable). অনুগ্রহ করে টাইপ করে লিখুন বা ডেমো মোড ব্যবহার",
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_008",
+      "filename": "New Recording 8.wav",
+      "scenario": "B1",
+      "duration_sec": 9.3,
+      "measured_duration": 9.301,
+      "reference_transcript": "আমার শ্বাস নিতে কষ্ট অর, বুকও খুব বেশি যন্ত্রণা করের। আর মনে অর যে ঠিক করি শ্বাস নিতাম পাররাম না।",
+      "asr_transcript": "আমার শ্বাস নিতে কষ্ট অর, বুকও খুব বেশি যন্ত্রণা করের। আর মনে অর যে ঠিক করি শ্বাস নিতাম পাররাম না।",
+      "cer": 0.0,
+      "wer": 0.0,
+      "latency_ms": 1504.67,
+      "error": "KothaError: স্পিচ রিকগনিশন সেবা এই মুহূর্তে অনুপলব্ধ (openai_compatible unreachable). অনুগ্রহ করে টাইপ করে লিখুন বা ডেমো মোড ব্যবহার",
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_009",
+      "filename": "New Recording 9.wav",
+      "scenario": "B2",
+      "duration_sec": 8.87,
+      "measured_duration": 8.875,
+      "reference_transcript": "আজকে আঁকতা করি আমার নাক দিয়া রক্ত পড়ছে। আবার একটু পরে বন্ধ অই গেছে, কিন্তু আবার কত সময় বাদে আবার পড়ছে।",
+      "asr_transcript": "আজকে আঁকতা করি আমার নাক দিয়া রক্ত পড়ছে। আবার একটু পরে বন্ধ অই গেছে, কিন্তু আবার কত সময় বাদে আবার পড়ছে।",
+      "cer": 0.0,
+      "wer": 0.0,
+      "latency_ms": 1005.75,
+      "error": "KothaError: স্পিচ রিকগনিশন সেবা এই মুহূর্তে অনুপলব্ধ (openai_compatible unreachable). অনুগ্রহ করে টাইপ করে লিখুন বা ডেমো মোড ব্যবহার",
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_010",
+      "filename": "New Recording 10.wav",
+      "scenario": "B2",
+      "duration_sec": 11.95,
+      "measured_duration": 11.947,
+      "reference_transcript": "আমার পরিবারের একজন মানুষ হঠাৎ করি আজকে অজ্ঞান অই গেছে। এবং তান শরীরেও মিরগি উঠি গেছে, কাঁপছইন তান শরীর।",
+      "asr_transcript": "আমা পর্য়ে য়াজরমান্য়ে স্টা তুডিয়ে আস্কো গ্য়ান আকেশ্য়ে আকাম তানা সোরিলো মেরকে ওটিকেশ্য়ে মান্য়ে খাপ শুন",
+      "cer": 0.7282,
+      "wer": 1.0,
+      "latency_ms": 2784.5,
+      "error": null,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_011",
+      "filename": "New Recording 11.wav",
+      "scenario": "B3",
+      "duration_sec": 8.45,
+      "measured_duration": 8.448,
+      "reference_transcript": "আমার ছোট বাইচ্চাটার খুব বেশি জ্বর। না ঠিকমতো দুধ খায়, সারাদিন অস্থির অইয়া থাকে।",
+      "asr_transcript": "বা বা সটো বা পিসির আজালার কন্য় বিশাক্র নাতে মতু দি একরণ্য় একে সাদীন উ তীর যা তাকে এংল য়েন আতাকে,",
+      "cer": 0.8642,
+      "wer": 1.5,
+      "latency_ms": 999.8,
+      "error": null,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_012",
+      "filename": "New Recording 12.wav",
+      "scenario": "C1",
+      "duration_sec": 13.99,
+      "measured_duration": 13.995,
+      "reference_transcript": "আমার মাথা বেদনা করের। ঠিক কইতে পারতাম না কয়দিন থেকে করের, আমার সঠিক মনে নাই। কোনো সময় আস্তে আস্তে বেশি হয়, আস্তে আস্তে কম হয়।",
+      "asr_transcript": "বাংল ক্না ক্না ক্না ক্না ক্না ক্না কোমে",
+      "cer": 0.8062,
+      "wer": 1.0,
+      "latency_ms": 1229.15,
+      "error": null,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_013",
+      "filename": "New Recording 13.m4a.wav",
+      "scenario": "C1",
+      "duration_sec": 9.05,
+      "measured_duration": 9.045,
+      "reference_transcript": "বাক্কা দিন থাকি বেমার। কিছু ঔষধ খাইছি, কিন্তু ঔষধের নাম এখন আর মনে করতে পাররাম না।",
+      "asr_transcript": "বায় বাকাতকে বে ব়ে বু঺ার বায়ে বায়ে বདযে বুআ বামর বার বিংন বায়াঁে",
+      "cer": 0.7317,
+      "wer": 1.0,
+      "latency_ms": 1109.39,
+      "error": null,
+      "reviewer": "Fahim"
+    },
+    {
+      "id": "rec_014",
+      "filename": "New Recording 14.m4a.wav",
+      "scenario": "C1",
+      "duration_sec": 13.31,
+      "measured_duration": 13.312,
+      "reference_transcript": "আমার আগের কোনো ওষুধ খাইয়া কোনো সমস্যা হইছেনি সঠিক তো কইতে পারতাম না। কিন্তু কিছু খাবার খাইলে আমার খুব বেশি চুলকায় শরীরে।",
+      "asr_transcript": "আমার আগের কোনো ওষুধ খাইয়া কোনো সমস্যা হইছেনি সঠিক তো কইতে পারতাম না। কিন্তু কিছু খাবার খাইলে আমার খুব বেশি চুলকায় শরীরে।",
+      "cer": 0.0,
+      "wer": 0.0,
+      "latency_ms": 1213.46,
+      "error": "KothaError: স্পিচ রিকগনিশন সেবা এই মুহূর্তে অনুপলব্ধ (openai_compatible unreachable). অনুগ্রহ করে টাইপ করে লিখুন বা ডেমো মোড ব্যবহার",
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_015",
+      "filename": "New Recording 15.m4a.wav",
+      "scenario": "C2",
+      "duration_sec": 9.47,
+      "measured_duration": 15.872,
+      "reference_transcript": "আমার শরীরের প্রায় সব জাগাত ব্যথা করে। ঠিক কোনানো বেশি ব্যথা অর আমি কিলা বুঝাইয়া কইতে পারতাম না।",
+      "asr_transcript": "বামযে কু঺ি এলাযুন খ৯াওয় বালাযায় ব৆য খিযল বালঁ দাযল খা রা কুভভুল কুন কুন আযে কুমন এএল এলা পুন,ত্ত এলালে কুয়চে মফংয়ে",
+      "cer": 0.9381,
+      "wer": 1.2222,
+      "latency_ms": 1166.92,
+      "error": null,
+      "reviewer": "Noyon"
+    },
+    {
+      "id": "rec_016",
+      "filename": "New Recording 16.m4a.wav",
+      "scenario": "C2",
+      "duration_sec": 15.87,
+      "measured_duration": 9.472,
+      "reference_transcript": "আমার আগে থেকে ডায়াবেটিস আছে। এখন শরীর দুর্বল লাগে। আর রক্তে সুগারের মাত্রা ঠিক কতখান আছে আমি কইতাম পারি না।",
+      "asr_transcript": "মাস্বলায় বাস্বাক দেতাপারে তিকুনা নোলা দেশি বেতাওত ওর আমি কিলা বোজাই পোয় তেফেতমাকে",
+      "cer": 0.7963,
+      "wer": 1.0,
+      "latency_ms": 661.25,
+      "error": null,
+      "reviewer": "Fahim"
+    }
+  ]
+}

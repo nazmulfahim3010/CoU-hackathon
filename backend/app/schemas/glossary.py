@@ -94,6 +94,7 @@ class DialectCount(BaseModel):
     total: int
     verified: int
     unverified: int
+    by_category: dict[str, int] = Field(default_factory=dict)
 
 
 class GlossaryStatsResponse(BaseModel):
@@ -102,3 +103,4 @@ class GlossaryStatsResponse(BaseModel):
     verified_total: int
     unverified_total: int
     disclaimer: str
+    by_category: dict[str, int] = Field(default_factory=dict)

@@ -177,7 +177,9 @@ def test_glossary_stats_endpoint(client):
     assert data["total_entries"] == 120  # the standard-Bangla reference list is not dialect coverage
     assert data["verified_total"] == 120 and data["unverified_total"] == 0
     assert set(data["by_dialect"]) == {"sylheti", "standard_bangla"}
-    assert data["by_dialect"]["sylheti"] == {"total": 120, "verified": 120, "unverified": 0}
+    assert data["by_dialect"]["sylheti"]["total"] == 120
+    assert data["by_dialect"]["sylheti"]["verified"] == 120
+    assert data["by_dialect"]["sylheti"]["unverified"] == 0
     assert "text-level review" in data["disclaimer"]
 
 

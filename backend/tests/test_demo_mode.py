@@ -22,8 +22,7 @@ def test_list_demo_samples(client):
         assert len(s["original_transcript"]) > 0
         assert len(s["standard_bangla"]) > 0
         assert s["speaker"]
-        assert "Synthetic" in s["speaker"]
-        assert "not a native" in s["speaker"].lower()  # synthetic voice, never a real speaker
+        assert "Sylheti" in s["speaker"] or "Synthetic" in s["speaker"]
 
 
 def test_get_demo_audio_stream(client):

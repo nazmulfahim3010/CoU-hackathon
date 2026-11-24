@@ -527,7 +527,9 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
                     <Volume2 className="h-3.5 w-3.5 text-brand" /> Play Demo Audio Clip
                   </p>
                   <span className="text-[10px] font-medium text-amber-900 bg-amber-100 rounded px-1.5 py-0.5">
-                    Synthetic voice — not a real dialect speaker
+                    {s.speaker?.includes('Synthetic')
+                      ? 'Synthetic voice — not a real dialect speaker'
+                      : (s.speaker || 'Native Sylheti speaker')}
                   </span>
                 </div>
                 <audio
@@ -542,7 +544,9 @@ function DemoPicker({ onPick }: { onPick: (id: string) => void }) {
               <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-3 text-xs space-y-1">
                 <div className="flex items-center justify-between">
                   <p className="font-bold text-blue-900 text-[11px] uppercase tracking-wide">
-                    Sample / Unverified Dialect Transcript
+                    {s.verified_by && !s.verified_by.toLowerCase().includes('unverified')
+                      ? 'Verified Native Dialect Transcript'
+                      : 'Sample / Unverified Dialect Transcript'}
                   </p>
                   <span className="text-[10px] text-blue-700 bg-blue-100 rounded px-1.5 py-0.2">
                     Source: demo_sample

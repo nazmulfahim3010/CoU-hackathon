@@ -7,12 +7,12 @@
   "provider": "cached_demo_output",
   "model": "pre-saved-demo-fallback",
   "transcript": {
-    "text": "৩ দিন থাকি আমার জ্বর আর সর্দি কমের না। সকাল থাকি আমার মাথাত বেদনা করের।",
+    "text": "গত তিন দিন থাকি আমার জ্বর, সর্দি কমের না। বিয়ান থাকি আমার মাথাতও বেদনা করের।",
     "source": "demo_sample"
   },
   "normalization": {
-    "original": "৩ দিন থাকি আমার জ্বর আর সর্দি কমের না। সকাল থাকি আমার মাথাত বেদনা করের।",
-    "normalized": "তিন দিন ধরে আমার জ্বর আর সর্দি কমছে না। সকাল থেকে আমার মাথাব্যথা করছে।",
+    "original": "গত তিন দিন থাকি আমার জ্বর, সর্দি কমের না। বিয়ান থাকি আমার মাথাতও বেদনা করের।",
+    "normalized": "গত তিন দিন ধরে আমার জ্বর ও সর্দি কমছে না। সকাল থেকে আমার মাথায়ও ব্যথা করছে।",
     "source": "demo_prepared",
     "glossary_matches": [
       {
@@ -47,7 +47,7 @@
       "status": "reported",
       "bn": "জ্বর ও সর্দি, কমছে না",
       "en": "Fever and cold that are not improving",
-      "evidence": "জ্বর আর সর্দি কমছে না"
+      "evidence": "জ্বর ও সর্দি কমছে না"
     },
     "symptoms": [
       {
@@ -63,7 +63,7 @@
       {
         "bn": "মাথাব্যথা",
         "en": "Headache",
-        "evidence": "মাথাব্যথা"
+        "evidence": "মাথায়ও ব্যথা"
       }
     ],
     "duration": {

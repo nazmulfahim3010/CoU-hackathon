@@ -281,6 +281,10 @@ async def normalize(
             normalized=m.standard,
             reason=f"Glossary match ({m.category})",
             source="glossary",
+            glossary_id=m.glossary_id,
+            category=m.category,
+            verification_status=m.verification_status,
+            matching_method=m.matching_method,
         )
         for m in matches
     ]
@@ -330,20 +334,34 @@ async def normalize(
                 source = "llm_with_glossary"
                 provider = llm.name
                 if parsed.changes:
+                    # Enrich LLM changes with glossary audit metadata when matching
+                    match_map = {m.regional: m for m in matches}
+                    for c in parsed.changes:
+                        if c.original in match_map:
+                            gm = match_map[c.original]
+                            if not c.glossary_id:
+                                c.glossary_id = gm.glossary_id
+                            if not c.category:
+                                c.category = gm.category
+                            if not c.verification_status:
+                                c.verification_status = gm.verification_status
+                            if not c.matching_method:
+                                c.matching_method = gm.matching_method
                     changes = parsed.changes
                 if parsed.uncertain_segments:
                     uncertain_segments.extend(parsed.uncertain_segments)
                 uncertain_spans = list(dict.fromkeys(uncertain_spans + parsed.uncertain_spans + [s.text for s in parsed.uncertain_segments]))
-        except (ValueError, ValidationError) as exc:
+        except Exception as exc:
             warnings.append("LLM returned an invalid response; glossary-only result shown instead.")
             error_type = type(exc).__name__
             model_id = getattr(llm, "_model", getattr(settings, "llm_model", "unknown"))
             is_json_fail = isinstance(exc, (json.JSONDecodeError, ValueError))
             log.warning(
-                "llm_normalization_invalid error_type=%s model_id=%s json_parse_failed=%s",
+                "llm_normalization_invalid error_type=%s model_id=%s json_parse_failed=%s error=%s",
                 error_type,
                 model_id,
                 is_json_fail,
+                str(exc)[:100],
             )
 
     if not matches and source == "glossary_only":

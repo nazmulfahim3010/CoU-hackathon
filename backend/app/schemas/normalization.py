@@ -12,6 +12,9 @@ class GlossaryMatch(BaseModel):
     verification: str
     start: int
     end: int
+    glossary_id: str | None = None
+    verification_status: str | None = None
+    matching_method: str = "word_boundary"
 
 
 class NormalizationChange(BaseModel):
@@ -19,6 +22,10 @@ class NormalizationChange(BaseModel):
     normalized: str
     reason: str
     source: Literal["glossary", "llm"] = "llm"
+    glossary_id: str | None = None
+    category: str | None = None
+    verification_status: str | None = None
+    matching_method: str | None = None
 
     @field_validator("source", mode="before")
     @classmethod

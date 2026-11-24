@@ -5,15 +5,16 @@
     "audio_file": "sample_A.wav",
     "title": "Scenario A — Ordinary symptoms",
     "purpose": "Fever, cold and headache; no red-flag rule should trigger.",
-    "dialect": "sylheti (verified-glossary sentences; prepared sample)",
-    "speaker": "Synthetic standard-Bangla voice (gTTS) — NOT a native Sylheti speaker",
-    "original_transcript": "৩ দিন থাকি আমার জ্বর আর সর্দি কমের না। সকাল থাকি আমার মাথাত বেদনা করের।",
-    "standard_bangla": "তিন দিন ধরে আমার জ্বর আর সর্দি কমছে না। সকাল থেকে আমার মাথাব্যথা করছে।",
+    "dialect": "sylheti",
+    "speaker": "Consented native Sylheti speaker (S1)",
+    "original_transcript": "গত তিন দিন থাকি আমার জ্বর, সর্দি কমের না। বিয়ান থাকি আমার মাথাতও বেদনা করের।",
+    "standard_bangla": "গত তিন দিন ধরে আমার জ্বর ও সর্দি কমছে না। সকাল থেকে আমার মাথায়ও ব্যথা করছে।",
+    "english_translation": "For the past three days, my fever and cold have not subsided. Since this morning, I have also had a headache.",
     "source_glossary_rows": [
       "syl_054",
       "syl_027"
     ],
-    "verified_by": "Original sentences: team-verified glossary examples (syl_054, syl_027). Standard-Bangla rendering and audio: prepared, NOT verified."
+    "verified_by": "Verified native Sylheti speaker (S2)"
   },
   {
     "id": "B_red_flag",
@@ -21,15 +22,16 @@
     "audio_file": "sample_B.wav",
     "title": "Scenario B — Red-flag symptoms",
     "purpose": "Chest pain with a feeling of suffocation; deterministic rules should trigger.",
-    "dialect": "sylheti (verified-glossary sentences; prepared sample)",
-    "speaker": "Synthetic standard-Bangla voice (gTTS) — NOT a native Sylheti speaker",
-    "original_transcript": "গত রাইত থাকি আমার বুক বেদনা করের। শুইয়া থাকলে মনে অয় আমার দম বন্ধ অইজার।",
+    "dialect": "sylheti",
+    "speaker": "Consented native Sylheti speaker (S1)",
+    "original_transcript": "গত রাইত থেকে আমার বুকো বেদনা করে। শুইয়া থাকলে মনে হয় আমার দম বন্ধ অই যার।",
     "standard_bangla": "গত রাত থেকে আমার বুকে ব্যথা করছে। শুয়ে থাকলে মনে হয় আমার দম বন্ধ হয়ে আসছে।",
+    "english_translation": "Since last night, I have had chest pain. When I lie down, I feel like I am suffocating.",
     "source_glossary_rows": [
       "syl_009",
       "syl_018"
     ],
-    "verified_by": "Original sentences: team-verified glossary examples (syl_009, syl_018). Standard-Bangla rendering and audio: prepared, NOT verified."
+    "verified_by": "Verified native Sylheti speaker (S2)"
   },
   {
     "id": "C_uncertain",
@@ -37,14 +39,15 @@
     "audio_file": "sample_C.wav",
     "title": "Scenario C — Uncertain / incomplete information",
     "purpose": "Patient cannot remember a test name and gives no duration; unknowns must stay 'uncertain' or 'not reported', never 'absent'.",
-    "dialect": "sylheti (verified-glossary sentences; prepared sample)",
-    "speaker": "Synthetic standard-Bangla voice (gTTS) — NOT a native Sylheti speaker",
-    "original_transcript": "বাইরের খাবার খাওয়ার বাদে আমার পেটো বেদনা শুরু অইসে। ডাক্তারে কিতা কইতাম একটা টেস্টর নাম কইসইন, আমার মনে নাই।",
-    "standard_bangla": "বাইরের খাবার খাওয়ার পরে আমার পেট ব্যথা শুরু হয়েছে। ডাক্তার কী যেন একটা টেস্টের নাম বলেছেন, আমার মনে নেই।",
+    "dialect": "sylheti",
+    "speaker": "Consented native Sylheti speaker (S1)",
+    "original_transcript": "বাইরের খাবার খাওয়ার বাদে আমার পেটো বেদনা করে, বেদনা করা শুরু করছে। ডাক্তারে কিতা কইতাম একটা টেস্টের নাম কইছইন, এখন আমার মনে নাই।",
+    "standard_bangla": "বাইরের খাবার খাওয়ার পর আমার পেটে ব্যথা শুরু হয়েছে। ডাক্তার কী যেন একটা টেস্টের নাম বলেছিলেন, এখন আমার মনে নেই।",
+    "english_translation": "After eating outside food, my stomach started hurting. The doctor mentioned the name of some test, but I cannot remember it now.",
     "source_glossary_rows": [
       "syl_029",
       "syl_076"
     ],
-    "verified_by": "Original sentences: team-verified glossary examples (syl_029, syl_076). Standard-Bangla rendering and audio: prepared, NOT verified."
+    "verified_by": "Verified native Sylheti speaker (S2)"
   }
 ]

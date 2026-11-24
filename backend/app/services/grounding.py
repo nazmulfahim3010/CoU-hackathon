@@ -16,7 +16,7 @@ from app.services.glossary_service import clean_text
 
 # Symptom groups: all the spellings/variants that count as "the patient mentioned this symptom".
 SYMPTOM_GROUPS: dict[str, tuple[str, ...]] = {
-    "head_pain": ("মাথাব্যথা", "মাথা ব্যথা", "মাথায় ব্যথা", "মাথাত বেদনা"),
+    "head_pain": ("মাথাব্যথা", "মাথা ব্যথা", "মাথায় ব্যথা", "মাথায়ও ব্যথা", "মাথাত বেদনা"),
     "chest_pain": ("বুকে ব্যথা", "বুক ব্যথা", "বুক বেদনা", "বুকে বেদনা", "বুকুত বেদনা", "বুকের ব্যথা", "বুকর বাম সাইডে বেদনা", "বুকর বেদনা"),
     "stomach_pain": ("পেটে ব্যথা", "পেট ব্যথা", "পেটো বেদনা", "পেটের ব্যথা"),
     "breathing": ("শ্বাসকষ্ট", "শ্বাস কষ্ট", "শ্বাস নিতে কষ্ট", "নিঃশ্বাস নিতে কষ্ট", "দম বন্ধ", "দম নিতে কষ্ট"),
