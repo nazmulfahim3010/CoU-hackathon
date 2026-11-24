@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test'
 import * as path from 'path'
 import * as fs from 'fs'
 
-const SCREENSHOT_DIR = 'C:/Users/ASUS/.gemini/antigravity/brain/5ee6cc71-8361-4ef5-89a1-3ca8b379ea6a/screenshots'
+const SCREENSHOT_DIR = process.env.SCREENSHOT_DIR || path.resolve(process.cwd(), 'screenshots')
 
 // Ensure screenshot directory exists
 if (!fs.existsSync(SCREENSHOT_DIR)) {
