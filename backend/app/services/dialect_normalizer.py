@@ -307,7 +307,15 @@ async def normalize(
                 uncertain_spans = list(dict.fromkeys(uncertain_spans + parsed.uncertain_spans + [s.text for s in parsed.uncertain_segments]))
         except (ValueError, ValidationError) as exc:
             warnings.append("LLM returned an invalid response; glossary-only result shown instead.")
-            log.warning("llm_normalization_invalid error=%s", exc)
+            error_type = type(exc).__name__
+            model_id = getattr(llm, "_model", getattr(settings, "llm_model", "unknown"))
+            is_json_fail = isinstance(exc, (json.JSONDecodeError, ValueError))
+            log.warning(
+                "llm_normalization_invalid error_type=%s model_id=%s json_parse_failed=%s",
+                error_type,
+                model_id,
+                is_json_fail,
+            )
 
     if not matches and source == "glossary_only":
         warnings.append("No glossary terms matched; text is unchanged. Please review carefully.")

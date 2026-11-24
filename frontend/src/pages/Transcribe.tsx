@@ -127,7 +127,13 @@ export default function Transcribe() {
       {error && !showTypedFallback && (
         <div>
           <ErrorBox
-            title={error.code === 'NO_SPEECH_DETECTED' ? 'কোনো কথা শনাক্ত করা যায়নি' : 'Processing failed'}
+            title={
+              error.code === 'NO_SPEECH_DETECTED'
+                ? 'কোনো কথা শনাক্ত করা যায়নি'
+                : error.code === 'ASR_NON_BANGLA'
+                  ? 'কথা বোঝা যায়নি (Speech not recognized as Bangla)'
+                  : 'Processing failed'
+            }
             message={error.message}
           >
             {error.code !== 'NO_SPEECH_DETECTED' && error.code !== 'AUDIO_TOO_SHORT' && (

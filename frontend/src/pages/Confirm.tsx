@@ -13,13 +13,30 @@ export default function Confirm() {
   const [reviewed, setReviewed] = useState(true)
   const [confirmedBy, setConfirmedBy] = useState<'patient' | 'helper'>('patient')
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null)
+  const [acknowledgedWarning, setAcknowledgedWarning] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   if (!sessionId || !normalization || !transcription) return <Navigate to="/intake" replace />
 
+  const isStrongWarning = Boolean(
+    normalization?.warnings?.some((w) => {
+      const lower = w.toLowerCase()
+      return (
+        lower.includes('invalid response') ||
+        lower.includes('no glossary term') ||
+        lower.includes('meaning-preservation')
+      )
+    })
+  )
+
   const edited = original !== normalization.original || standard !== normalization.normalized
-  const canConfirm = reviewed && standard.trim().length > 0 && original.trim().length > 0 && !busy
+  const canConfirm =
+    reviewed &&
+    standard.trim().length > 0 &&
+    original.trim().length > 0 &&
+    (!isStrongWarning || edited || acknowledgedWarning) &&
+    !busy
 
   const confirm = async () => {
     setBusy(true)
@@ -76,8 +93,51 @@ export default function Confirm() {
         </p>
       </div>
 
-      {/* Prominent Normalization Warnings */}
-      {normalization.warnings.length > 0 && (
+      {/* Strong Warning when LLM invalid response or no glossary terms matched */}
+      {isStrongWarning && (
+        <div
+          data-testid="strong-warning"
+          className="rounded-2xl border-2 border-red-500 bg-red-50/95 p-5 text-red-950 shadow-sm space-y-3"
+          role="alert"
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="h-6 w-6 shrink-0 text-red-600 mt-0.5" aria-hidden />
+            <div>
+              <h2 className="text-lg font-bold text-red-900 font-bangla" lang="bn">
+                জরুরি সতর্কবার্তা: স্বয়ংক্রিয় রূপান্তর অসম্পূর্ণ বা যাচাইবিহীন (Action Required)
+              </h2>
+              <p className="mt-1 text-sm text-red-900/90 font-bangla" lang="bn">
+                ভাষাগত এআই বা শব্দকোষ থেকে এই কথার কোনো প্রমিত রূপান্তর নিশ্চিত করা যায়নি। ডাক্তারের কাছে পাঠানোর আগে অনুগ্রহ করে লেখাটি নিজ হাতে সংশোধন করুন অথবা নিশ্চিত করতে নিচে টিক চিহ্ন দিন।
+              </p>
+            </div>
+          </div>
+
+          <ul className="list-inside list-disc pl-2 space-y-1 text-xs text-red-800 font-medium">
+            {normalization.warnings.map((w, i) => (
+              <li key={i}>{w}</li>
+            ))}
+          </ul>
+
+          {!edited && (
+            <label className="flex items-start gap-2.5 rounded-xl border border-red-300 bg-white p-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                id="ack-warning-checkbox"
+                data-testid="ack-warning-checkbox"
+                checked={acknowledgedWarning}
+                onChange={(e) => setAcknowledgedWarning(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-red-400 text-red-600 focus:ring-red-500"
+              />
+              <span className="text-sm font-semibold text-red-950 font-bangla" lang="bn">
+                আমি সতর্কবার্তা পড়েছি এবং উল্লেখিত তথ্য সঠিক বলে নিশ্চিত করছি (I acknowledge and verified the unverified text)
+              </span>
+            </label>
+          )}
+        </div>
+      )}
+
+      {/* Prominent Normalization Warnings (standard notice when not high warning) */}
+      {!isStrongWarning && normalization.warnings.length > 0 && (
         <div className="rounded-xl border border-warn/40 bg-amber-50 p-4 text-amber-950" role="alert">
           <div className="flex items-start gap-2.5 font-semibold text-amber-900">
             <AlertTriangle className="h-5 w-5 shrink-0 text-warn" aria-hidden />

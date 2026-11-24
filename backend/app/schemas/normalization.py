@@ -1,6 +1,6 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class GlossaryMatch(BaseModel):
@@ -19,6 +19,13 @@ class NormalizationChange(BaseModel):
     normalized: str
     reason: str
     source: Literal["glossary", "llm"] = "llm"
+
+    @field_validator("source", mode="before")
+    @classmethod
+    def normalize_source(cls, v: str) -> str:
+        if isinstance(v, str) and "glossary" in v.lower():
+            return "glossary"
+        return "llm"
 
 
 class UncertainSegment(BaseModel):

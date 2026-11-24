@@ -288,6 +288,39 @@ describe('Confirm page', () => {
     expect(screen.getByRole('button', { name: /নিশ্চিত করছি/ })).toBeEnabled()
   })
 
+  it('requires user edit or explicit acknowledgement when normalization has high warnings', async () => {
+    const seedWithWarning: FlowInitial = {
+      sessionId: 's1',
+      transcription,
+      normalization: {
+        ...normalization,
+        warnings: ['No glossary terms matched; text is unchanged. Please review carefully.'],
+      },
+    }
+    renderAt('/confirm', <Confirm />, seedWithWarning)
+
+    // Strong warning alert is rendered
+    expect(screen.getByTestId('strong-warning')).toBeInTheDocument()
+
+    // Confirm button is initially disabled
+    const confirmBtn = screen.getByRole('button', { name: /নিশ্চিত করছি/ })
+    expect(confirmBtn).toBeDisabled()
+
+    // Checking the acknowledgement checkbox enables the confirm button
+    const ackCheckbox = screen.getByTestId('ack-warning-checkbox')
+    await userEvent.click(ackCheckbox)
+    expect(confirmBtn).toBeEnabled()
+
+    // Unchecking it disables it again
+    await userEvent.click(ackCheckbox)
+    expect(confirmBtn).toBeDisabled()
+
+    // Editing the standard text enables the confirm button even without the ack checkbox
+    const std = screen.getByLabelText('Standard Bangla transcript')
+    await userEvent.type(std, ' সংশোধন')
+    expect(confirmBtn).toBeEnabled()
+  })
+
   it('record again links back to intake', () => {
     renderAt('/confirm', <Confirm />, seed)
     const link = screen.getByRole('link', { name: /আবার রেকর্ড করুন/i })

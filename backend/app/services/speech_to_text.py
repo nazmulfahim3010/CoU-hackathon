@@ -40,6 +40,40 @@ class SpeechToTextProvider(Protocol):
         ...
 
 
+def validate_bangla_script(text: str, min_bangla_ratio: float = 0.5) -> None:
+    """Validate that transcribed text contains predominantly Bengali script.
+
+    If fewer than ~50% of the alphabetic characters belong to the Bengali Unicode block (\u0980-\u09FF),
+    raise KothaError(422, 'ASR_NON_BANGLA', 'কথা বোঝা যায়নি, আবার বলুন বা লিখে দিন').
+    Strictly avoids logging or leaking the transcript text.
+    """
+    cleaned = (text or "").strip()
+    if not cleaned:
+        raise KothaError(
+            422,
+            "NO_SPEECH_DETECTED",
+            "No speech was detected. Please record again, closer to the microphone.",
+        )
+    letters = [ch for ch in cleaned if ch.isalpha()]
+    if letters:
+        bangla_chars = sum(1 for ch in letters if "\u0980" <= ch <= "\u09ff")
+        ratio = bangla_chars / len(letters)
+        if ratio < min_bangla_ratio:
+            raise KothaError(
+                422,
+                "ASR_NON_BANGLA",
+                "কথা বোঝা যায়নি, আবার বলুন বা লিখে দিন (Speech could not be recognized as Bangla. Please record again or type your note).",
+            )
+    else:
+        has_bangla = any("\u0980" <= ch <= "\u09ff" for ch in cleaned)
+        if not has_bangla:
+            raise KothaError(
+                422,
+                "ASR_NON_BANGLA",
+                "কথা বোঝা যায়নি, আবার বলুন বা লিখে দিন (Speech could not be recognized as Bangla. Please record again or type your note).",
+            )
+
+
 def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
     """Validate raw audio container, transcode to 16kHz mono PCM 16-bit WAV with ffmpeg,
     and verify duration <= 90s.
@@ -152,6 +186,7 @@ class LocalTransformersSTT:
                 lambda: pipe(audio_bytes, generate_kwargs={"language": "bn", "task": "transcribe"}),
             )
             text = (res.get("text") or "").strip()
+            validate_bangla_script(text)
             return STTResult(text=text, confidence=None, provider=self.name, model=self._model)
         except Exception as exc:
             raise_for_stt(exc, self.name)
@@ -174,11 +209,17 @@ class HFInferenceSTT:
             async with httpx.AsyncClient(timeout=self._timeout) as c:
                 r = await c.post(
                     f"{self._base}/{self._model}",
-                    headers={"Authorization": f"Bearer {self._key}", "Content-Type": content_type or "audio/wav"},
+                    headers={
+                        "Authorization": f"Bearer {self._key}",
+                        "Content-Type": content_type or "audio/wav",
+                        "x-wait-for-model": "true",
+                    },
+                    params={"language": "bn", "task": "transcribe"},
                     content=audio_bytes,
                 )
                 r.raise_for_status()
                 text = (r.json().get("text") or "").strip()
+                validate_bangla_script(text)
         except Exception as exc:
             raise_for_stt(exc, self.name)
             raise
@@ -202,11 +243,18 @@ class OpenAICompatSTT:
                 r = await c.post(
                     f"{self._base}/audio/transcriptions",
                     headers={"Authorization": f"Bearer {self._key}"},
-                    data={"model": self._model, "language": "bn", "response_format": "json"},
+                    data={
+                        "model": self._model,
+                        "language": "bn",
+                        "task": "transcribe",
+                        "response_format": "json",
+                        "prompt": "বাংলায় বলুন।",
+                    },
                     files={"file": ("recording.wav", audio_bytes, content_type or "audio/wav")},
                 )
                 r.raise_for_status()
                 text = (r.json().get("text") or "").strip()
+                validate_bangla_script(text)
         except Exception as exc:
             raise_for_stt(exc, self.name)
             raise
