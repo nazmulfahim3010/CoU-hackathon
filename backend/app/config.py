@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     # Never default to one provider's model id: sending it to another provider returns HTTP 400.
     speech_model: str = ""
     speech_api_key: str = ""
+    # Optional Whisper "prompt" (text that biases decoding). OFF by default: on the 16 Sylheti recordings a Bangla
+    # prompt made Groq return empty transcripts for 3 of 16 clips versus 0 of 16 without it.
+    speech_prompt: str = ""
     speech_base_url: str = ""  # openai_compatible: e.g. https://api.openai.com/v1
 
     # LLM. provider: none | anthropic | openai_compatible

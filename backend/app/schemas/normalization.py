@@ -12,6 +12,9 @@ class GlossaryMatch(BaseModel):
     verification: str
     start: int
     end: int
+    # Traceability: which glossary row produced this suggestion, and how it matched
+    glossary_id: str | None = None
+    matching_method: str = "exact_word"  # exact_word | exact_phrase (multiword, matched before its parts)
 
 
 class NormalizationChange(BaseModel):
@@ -19,6 +22,7 @@ class NormalizationChange(BaseModel):
     normalized: str
     reason: str
     source: Literal["glossary", "llm"] = "llm"
+    glossary_evidence_ids: list[str] = Field(default_factory=list)
 
     @field_validator("source", mode="before")
     @classmethod
@@ -26,6 +30,18 @@ class NormalizationChange(BaseModel):
         if isinstance(v, str) and "glossary" in v.lower():
             return "glossary"
         return "llm"
+
+
+class GlossaryEvidence(BaseModel):
+    """One glossary row that influenced (or was available to) a normalization."""
+
+    glossary_id: str | None
+    regional_expression: str
+    standard_bangla: str
+    category: str
+    verification_status: str
+    matching_method: str
+    applied: bool = True  # False when the row matched but the final text does not use its standard form
 
 
 class UncertainSegment(BaseModel):
@@ -46,6 +62,9 @@ class NormalizationResponse(BaseModel):
     normalized: str
     source: Literal["llm_with_glossary", "glossary_only", "demo_prepared", "cached_demo_output"]
     glossary_matches: list[GlossaryMatch] = Field(default_factory=list)
+    glossary_evidence: list[GlossaryEvidence] = Field(default_factory=list)
+    # glossary_only_proposal | no_glossary_match_unchanged | llm_proposal_validated | llm_rejected_glossary_fallback
+    normalization_status: str = "glossary_only_proposal"
     changes: list[NormalizationChange] = Field(default_factory=list)
     uncertain_segments: list[UncertainSegment] = Field(default_factory=list)
     uncertain_spans: list[str] = Field(default_factory=list)

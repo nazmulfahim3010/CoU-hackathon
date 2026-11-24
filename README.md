@@ -382,7 +382,7 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 ## 11. Datasets & Licences
 
 ### Actually Used in Codebase
-- **Sylheti glossary** (`demo_assets/sylheti_glossary_verified.csv` -> `backend/app/data/dialects/sylheti.json`): 120 entries authored by a team member (Avijit Dey Tonmoy) and reviewed by named team members (Noyon, Fahim), with reviewer and date stored per row. This is a text-level team review, **not** independent linguistic validation, and it has **not** been tested on real Sylheti speech. Licence: **to be decided by the team**.
+- **Sylheti glossary** (`data/glossary/sylheti_glossary_120-final.csv` -> `backend/app/data/dialects/sylheti.json`): 120 entries authored by a team member (Avijit Dey Tonmoy) and reviewed by named team members (Noyon, Fahim), with reviewer and date stored per row. This is a text-level team review, **not** independent linguistic validation, and it has **not** been tested on real Sylheti speech. Licence: **to be decided by the team**.
 - **Synthetic demo scenarios** (`demo_assets/`): 3 fictional patients; Sylheti sentences copied from the verified glossary; audio is synthetic standard-Bangla gTTS speech. Licence: **to be decided by the team**.
 - **Removed from tracking:** `demo_assets/raw_datasets/*_NER.csv` (regional NER corpora). Their origin and licence are unknown and no code uses them, so they are no longer committed (a local copy remains on disk, git-ignored). Do not reuse them until provenance is established.
   Provenance of those files is recorded in `demo_assets/raw_datasets/SOURCE.md` (origin and licence UNKNOWN).
@@ -428,6 +428,30 @@ and sees the **same summary card**, read-only, with a countdown.
 
 Limits: grounding covers the symptom groups listed in `grounding.py` and verbatim quoting; it cannot judge subtler
 meaning changes. The live LLM path is tested with scripted fake models only. It has not been run against a real model.
+
+---
+
+## 11c. Sylheti audio corpus, glossary evidence and evaluation
+
+Two datasets with different jobs (see `docs/KOTHA_DATASET_INTEGRATION_AUDIT.md` and `docs/SYLHETI_TRANSCRIPTION_GUIDE.md`):
+
+| Dataset | Location | Role |
+|---|---|---|
+| Sylheti audio + reference transcripts (16 clips, 1 speaker) | `data/audio/sylheti/` (**git-ignored**, never in an image) | ASR and normalization **evaluation only** |
+| Sylheti glossary (120 team-verified entries) | `data/glossary/sylheti_glossary_120-final.csv` | Controlled lexical resource used by the normalizer |
+
+- **Validate:** `python scripts/validate_sylheti_dataset.py` (from `backend/`) writes `reports/sylheti_dataset_validation.json`.
+- **Evaluate:** `scripts/evaluate_sylheti_dataset.py` runs the SAME path as the app (ffmpeg -> speech adapter -> normalizer) and scores
+  ASR against the original Sylheti transcript and normalization against the standard-Bangla reference. It refuses to send audio to a
+  third-party provider unless you pass `--confirm-third-party-processing`; `--skip-asr` evaluates normalization without any audio leaving the machine.
+- **Glossary evidence:** every glossary suggestion now carries `glossary_id` and `matching_method`; the normalization response includes
+  `glossary_evidence`, `normalization_status` and per-change `glossary_evidence_ids`. LLM-proposed changes are re-verified (the cited text must
+  exist in the transcript; a change labelled "glossary" must match a real glossary row). If the LLM is unavailable the patient still gets the
+  glossary-only proposal and the original transcript is never overwritten.
+- **Public reports** (`reports/*.json|md`) contain metrics and recording ids only. Texts go to `reports/*.local.json` (git-ignored).
+
+**Measured results are in `reports/sylheti_asr_evaluation.md`. Headline: zero-shot Whisper via Groq does NOT reliably recognise this Sylheti audio
+(see the report), so the confirmation step and typed fallback are essential. No accuracy claim is made.**
 
 ---
 

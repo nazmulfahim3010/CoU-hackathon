@@ -8,8 +8,10 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from app.config import Settings
+from app.core.exceptions import KothaError
 from app.core.logging import get_logger
 from app.schemas.normalization import (
+    GlossaryEvidence,
     GlossaryMatch,
     LLMNormalization,
     NormalizationChange,
@@ -84,8 +86,16 @@ def negation_forms(glossary: Glossary | None) -> frozenset[str]:
     return result
 
 
+# Past-tense negative verbs end in a vowel sign/letter + নি (করিনি, হয়নি, আসেনি, খাইনি, হইছেনি). Many NOUNS also end
+# in নি and are not negations: পানি, জানি ("I know"), চুলকানি (itching), খিঁচুনি (seizure), চিনি, খনি...
+_NEG_PAST_SUFFIXES = ("িনি", "েনি", "য়নি", "ইনি")
+_NEG_NOT_NEGATIONS = {"চিনি", "খনি", "শনি", "ধ্বনি"}
+
+
 def _is_base_negation(token: str) -> bool:
-    return token in _NEG_WORDS or (len(token) >= 4 and token.endswith("নি"))
+    return token in _NEG_WORDS or (
+        len(token) >= 4 and token.endswith(_NEG_PAST_SUFFIXES) and token not in _NEG_NOT_NEGATIONS
+    )
 
 
 def count_negations(text: str, extra_forms: frozenset[str] | set[str] = frozenset()) -> int:
@@ -176,8 +186,13 @@ def check_meaning_preservation(original: str, normalized: str, glossary: Glossar
                 sym in m.standard or (bool(sym_toks) and sym_toks.issubset(_symptom_tokens(m.standard)))
                 for m in matches
             )
-            if not excused and sym_toks and sym_toks.issubset(_symptom_tokens(original)):
-                excused = True
+            if not excused and sym_toks:
+                # every word of the symptom is either in the patient's own words or produced by a glossary
+                # mapping of them (e.g. "মাথা বেদনা" -> "মাথা ব্যথা": মাথা is theirs, ব্যথা comes from বেদনা)
+                covered = set(_symptom_tokens(original))
+                for m in matches:
+                    covered |= _symptom_tokens(m.standard)
+                excused = sym_toks.issubset(covered)
             if not excused:
                 problems.append("invented_symptom")
                 break
@@ -250,6 +265,43 @@ def parse_llm_response(raw: str) -> LLMNormalization:
     return norm
 
 
+def build_glossary_evidence(matches: list[GlossaryMatch], final_text: str) -> list[GlossaryEvidence]:
+    """Trace which glossary rows were available and which ones the final text actually uses."""
+    return [
+        GlossaryEvidence(
+            glossary_id=m.glossary_id,
+            regional_expression=m.regional,
+            standard_bangla=m.standard,
+            category=m.category,
+            verification_status=m.verification,
+            matching_method=m.matching_method,
+            applied=m.standard in final_text,
+        )
+        for m in matches
+    ]
+
+
+def verify_llm_changes(
+    changes: list[NormalizationChange], working_text: str, matches: list[GlossaryMatch], warnings: list[str]
+) -> list[NormalizationChange]:
+    """Never trust the model's own bookkeeping: every proposed change must cite text that really occurs in the
+    transcript, and a change labelled 'glossary' must correspond to a real glossary match."""
+    by_regional = {m.regional: m for m in matches}
+    verified: list[NormalizationChange] = []
+    for ch in changes:
+        span = clean_text(ch.original)
+        if not span or span not in working_text:
+            warnings.append("A model-proposed change cites text that is not in the transcript and was ignored.")
+            continue
+        m = by_regional.get(span)
+        if ch.source == "glossary" and not (m and clean_text(ch.normalized) == clean_text(m.standard)):
+            ch = ch.model_copy(update={"source": "llm"})
+            warnings.append("A change labelled glossary-backed has no matching glossary entry; shown as a model suggestion.")
+        ids = [x.glossary_id for x in matches if x.glossary_id and (x.regional in span or span in x.regional)]
+        verified.append(ch.model_copy(update={"glossary_evidence_ids": list(dict.fromkeys(ids))}))
+    return verified
+
+
 async def normalize(
     original: str, settings: Settings, use_llm: bool, glossary: Glossary | None = None
 ) -> NormalizationResponse:
@@ -281,11 +333,13 @@ async def normalize(
             normalized=m.standard,
             reason=f"Glossary match ({m.category})",
             source="glossary",
+            glossary_evidence_ids=[m.glossary_id] if m.glossary_id else [],
         )
         for m in matches
     ]
 
     normalized, source, provider = glossary_only, "glossary_only", "glossary"
+    status = "glossary_only_proposal" if matches else "no_glossary_match_unchanged"
 
     if use_llm:
         llm = get_llm(settings)
@@ -325,17 +379,20 @@ async def normalize(
                     "glossary-only result shown instead."
                 )
                 log.warning("llm_normalization_rejected problems=%s", problems)
+                status = "llm_rejected_glossary_fallback"
             else:
                 normalized = clean_text(parsed.final_normalized)
                 source = "llm_with_glossary"
                 provider = llm.name
+                status = "llm_proposal_validated"
                 if parsed.changes:
-                    changes = parsed.changes
+                    changes = verify_llm_changes(parsed.changes, working_text, matches, warnings) or changes
                 if parsed.uncertain_segments:
                     uncertain_segments.extend(parsed.uncertain_segments)
                 uncertain_spans = list(dict.fromkeys(uncertain_spans + parsed.uncertain_spans + [s.text for s in parsed.uncertain_segments]))
         except (ValueError, ValidationError) as exc:
             warnings.append("LLM returned an invalid response; glossary-only result shown instead.")
+            status = "llm_rejected_glossary_fallback"
             error_type = type(exc).__name__
             model_id = getattr(llm, "_model", getattr(settings, "llm_model", "unknown"))
             is_json_fail = isinstance(exc, (json.JSONDecodeError, ValueError))
@@ -345,6 +402,14 @@ async def normalize(
                 model_id,
                 is_json_fail,
             )
+
+        except KothaError as exc:
+            # Provider outage / quota / bad model id: never block the patient, keep the original transcript
+            warnings.append(
+                f"The language model was unavailable ({exc.code}); showing the glossary-only proposal. Please review carefully."
+            )
+            log.warning("llm_normalization_unavailable code=%s", exc.code)
+            status = "llm_rejected_glossary_fallback"
 
     if not matches and source == "glossary_only":
         warnings.append("No glossary terms matched; text is unchanged. Please review carefully.")
@@ -358,6 +423,8 @@ async def normalize(
         normalized=normalized,
         source=source,
         glossary_matches=matches,
+        glossary_evidence=build_glossary_evidence(matches, normalized),
+        normalization_status=status,
         changes=changes,
         uncertain_segments=uncertain_segments,
         uncertain_spans=uncertain_spans,

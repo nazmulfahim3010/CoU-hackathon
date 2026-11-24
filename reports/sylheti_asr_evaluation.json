@@ -1,0 +1,382 @@
+{
+  "generated_at": "2026-11-24T06:50:32+00:00",
+  "speech_provider": "openai_compatible",
+  "speech_model": "whisper-large-v3",
+  "speech_credentials_configured": true,
+  "llm_used_for_normalization": false,
+  "llm_provider": null,
+  "recordings_evaluated": 16,
+  "asr_run": true,
+  "third_party_audio_processing_confirmed": true,
+  "aggregate": {
+    "recordings": 16,
+    "successful_transcriptions": 16,
+    "failed_transcriptions": 0,
+    "failure_rate": 0.0,
+    "empty_transcripts": 0,
+    "empty_transcript_rate": 0.0,
+    "exact_match_rate": 0.0,
+    "mean_cer": 0.4949,
+    "mean_wer": 0.9205,
+    "mean_processing_seconds": 3.0488
+  },
+  "by_scenario": {
+    "A1": {
+      "recordings": 2,
+      "successful_transcriptions": 2,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.4243,
+      "mean_wer": 0.9062,
+      "mean_processing_seconds": 2.855,
+      "normalization_needing_human_review": 2,
+      "normalization_checked": 2
+    },
+    "A2": {
+      "recordings": 2,
+      "successful_transcriptions": 2,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.5305,
+      "mean_wer": 0.9621,
+      "mean_processing_seconds": 3.46,
+      "normalization_needing_human_review": 2,
+      "normalization_checked": 2
+    },
+    "A3": {
+      "recordings": 2,
+      "successful_transcriptions": 2,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.4576,
+      "mean_wer": 1.0402,
+      "mean_processing_seconds": 1.845,
+      "normalization_needing_human_review": 0,
+      "normalization_checked": 2
+    },
+    "B1": {
+      "recordings": 2,
+      "successful_transcriptions": 2,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.3287,
+      "mean_wer": 0.825,
+      "mean_processing_seconds": 2.505,
+      "normalization_needing_human_review": 1,
+      "normalization_checked": 2
+    },
+    "B2": {
+      "recordings": 2,
+      "successful_transcriptions": 2,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.5089,
+      "mean_wer": 0.9285,
+      "mean_processing_seconds": 5.94,
+      "normalization_needing_human_review": 2,
+      "normalization_checked": 2
+    },
+    "B3": {
+      "recordings": 1,
+      "successful_transcriptions": 1,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.5385,
+      "mean_wer": 1.0,
+      "mean_processing_seconds": 2.56,
+      "normalization_needing_human_review": 0,
+      "normalization_checked": 1
+    },
+    "C1": {
+      "recordings": 3,
+      "successful_transcriptions": 3,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.3993,
+      "mean_wer": 0.8198,
+      "mean_processing_seconds": 2.4133,
+      "normalization_needing_human_review": 3,
+      "normalization_checked": 3
+    },
+    "C2": {
+      "recordings": 2,
+      "successful_transcriptions": 2,
+      "failed_transcriptions": 0,
+      "failure_rate": 0.0,
+      "empty_transcripts": 0,
+      "empty_transcript_rate": 0.0,
+      "exact_match_rate": 0.0,
+      "mean_cer": 0.8411,
+      "mean_wer": 0.9722,
+      "mean_processing_seconds": 2.885,
+      "normalization_needing_human_review": 1,
+      "normalization_checked": 2
+    }
+  },
+  "possible_label_mismatches": [
+    {
+      "recording_id": "rec_015",
+      "closer_to": "rec_016",
+      "own_cer": 0.8632,
+      "other_cer": 0.3714
+    },
+    {
+      "recording_id": "rec_016",
+      "closer_to": "rec_015",
+      "own_cer": 0.819,
+      "other_cer": 0.5895
+    }
+  ],
+  "recordings": [
+    {
+      "recording_id": "rec_001",
+      "scenario_card": "A1",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 8.28,
+      "processing_seconds": 3.69,
+      "status": "ok",
+      "asr": {
+        "cer": 0.4512,
+        "wer": 1.0,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_002",
+      "scenario_card": "A1",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 9.22,
+      "processing_seconds": 2.02,
+      "status": "ok",
+      "asr": {
+        "cer": 0.3973,
+        "wer": 0.8125,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_003",
+      "scenario_card": "A2",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 8.7,
+      "processing_seconds": 4.17,
+      "status": "ok",
+      "asr": {
+        "cer": 0.6505,
+        "wer": 1.0909,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_004",
+      "scenario_card": "A2",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 6.83,
+      "processing_seconds": 2.75,
+      "status": "ok",
+      "asr": {
+        "cer": 0.4105,
+        "wer": 0.8333,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_005",
+      "scenario_card": "A3",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 7.85,
+      "processing_seconds": 1.85,
+      "status": "ok",
+      "asr": {
+        "cer": 0.3571,
+        "wer": 0.9375,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_006",
+      "scenario_card": "A3",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 7.85,
+      "processing_seconds": 1.84,
+      "status": "ok",
+      "asr": {
+        "cer": 0.5581,
+        "wer": 1.1429,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_007",
+      "scenario_card": "B1",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 12.29,
+      "processing_seconds": 2.85,
+      "status": "ok",
+      "asr": {
+        "cer": 0.3171,
+        "wer": 0.8,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_008",
+      "scenario_card": "B1",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 9.3,
+      "processing_seconds": 2.16,
+      "status": "ok",
+      "asr": {
+        "cer": 0.3404,
+        "wer": 0.85,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_009",
+      "scenario_card": "B2",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 8.87,
+      "processing_seconds": 8.0,
+      "status": "ok",
+      "asr": {
+        "cer": 0.4078,
+        "wer": 0.8571,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_010",
+      "scenario_card": "B2",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 11.95,
+      "processing_seconds": 3.88,
+      "status": "ok",
+      "asr": {
+        "cer": 0.61,
+        "wer": 1.0,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_011",
+      "scenario_card": "B3",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 8.45,
+      "processing_seconds": 2.56,
+      "status": "ok",
+      "asr": {
+        "cer": 0.5385,
+        "wer": 1.0,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_012",
+      "scenario_card": "C1",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 13.99,
+      "processing_seconds": 2.34,
+      "status": "ok",
+      "asr": {
+        "cer": 0.4677,
+        "wer": 0.84,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_013",
+      "scenario_card": "C1",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 9.05,
+      "processing_seconds": 2.93,
+      "status": "ok",
+      "asr": {
+        "cer": 0.4051,
+        "wer": 0.9375,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_014",
+      "scenario_card": "C1",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 13.31,
+      "processing_seconds": 1.97,
+      "status": "ok",
+      "asr": {
+        "cer": 0.325,
+        "wer": 0.6818,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_015",
+      "scenario_card": "C2",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 15.87,
+      "processing_seconds": 2.86,
+      "status": "ok",
+      "asr": {
+        "cer": 0.8632,
+        "wer": 0.9444,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    },
+    {
+      "recording_id": "rec_016",
+      "scenario_card": "C2",
+      "anonymized_speaker_id": "S1",
+      "duration_seconds": 9.47,
+      "processing_seconds": 2.91,
+      "status": "ok",
+      "asr": {
+        "cer": 0.819,
+        "wer": 1.0,
+        "exact_match": false,
+        "empty_transcript": false
+      }
+    }
+  ],
+  "limitations": [
+    "Single speaker, 16 short recordings: not representative of Sylheti regional variation.",
+    "Reference transcripts are team-authored; independent adjudication is not established.",
+    "Metrics are descriptive, not a claim of clinical accuracy."
+  ]
+}

@@ -12,3 +12,7 @@ frontend/playwright-report
 frontend/test-results
 demo_assets/raw_datasets/*.csv
 docs
+
+# research audio + generated reports: never part of an image
+data/audio
+reports

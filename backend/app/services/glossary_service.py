@@ -60,6 +60,8 @@ class Glossary:
                     verification="verified" if all(e["verification"] == "verified" for e in entries) else "unverified",
                     start=m.start(),
                     end=m.end(),
+                    glossary_id=first.get("id"),
+                    matching_method="exact_phrase" if " " in m.group(0) else "exact_word",
                 )
             )
         return out

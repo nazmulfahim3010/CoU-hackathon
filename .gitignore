@@ -14,3 +14,7 @@ frontend/test-results/
 skills-lock.json
 kotha/
 demo_assets/raw_datasets/
+
+# Sylheti research audio + transcripts: consent/permitted uses unresolved, single identifiable speaker. Never commit.
+data/audio/
+reports/*.local.*
