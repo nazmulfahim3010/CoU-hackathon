@@ -9,6 +9,7 @@ import asyncio
 import os
 import re
 import shutil
+import unicodedata
 import subprocess
 import tempfile
 import wave
@@ -81,6 +82,84 @@ class SpeechToTextProvider(Protocol):
 
     async def transcribe(self, audio_bytes: bytes, content_type: str = "audio/wav") -> STTResult:
         ...
+
+
+_SPECIAL_TOKEN = re.compile(r"<\|[^|>]{0,40}\|>")  # Whisper control tokens that sometimes leak into text, e.g. <|sq|>
+_ALLOWED_CONTROLS = "\n\t‌‍"  # line breaks, tab, ZWNJ, ZWJ (ZWNJ/ZWJ are legitimate in Bangla)
+_BN_RUN = re.compile(r"[ঀ-৿‌‍]+")
+_HASANTA, _NUKTA = "্", "়"
+# A transcript is rejected when at least this many words, and this share of all words, cannot be Bangla words.
+MIN_IMPOSSIBLE_WORDS = 2
+MAX_IMPOSSIBLE_WORD_RATIO = 0.15
+
+
+def _is_consonant(c: str) -> bool:
+    o = ord(c) if c else 0
+    return bool(c) and (0x0995 <= o <= 0x09B9 or o in (0x09CE, 0x09DC, 0x09DD, 0x09DF, 0x09F0, 0x09F1))
+
+
+def _is_independent_vowel(c: str) -> bool:
+    o = ord(c) if c else 0
+    return 0x0985 <= o <= 0x0994 or o in (0x09E0, 0x09E1)
+
+
+def _is_vowel_sign(c: str) -> bool:
+    o = ord(c) if c else 0
+    return 0x09BE <= o <= 0x09C4 or o in (0x09C7, 0x09C8, 0x09CB, 0x09CC, 0x09D7, 0x09E2, 0x09E3)
+
+
+def is_impossible_bangla_word(word: str) -> bool:
+    """True if the word breaks Bengali orthography itself (so it cannot be a real word in any dialect): an
+    unassigned code point, a vowel sign that does not follow a consonant (e.g. a vowel letter + sign "এা"), a
+    hasanta that does not join two consonants, or an anusvara after a hasanta. Real speech transcripts in
+    Bangla script (verified on the 16 Sylheti references, standard Bangla references and 120 glossary rows)
+    contain none of these."""
+    prev = ""
+    for i, c in enumerate(word):
+        if unicodedata.category(c) == "Cn":
+            return True
+        if _is_vowel_sign(c):
+            joined_o = prev == "ে" and c in ("া", "ৗ")  # decomposed "ো" / "ৌ"
+            if not (_is_consonant(prev) or prev == _NUKTA or joined_o):
+                return True
+        elif c == _HASANTA:
+            if not (_is_consonant(prev) or prev == _NUKTA):
+                return True
+            nxt = word[i + 1] if i + 1 < len(word) else ""
+            if nxt and not (_is_consonant(nxt) or nxt in "‌‍"):
+                return True
+        elif c in "ঁংঃ":
+            if prev == _HASANTA or not (_is_consonant(prev) or _is_vowel_sign(prev) or _is_independent_vowel(prev) or prev == _NUKTA):
+                return True
+        elif c == _NUKTA and not _is_consonant(prev):
+            return True
+        prev = c
+    return False
+
+
+def sanitize_asr_text(text: str) -> str:
+    """Make a recognised transcript safe to show. Removes leaked model tokens (<|sq|>) and stray invalid code
+    points, and rejects text where many words are orthographically impossible (the model hallucinated pseudo-script
+    instead of words). This cannot detect well-formed but WRONG words: the patient confirmation step exists for
+    that. Never logs the text."""
+    t = _SPECIAL_TOKEN.sub(" ", text or "")
+    words = _BN_RUN.findall(unicodedata.normalize("NFC", t))
+    impossible = sum(1 for w in words if is_impossible_bangla_word(w))
+    if words and impossible >= MIN_IMPOSSIBLE_WORDS and impossible / len(words) >= MAX_IMPOSSIBLE_WORD_RATIO:
+        raise KothaError(
+            422,
+            "ASR_UNINTELLIGIBLE",
+            "কথা বোঝা যায়নি, আবার বলুন বা লিখে দিন (The speech could not be understood. Please record again or type your note).",
+        )
+    keep = []
+    for ch in t:
+        cat = unicodedata.category(ch)
+        if cat in ("Cn", "Co", "Cs"):  # unassigned / private-use / surrogate: not real characters
+            continue
+        if cat[0] == "C" and ch not in _ALLOWED_CONTROLS:
+            continue
+        keep.append(ch)
+    return re.sub(r"[ \t]+", " ", "".join(keep)).strip()
 
 
 def validate_bangla_script(text: str, min_bangla_ratio: float = 0.5) -> None:
@@ -224,6 +303,9 @@ def process_audio(raw_bytes: bytes, max_bytes: int) -> tuple[bytes, float]:
 
 def raise_for_stt(exc: Exception, provider: str) -> None:
     """Translate transport and provider errors into clean KothaError without leaking credentials or transcripts."""
+    if isinstance(exc, KothaError):
+        # Our own validation (e.g. ASR_NON_BANGLA, NO_SPEECH_DETECTED) is not a provider outage: never relabel it.
+        raise exc
     if isinstance(exc, (httpx.TimeoutException, asyncio.TimeoutError)):
         raise KothaError(
             504,
@@ -302,6 +384,7 @@ class LocalTransformersSTT:
                 lambda: pipe(audio_bytes, generate_kwargs={"language": "bn", "task": "transcribe"}),
             )
             text = (res.get("text") or "").strip()
+            text = sanitize_asr_text(text)
             validate_bangla_script(text)
             return STTResult(text=text, confidence=None, provider=self.name, model=self._model)
         except Exception as exc:
@@ -335,7 +418,8 @@ class HFInferenceSTT:
                 )
                 r.raise_for_status()
                 text = (r.json().get("text") or "").strip()
-                validate_bangla_script(text)
+                text = sanitize_asr_text(text)
+            validate_bangla_script(text)
         except Exception as exc:
             raise_for_stt(exc, self.name)
             raise
@@ -352,24 +436,24 @@ class OpenAICompatSTT:
         self._key = s.speech_api_key
         self._timeout = s.provider_timeout_seconds
         self._base = (s.speech_base_url or "https://api.openai.com/v1").rstrip("/")
+        self._prompt = s.speech_prompt
 
     async def transcribe(self, audio_bytes: bytes, content_type: str = "audio/wav") -> STTResult:
+        form = {"model": self._model, "language": "bn", "response_format": "json"}
+        if self._prompt:
+            form["prompt"] = self._prompt
         try:
             async with httpx.AsyncClient(timeout=self._timeout) as c:
                 r = await c.post(
                     f"{self._base}/audio/transcriptions",
                     headers={"Authorization": f"Bearer {self._key}"},
-                    data={
-                        "model": self._model,
-                        "language": "bn",
-                        "response_format": "json",
-                        "prompt": "বাংলায় বলুন।",
-                    },
+                    data=form,
                     files={"file": ("recording.wav", audio_bytes, content_type or "audio/wav")},
                 )
                 r.raise_for_status()
                 text = (r.json().get("text") or "").strip()
-                validate_bangla_script(text)
+                text = sanitize_asr_text(text)
+            validate_bangla_script(text)
         except Exception as exc:
             raise_for_stt(exc, self.name)
             raise

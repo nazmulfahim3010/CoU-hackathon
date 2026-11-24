@@ -17,6 +17,8 @@ RUN pip install -r requirements.txt
 
 COPY backend/ /app/backend/
 COPY demo_assets/ /app/demo_assets/
+# Glossary CSV only (a lexical resource). The audio corpus (data/audio) is NEVER copied into an image.
+COPY data/glossary/ /app/data/glossary/
 COPY scripts/ /app/scripts/
 
 # Run as a non-root user. Nothing is written to disk by the app (in-memory sessions only).

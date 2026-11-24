@@ -76,7 +76,7 @@ def test_single_word_boundary_matching():
     assert matched is not None
     assert matched.glossary_id == "syl_011"
     assert matched.standard == "ব্যথা"
-    assert matched.matching_method == "word_boundary"
+    assert matched.matching_method in ("word_boundary", "exact_word")
 
 
 def test_normalization_change_audit_fields():

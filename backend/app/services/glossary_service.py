@@ -64,7 +64,7 @@ class Glossary:
                     end=m.end(),
                     glossary_id=first.get("id"),
                     verification_status=first.get("verification_status") or first.get("verification") or "unverified",
-                    matching_method="exact_phrase" if is_multiword else "word_boundary",
+                    matching_method="exact_phrase" if is_multiword else "exact_word",
                 )
             )
         return out

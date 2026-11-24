@@ -1,379 +1,225 @@
 #!/usr/bin/env python3
-"""Automated evaluation and quality benchmarking pipeline for Sylheti Audio Corpus.
+"""Evaluate Kotha's real ASR and normalization on the Sylheti audio corpus.
 
-Evaluates:
-- Speech recognition (ASR): CER, WER, Latency across 16 recordings
-- Dialect Normalization: Glossary matches, semantic preservation, and similarity to Standard Bangla
-- Scenario-level breakdowns (A1, A2, A3, B1, B2, B3, C1, C2)
+Uses the SAME code path as the live app: process_audio (ffmpeg) -> get_stt(settings).transcribe -> normalize().
+The reference transcripts are used ONLY for scoring, never as transcription output.
 
-Outputs:
-- reports/sylheti_asr_evaluation.json
-- reports/sylheti_asr_evaluation.md
-- reports/sylheti_normalization_evaluation.json
+  ASR:            recognised text  vs  original_sylheti_transcript   (CER / WER / exact match)
+  Normalization:  normalized text  vs  reference_standard_bangla     (diffs + semantic checks)
+
+Audio is sent to the configured third-party speech provider, so this refuses to run unless you pass
+--confirm-third-party-processing (confirm consent and permitted uses first). Use --skip-asr to evaluate
+normalization of the reference transcripts only (no audio leaves the machine).
+
+Run inside Docker (ffmpeg is required):
+  docker run --rm --env-file backend/.env -v <repo>/data:/app/data:ro -v <repo>/reports:/app/reports \
+      kotha-backend python scripts/evaluate_sylheti_dataset.py --confirm-third-party-processing
+
+Public reports contain metrics and recording ids only. Texts go to reports/*.local.json (git-ignored).
+Reports never contain audio, file paths, speaker names, API keys or provider response bodies.
 """
 from __future__ import annotations
 
 import argparse
 import asyncio
 import json
-import statistics
 import sys
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-# Ensure backend directory is in sys.path
-backend_dir = Path(__file__).resolve().parent.parent
-if str(backend_dir) not in sys.path:
-    sys.path.insert(0, str(backend_dir))
+BACKEND = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(BACKEND))
 
-from app.config import get_settings
-from app.services.dataset.sylheti_audio_dataset import (
-    SylhetiAudioDataset,
-    find_dataset_paths,
-)
-from app.services.dialect_normalizer import normalize
-from app.services.glossary_service import clean_text, load_glossary
-from app.services.llm_provider import llm_configured
-from app.services.speech_to_text import get_stt, stt_configured
+from app.config import get_settings  # noqa: E402
+from app.core.exceptions import KothaError  # noqa: E402
+from app.core.security import validate_audio  # noqa: E402
+from app.services.dataset import evaluation as ev  # noqa: E402
+from app.services.dataset.sylheti_audio_dataset import REPO_ROOT, dataset_dir, load_sylheti_audio_dataset  # noqa: E402
+from app.services.dialect_normalizer import normalize  # noqa: E402
+from app.services.glossary_service import clean_text, load_glossary  # noqa: E402
+from app.services.llm_provider import llm_configured  # noqa: E402
+from app.services.speech_to_text import effective_speech_model, get_stt, process_audio, stt_configured  # noqa: E402
 
-
-def levenshtein_distance(ref: list | str, hyp: list | str) -> int:
-    """Compute Levenshtein edit distance between two sequences."""
-    m, n = len(ref), len(hyp)
-    dp = [[0] * (n + 1) for _ in range(m + 1)]
-    for i in range(m + 1):
-        dp[i][0] = i
-    for j in range(n + 1):
-        dp[0][j] = j
-    for i in range(1, m + 1):
-        for j in range(1, n + 1):
-            if ref[i - 1] == hyp[j - 1]:
-                dp[i][j] = dp[i - 1][j - 1]
-            else:
-                dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
-    return dp[m][n]
+RETRYABLE = {"ASR_PROVIDER_UNAVAILABLE", "ASR_TIMEOUT"}
 
 
-def calculate_cer(reference: str, hypothesis: str) -> float:
-    """Character Error Rate = edit_distance(ref_chars, hyp_chars) / len(ref_chars)."""
-    ref_chars = list(clean_text(reference))
-    hyp_chars = list(clean_text(hypothesis))
-    if not ref_chars:
-        return 0.0 if not hyp_chars else 1.0
-    return round(levenshtein_distance(ref_chars, hyp_chars) / len(ref_chars), 4)
-
-
-def calculate_wer(reference: str, hypothesis: str) -> float:
-    """Word Error Rate = edit_distance(ref_words, hyp_words) / len(ref_words)."""
-    ref_words = clean_text(reference).split()
-    hyp_words = clean_text(hypothesis).split()
-    if not ref_words:
-        return 0.0 if not hyp_words else 1.0
-    return round(levenshtein_distance(ref_words, hyp_words) / len(ref_words), 4)
-
-
-def string_similarity(s1: str, s2: str) -> float:
-    """Character-level similarity ratio between 0.0 and 1.0."""
-    c1, c2 = list(clean_text(s1)), list(clean_text(s2))
-    if not c1 and not c2:
-        return 1.0
-    if not c1 or not c2:
-        return 0.0
-    dist = levenshtein_distance(c1, c2)
-    max_len = max(len(c1), len(c2))
-    return round(max(0.0, 1.0 - (dist / max_len)), 4)
-
-
-async def evaluate_corpus(
-    output_dir: Path,
-    delay_seconds: float = 1.0,
-    mock_offline: bool = False,
-    enable_llm: bool = True,
-):
-    output_dir.mkdir(parents=True, exist_ok=True)
-    settings = get_settings()
-    csv_path, audio_dir = find_dataset_paths()
-    if not csv_path or not audio_dir:
-        print("ERROR: Sylheti dataset paths could not be located.", file=sys.stderr)
-        sys.exit(1)
-
-    dataset = SylhetiAudioDataset.load(csv_path, audio_dir)
-    print(f"Loaded dataset: {len(dataset)} recordings from {csv_path}")
-
-    is_stt_live = stt_configured(settings) and not mock_offline
-    stt_provider = get_stt(settings) if is_stt_live else None
-    provider_name = stt_provider.name if stt_provider else "offline_reference"
-    model_name = getattr(stt_provider, "_model", "none") if stt_provider else "reference_only"
-
-    use_llm_norm = enable_llm and llm_configured(settings)
-    print(f"STT Configuration: live={is_stt_live}, provider={provider_name}, model={model_name}")
-    print(f"Normalization Configuration: use_llm={use_llm_norm}")
-
-    asr_results: list[dict[str, Any]] = []
-    norm_results: list[dict[str, Any]] = []
-
-    for idx, rec in enumerate(dataset.records, start=1):
-        print(f"\n[{idx}/16] Evaluating {rec.recording_id} ({rec.audio_filename}, Scenario: {rec.scenario_card})...")
-        audio_file_path = Path(rec.audio_path)
-        audio_bytes = audio_file_path.read_bytes()
-
-        asr_text = ""
-        latency_ms = 0.0
-        asr_error = None
-
-        if is_stt_live and stt_provider:
-            start_t = time.perf_counter()
+async def transcribe_one(settings, record) -> tuple[str | None, float, str | None]:
+    """Exactly the app's path. Returns (text, seconds, error_code)."""
+    raw = record.audio_path.read_bytes()
+    t0 = time.perf_counter()
+    try:
+        validate_audio(raw, settings.max_audio_bytes)
+        wav, _dur = process_audio(raw, settings.max_audio_bytes)
+        stt = get_stt(settings)
+        for attempt in (1, 2):
             try:
-                stt_res = await stt_provider.transcribe(audio_bytes, content_type="audio/wav")
-                asr_text = stt_res.text
-                latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
-            except Exception as e:
-                latency_ms = round((time.perf_counter() - start_t) * 1000, 2)
-                asr_error = f"{type(e).__name__}: {str(e)[:120]}"
-                print(f"  ASR error: {asr_error}")
-                # Fall back to reference transcript for downstream evaluation if provider temporarily fails
-                asr_text = rec.original_sylheti_transcript
+                result = await stt.transcribe(wav, "audio/wav")
+                return clean_text(result.text), time.perf_counter() - t0, None
+            except KothaError as exc:
+                if attempt == 1 and exc.code in RETRYABLE:
+                    await asyncio.sleep(2.0)
+                    continue
+                raise
+    except KothaError as exc:
+        return None, time.perf_counter() - t0, exc.code
+    return None, time.perf_counter() - t0, "UNKNOWN"
+
+
+async def run(args) -> int:
+    settings = get_settings()
+    ds = load_sylheti_audio_dataset(dataset_dir() if args.dataset_dir is None else args.dataset_dir)
+    if not ds.records:
+        print("No recordings loaded:", [i.code for i in ds.issues][:5])
+        return 2
+    records = [r for r in ds.records if not args.records or r.recording_id in args.records]
+    if args.limit:
+        records = records[: args.limit]
+    glossary = load_glossary()
+    use_llm = llm_configured(settings) and not args.no_llm
+    skip_asr = args.skip_asr
+    if not skip_asr and not stt_configured(settings):
+        print("Speech provider is not configured (SPEECH_PROVIDER / SPEECH_API_KEY). Use --skip-asr or configure it.")
+        return 2
+
+    rows: list[dict[str, Any]] = []
+    local: list[dict[str, Any]] = []
+    transcripts: dict[str, str] = {}
+    for rec in records:
+        row: dict[str, Any] = {
+            "recording_id": rec.recording_id, "scenario_card": rec.scenario_card,
+            "anonymized_speaker_id": rec.anonymized_speaker_id, "duration_seconds": rec.audio.duration_seconds and round(rec.audio.duration_seconds, 2),
+        }
+        loc: dict[str, Any] = {"recording_id": rec.recording_id, "reference_original": rec.original_sylheti_transcript, "reference_standard": rec.reference_standard_bangla}
+
+        # --- Test 5: normalize the REFERENCE Sylheti transcript, compare with the standard Bangla reference
+        n_ref = await normalize(rec.original_sylheti_transcript, settings, use_llm, glossary)
+        row["normalization_of_reference"] = {
+            **ev.semantic_checks(rec.original_sylheti_transcript, n_ref.normalized, rec.reference_standard_bangla, glossary),
+            "normalization_status": n_ref.normalization_status,
+            "glossary_ids_applied": [e.glossary_id for e in n_ref.glossary_evidence if e.applied],
+            "warnings": len(n_ref.warnings),
+        }
+        loc["normalized_from_reference"] = n_ref.normalized
+
+        # --- Tests 3-4: real speech recognition on the real audio bytes
+        if skip_asr:
+            row["status"] = "skipped_asr"
         else:
-            asr_text = rec.original_sylheti_transcript
-            latency_ms = 45.0
+            text, secs, err = await transcribe_one(settings, rec)
+            row["processing_seconds"] = round(secs, 2)
+            if err or text is None:
+                row["status"], row["error_code"] = "failed", err
+            else:
+                row["status"] = "ok"
+                row["asr"] = ev.asr_metrics(rec.original_sylheti_transcript, text)
+                transcripts[rec.recording_id] = text
+                loc["asr_transcript"] = text
+                if text.strip():
+                    n_asr = await normalize(text, settings, use_llm, glossary)
+                    row["normalization_of_asr"] = {
+                        **ev.semantic_checks(text, n_asr.normalized, rec.reference_standard_bangla, glossary),
+                        "normalization_status": n_asr.normalization_status,
+                    }
+                    loc["normalized_from_asr"] = n_asr.normalized
+            await asyncio.sleep(args.delay)
+        rows.append(row)
+        local.append(loc)
+        print(f"{rec.recording_id} {rec.scenario_card}: "
+              + (f"CER={row['asr']['cer']:.2f} WER={row['asr']['wer']:.2f}" if row.get("asr") else row["status"] + (f" {row.get('error_code','')}" if row.get("error_code") else ""))
+              + f" | norm WER vs ref={row['normalization_of_reference']['wer_vs_reference']:.2f}"
+              + (" REVIEW" if row["normalization_of_reference"]["requires_human_review"] else ""))
 
-        cer = calculate_cer(rec.original_sylheti_transcript, asr_text)
-        wer = calculate_wer(rec.original_sylheti_transcript, asr_text)
-        print(f"  ASR Result: CER={cer:.4f}, WER={wer:.4f}, Latency={latency_ms:.1f}ms")
-
-        asr_eval_item = {
-            "id": rec.recording_id,
-            "filename": rec.audio_filename,
-            "scenario": rec.scenario_card,
-            "duration_sec": rec.duration_seconds,
-            "measured_duration": rec.audio_metadata.duration_seconds if rec.audio_metadata else None,
-            "reference_transcript": rec.original_sylheti_transcript,
-            "asr_transcript": asr_text,
-            "cer": cer,
-            "wer": wer,
-            "latency_ms": latency_ms,
-            "error": asr_error,
-            "reviewer": rec.reviewer,
-        }
-        asr_results.append(asr_eval_item)
-
-        # 2. Run Normalization on ASR text
-        print(f"  Normalizing ASR output...")
-        norm_asr = await normalize(asr_text, settings, use_llm=use_llm_norm)
-
-        # 3. Run Normalization on Reference Sylheti text
-        print(f"  Normalizing Ground Truth reference...")
-        norm_ref = await normalize(rec.original_sylheti_transcript, settings, use_llm=use_llm_norm)
-
-        preservation_passed_asr = not any("failed meaning-preservation checks" in w for w in norm_asr.warnings)
-        preservation_passed_ref = not any("failed meaning-preservation checks" in w for w in norm_ref.warnings)
-
-        sim_to_standard_asr = string_similarity(norm_asr.normalized, rec.reference_standard_bangla)
-        sim_to_standard_ref = string_similarity(norm_ref.normalized, rec.reference_standard_bangla)
-
-        norm_eval_item = {
-            "id": rec.recording_id,
-            "scenario": rec.scenario_card,
-            "original_sylheti": rec.original_sylheti_transcript,
-            "reference_standard": rec.reference_standard_bangla,
-            "asr_transcript": asr_text,
-            "normalized_from_asr": norm_asr.normalized,
-            "normalized_from_reference": norm_ref.normalized,
-            "glossary_matches_count_asr": len(norm_asr.glossary_matches),
-            "glossary_matches_asr": [
-                {
-                    "id": m.glossary_id,
-                    "regional": m.regional,
-                    "standard": m.standard,
-                    "category": m.category,
-                    "method": m.matching_method,
-                }
-                for m in norm_asr.glossary_matches
-            ],
-            "glossary_matches_count_ref": len(norm_ref.glossary_matches),
-            "glossary_matches_ref": [
-                {
-                    "id": m.glossary_id,
-                    "regional": m.regional,
-                    "standard": m.standard,
-                    "category": m.category,
-                    "method": m.matching_method,
-                }
-                for m in norm_ref.glossary_matches
-            ],
-            "preservation_passed_asr": preservation_passed_asr,
-            "preservation_passed_ref": preservation_passed_ref,
-            "warnings_asr": norm_asr.warnings,
-            "warnings_ref": norm_ref.warnings,
-            "similarity_to_standard_asr": sim_to_standard_asr,
-            "similarity_to_standard_ref": sim_to_standard_ref,
-        }
-        norm_results.append(norm_eval_item)
-
-        if delay_seconds > 0:
-            await asyncio.sleep(delay_seconds)
-
-    # 4. Aggregate Computations
-    mean_cer = round(statistics.mean(item["cer"] for item in asr_results), 4)
-    mean_wer = round(statistics.mean(item["wer"] for item in asr_results), 4)
-    latencies = [item["latency_ms"] for item in asr_results if item["latency_ms"] > 0]
-    mean_latency = round(statistics.mean(latencies), 2) if latencies else 0.0
-    median_latency = round(statistics.median(latencies), 2) if latencies else 0.0
-
-    # Scenario breakdowns
-    scenario_groups: dict[str, list[dict[str, Any]]] = {}
-    for item in asr_results:
-        scenario_groups.setdefault(item["scenario"], []).append(item)
-
-    scenario_metrics: dict[str, dict[str, float]] = {}
-    for sc, items in sorted(scenario_groups.items()):
-        scenario_metrics[sc] = {
-            "count": len(items),
-            "mean_cer": round(statistics.mean(x["cer"] for x in items), 4),
-            "mean_wer": round(statistics.mean(x["wer"] for x in items), 4),
-            "mean_latency_ms": round(statistics.mean(x["latency_ms"] for x in items), 2),
-        }
-
-    # Normalization metrics
-    total_recordings = len(norm_results)
-    records_with_glossary_match = sum(1 for item in norm_results if item["glossary_matches_count_ref"] > 0)
-    glossary_match_rate = round(records_with_glossary_match / total_recordings, 4)
-
-    preservation_pass_count = sum(1 for item in norm_results if item["preservation_passed_ref"])
-    normalization_success_rate = round(preservation_pass_count / total_recordings, 4)
-
-    mean_sim_standard_ref = round(statistics.mean(item["similarity_to_standard_ref"] for item in norm_results), 4)
-    mean_sim_standard_asr = round(statistics.mean(item["similarity_to_standard_asr"] for item in norm_results), 4)
-
-    # Build ASR Evaluation Report JSON
+    refs = {r.recording_id: r.original_sylheti_transcript for r in ds.records}
+    now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    meta = {
+        "generated_at": now,
+        "speech_provider": settings.speech_provider, "speech_model": effective_speech_model(settings),
+        "speech_credentials_configured": stt_configured(settings),
+        "llm_used_for_normalization": use_llm,
+        "llm_provider": settings.llm_provider if use_llm else None,
+        "recordings_evaluated": len(records), "asr_run": not skip_asr,
+        "third_party_audio_processing_confirmed": bool(args.confirm_third_party_processing) and not skip_asr,
+    }
+    asr_rows = [r for r in rows if r["status"] != "skipped_asr"]
     asr_report = {
-        "evaluation_name": "Sylheti Audio Speech-to-Text Benchmark",
-        "provider": provider_name,
-        "model": model_name,
-        "total_recordings": total_recordings,
-        "mean_cer": mean_cer,
-        "mean_wer": mean_wer,
-        "latency_stats": {
-            "mean_ms": mean_latency,
-            "median_ms": median_latency,
-            "min_ms": min(latencies) if latencies else 0.0,
-            "max_ms": max(latencies) if latencies else 0.0,
-        },
-        "scenario_metrics": scenario_metrics,
-        "recordings": asr_results,
+        **meta,
+        "aggregate": ev.asr_rollup(asr_rows) if asr_rows else None,
+        "by_scenario": ev.by_scenario(rows) if asr_rows else None,
+        "possible_label_mismatches": ev.possible_label_mismatches(transcripts, refs) if transcripts else [],
+        "recordings": [{k: v for k, v in r.items() if k not in ("normalization_of_reference", "normalization_of_asr")} for r in rows],
+        "limitations": [
+            "Single speaker, 16 short recordings: not representative of Sylheti regional variation.",
+            "Reference transcripts are team-authored; independent adjudication is not established.",
+            "Metrics are descriptive, not a claim of clinical accuracy.",
+        ],
     }
-
-    # Build Normalization Evaluation Report JSON
+    norm_ref = [r["normalization_of_reference"] for r in rows]
+    norm_asr = [r["normalization_of_asr"] for r in rows if "normalization_of_asr" in r]
     norm_report = {
-        "evaluation_name": "Sylheti Dialect Normalization Benchmark",
-        "total_recordings": total_recordings,
-        "glossary_match_rate": glossary_match_rate,
-        "normalization_success_rate": normalization_success_rate,
-        "mean_similarity_to_standard_ref": mean_sim_standard_ref,
-        "mean_similarity_to_standard_asr": mean_sim_standard_asr,
-        "recordings": norm_results,
+        **meta,
+        "reference_transcripts_normalized": ev.normalization_rollup(norm_ref),
+        "asr_transcripts_normalized": ev.normalization_rollup(norm_asr) if norm_asr else None,
+        "per_recording_reference": [{"recording_id": r["recording_id"], "scenario_card": r["scenario_card"], **r["normalization_of_reference"]} for r in rows],
+        "human_review_note": "requires_human_review is an automated screen. A human must judge clinical meaning for every flagged pair.",
     }
 
-    # Write JSON reports
-    asr_json_path = output_dir / "sylheti_asr_evaluation.json"
-    asr_json_path.write_text(json.dumps(asr_report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"\nASR Evaluation JSON written to {asr_json_path}")
-
-    norm_json_path = output_dir / "sylheti_normalization_evaluation.json"
-    norm_json_path.write_text(json.dumps(norm_report, ensure_ascii=False, indent=2), encoding="utf-8")
-    print(f"Normalization Evaluation JSON written to {norm_json_path}")
-
-    # Build Markdown ASR Evaluation Report
-    md_lines = [
-        "# Kotha — Sylheti Speech Recognition Evaluation Report",
-        "",
-        f"**Evaluation Date:** 2026-11-24  ",
-        f"**Provider:** `{provider_name}`  ",
-        f"**Model:** `{model_name}`  ",
-        f"**Total Audio Clips:** {total_recordings}  ",
-        f"**Mean CER (Character Error Rate):** `{mean_cer:.2%}`  ",
-        f"**Mean WER (Word Error Rate):** `{mean_wer:.2%}`  ",
-        f"**Mean Latency:** `{mean_latency:.1f} ms` (Median: `{median_latency:.1f} ms`)  ",
-        "",
-        "---",
-        "",
-        "## 1. Scenario-Level Breakdown",
-        "",
-        "| Scenario | Description / Domain | Count | Mean CER | Mean WER | Mean Latency |",
-        "|:---|:---|:---:|:---:|:---:|:---:|",
-    ]
-
-    scenario_descriptions = {
-        "A1": "Acute fever with chills (জ্বর ও কাঁপুনি)",
-        "A2": "Severe chest pain & breathlessness (বুক বেদনা ও শ্বাসকষ্ট)",
-        "A3": "Abdominal pain & vomiting (পেট কামড়ানি ও বমি ভাব)",
-        "B1": "Pediatric high fever & convulsions (বাচ্চার জ্বর ও খিঁচুনি)",
-        "B2": "Elderly dizziness & stroke signs (মাথা ঘুরা ও অজ্ঞান হওয়া)",
-        "B3": "Chronic joint/back pain (বাত বেদনা ও কোমর ব্যথা)",
-        "C1": "Diarrhea & dehydration (পাতলা পায়খানা ও দুর্বলতা)",
-        "C2": "Severe skin infection/rash (চুলকানি ও ঘা)",
-    }
-
-    for sc, metrics in sorted(scenario_metrics.items()):
-        desc = scenario_descriptions.get(sc, "Clinical scenario")
-        md_lines.append(
-            f"| `{sc}` | {desc} | {metrics['count']} | {metrics['mean_cer']:.2%} | {metrics['mean_wer']:.2%} | {metrics['mean_latency_ms']:.1f} ms |"
-        )
-
-    md_lines.extend([
-        "",
-        "---",
-        "",
-        "## 2. Per-Recording Results & Error Analysis",
-        "",
-        "| ID | Scenario | File | Duration | CER | WER | Latency | Reviewer |",
-        "|:---|:---:|:---|:---:|:---:|:---:|:---:|:---:|",
-    ])
-
-    for r in asr_results:
-        md_lines.append(
-            f"| `{r['id']}` | `{r['scenario']}` | `{r['filename']}` | {r['duration_sec']:.1f}s | {r['cer']:.2%} | {r['wer']:.2%} | {r['latency_ms']:.0f} ms | {r['reviewer']} |"
-        )
-
-    md_lines.extend([
-        "",
-        "---",
-        "",
-        "## 3. Dialect Phonetic & Acoustic Observations",
-        "",
-        "1. **Phonetic Shifts**: Standard Bangla aspirates (/ch/, /ph/) systematically spirantize to /s/ and /f/ in Sylheti (e.g., 'পানি' -> 'ফানি', 'ব্যথা' -> 'বেদনা', 'করছি না' -> 'করসিনা'). General-purpose Whisper models transcribe these variably depending on audio clarity.",
-        "2. **Lexical Divergence**: Regional verbs like 'লাগের', 'করার', 'বারর', 'অইজার' require downstream glossary mapping to prevent hallucination.",
-        "3. **Audio Quality**: Stereo 48kHz recordings exhibited zero clipping or distortion. Downsampling to 16kHz mono via FFmpeg preserved high speech intelligibility.",
-    ])
-
-    asr_md_path = output_dir / "sylheti_asr_evaluation.md"
-    asr_md_path.write_text("\n".join(md_lines), encoding="utf-8")
-    print(f"ASR Evaluation Markdown written to {asr_md_path}")
+    out = args.out_dir
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "sylheti_asr_evaluation.json").write_text(json.dumps(asr_report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (out / "sylheti_normalization_evaluation.json").write_text(json.dumps(norm_report, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    (out / "sylheti_asr_evaluation.md").write_text(render_markdown(asr_report, norm_report), encoding="utf-8")
+    (out / "sylheti_evaluation.local.json").write_text(json.dumps(local, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")  # git-ignored: contains texts
+    agg = asr_report["aggregate"]
+    if agg:
+        print(f"\nASR: ok {agg['successful_transcriptions']}/{agg['recordings']} | mean CER {agg['mean_cer']} | mean WER {agg['mean_wer']} | exact {agg['exact_match_rate']}")
+    print("Normalization(reference):", norm_report["reference_transcripts_normalized"])
+    print("wrote reports to", out)
+    return 0
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Evaluate Sylheti dataset speech-to-text and normalization.")
-    parser.add_argument(
-        "--output-dir",
-        type=str,
-        default=str(Path(__file__).resolve().parents[2] / "reports"),
-        help="Directory to save evaluation reports",
-    )
-    parser.add_argument("--delay", type=float, default=1.0, help="Delay between API requests in seconds")
-    parser.add_argument("--offline", action="store_true", help="Force offline mode using reference transcripts")
-    parser.add_argument("--no-llm", action="store_true", help="Disable LLM during normalization (glossary only)")
-    args = parser.parse_args()
+def render_markdown(a: dict[str, Any], n: dict[str, Any]) -> str:
+    L = ["# Sylheti ASR and normalization evaluation", "",
+         f"Generated {a['generated_at']}. Speech: `{a['speech_provider']}` / `{a['speech_model']}` "
+         f"(credentials configured: {a['speech_credentials_configured']}). Normalization LLM used: {a['llm_used_for_normalization']}.", ""]
+    agg = a["aggregate"]
+    if agg:
+        L += ["## ASR (scored against the original Sylheti transcript)", "",
+              "| Metric | Value |", "|---|---|",
+              *[f"| {k} | {v} |" for k, v in agg.items()], ""]
+        L += ["### By scenario card", "", "| Card | n | ok | failed | mean CER | mean WER |", "|---|---|---|---|---|---|"]
+        for card, s in (a["by_scenario"] or {}).items():
+            L.append(f"| {card} | {s['recordings']} | {s['successful_transcriptions']} | {s['failed_transcriptions']} | {s['mean_cer']} | {s['mean_wer']} |")
+        L.append("")
+        if a["possible_label_mismatches"]:
+            L += ["### Possible audio/transcript label mismatches (diagnostic; dataset not altered)", ""]
+            L += [f"- `{m['recording_id']}` recognised text is closer to `{m['closer_to']}`'s reference (CER {m['own_cer']} vs {m['other_cer']})" for m in a["possible_label_mismatches"]]
+            L.append("")
+    L += ["## Normalization of the reference Sylheti transcripts (scored against standard Bangla)", "", "| Metric | Value |", "|---|---|",
+          *[f"| {k} | {v} |" for k, v in n["reference_transcripts_normalized"].items()], ""]
+    L += ["## Limitations", "", *[f"- {x}" for x in a["limitations"]], "", f"_{n['human_review_note']}_", ""]
+    return "\n".join(L)
 
-    asyncio.run(
-        evaluate_corpus(
-            Path(args.output_dir),
-            delay_seconds=args.delay,
-            mock_offline=args.offline,
-            enable_llm=not args.no_llm,
-        )
-    )
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("--confirm-third-party-processing", action="store_true",
+                    help="I confirm consent covers sending these recordings to the configured speech provider")
+    ap.add_argument("--skip-asr", action="store_true", help="evaluate normalization only; no audio is sent anywhere")
+    ap.add_argument("--no-llm", action="store_true", help="force glossary-only normalization")
+    ap.add_argument("--records", type=lambda s: set(s.split(",")), default=None, help="comma-separated recording ids")
+    ap.add_argument("--limit", type=int, default=None)
+    ap.add_argument("--delay", type=float, default=0.5, help="seconds between provider calls")
+    ap.add_argument("--dataset-dir", type=Path, default=None)
+    ap.add_argument("--out-dir", type=Path, default=REPO_ROOT / "reports")
+    args = ap.parse_args()
+    if not args.skip_asr and not args.confirm_third_party_processing:
+        print("Refusing to run: this sends the recordings to the configured third-party speech provider.\n"
+              "Confirm consent and permitted uses, then pass --confirm-third-party-processing (or use --skip-asr).")
+        return 2
+    return asyncio.run(run(args))
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

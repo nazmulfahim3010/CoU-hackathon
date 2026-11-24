@@ -1,208 +1,283 @@
 {
-  "dataset_name": "Sylheti Audio Recording & CSV Corpus",
-  "csv_path": "C:\\Users\\ASUS\\Desktop\\CoU\\CoU-hackathon\\dataset\\Audio_Record_and_Csv\\sylheti_recordings_log_completeV2.csv",
-  "audio_dir": "C:\\Users\\ASUS\\Desktop\\CoU\\CoU-hackathon\\dataset\\Audio_Record_and_Csv\\human_varified_audio.m4a",
-  "is_valid": true,
-  "total_csv_records": 16,
-  "total_audio_files": 16,
-  "matched_records": 16,
-  "missing_audio_files": [],
-  "missing_transcript_records": [],
-  "duplicate_ids": [],
-  "duplicate_filenames": [],
-  "duration_mismatches": [
-    {
-      "id": "rec_015",
-      "file": "New Recording 15.m4a.wav",
-      "csv_duration": 9.47,
-      "measured_duration": 15.872,
-      "difference": 6.4
+  "generated_at": "2026-11-24T06:15:38+00:00",
+  "audio_dataset": {
+    "summary": {
+      "audio_files_found": 16,
+      "transcript_records": 16,
+      "matched_recordings": 16,
+      "missing_audio_files": 0,
+      "missing_transcripts": 0,
+      "orphan_audio_files": 0,
+      "duplicate_ids": 0,
+      "duplicate_filenames": 0,
+      "containers": {
+        "wav": 16
+      },
+      "codecs": {
+        "pcm_s16le": 16
+      },
+      "sample_rates_hz": {
+        "48000": 16
+      },
+      "channels": {
+        "2": 16
+      },
+      "duration_seconds_min": 6.83,
+      "duration_seconds_max": 15.87,
+      "scenario_cards": {
+        "A1": 2,
+        "A2": 2,
+        "A3": 2,
+        "B1": 2,
+        "B2": 2,
+        "B3": 1,
+        "C1": 3,
+        "C2": 2
+      },
+      "distinct_speakers": 1,
+      "consent_status": {
+        "recorded": 16
+      },
+      "issue_counts": {
+        "CSV_PREAMBLE": 1,
+        "COMPOUND_EXTENSION": 4,
+        "DURATION_MISMATCH": 2
+      },
+      "errors": 2,
+      "warnings": 5
     },
-    {
-      "id": "rec_016",
-      "file": "New Recording 16.m4a.wav",
-      "csv_duration": 15.87,
-      "measured_duration": 9.472,
-      "difference": 6.4
-    }
-  ],
-  "validation_errors": [],
-  "records_summary": [
-    {
-      "id": "rec_001",
-      "file": "New Recording.wav",
-      "scenario": "A1",
-      "duration_csv": 8.28,
-      "duration_measured": 8.277,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 85,
-      "reviewer": "Fahim"
+    "recordings": [
+      {
+        "recording_id": "rec_001",
+        "dialect": "sylheti",
+        "scenario_card": "A1",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 8.28,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_002",
+        "dialect": "sylheti",
+        "scenario_card": "A1",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 9.22,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_003",
+        "dialect": "sylheti",
+        "scenario_card": "A2",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 8.7,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_004",
+        "dialect": "sylheti",
+        "scenario_card": "A2",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 6.83,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_005",
+        "dialect": "sylheti",
+        "scenario_card": "A3",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 7.85,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_006",
+        "dialect": "sylheti",
+        "scenario_card": "A3",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 7.85,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_007",
+        "dialect": "sylheti",
+        "scenario_card": "B1",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 12.29,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_008",
+        "dialect": "sylheti",
+        "scenario_card": "B1",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 9.3,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_009",
+        "dialect": "sylheti",
+        "scenario_card": "B2",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 8.87,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_010",
+        "dialect": "sylheti",
+        "scenario_card": "B2",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 11.95,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_011",
+        "dialect": "sylheti",
+        "scenario_card": "B3",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 8.45,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_012",
+        "dialect": "sylheti",
+        "scenario_card": "C1",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 13.99,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_013",
+        "dialect": "sylheti",
+        "scenario_card": "C1",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 9.05,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_014",
+        "dialect": "sylheti",
+        "scenario_card": "C1",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 13.31,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_015",
+        "dialect": "sylheti",
+        "scenario_card": "C2",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 9.47,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      },
+      {
+        "recording_id": "rec_016",
+        "dialect": "sylheti",
+        "scenario_card": "C2",
+        "anonymized_speaker_id": "S1",
+        "duration_seconds": 15.87,
+        "consent_status": "recorded",
+        "audio_container": "wav"
+      }
+    ],
+    "issues": [
+      {
+        "severity": "warning",
+        "code": "CSV_PREAMBLE",
+        "recording_id": null,
+        "message": "1 line(s) precede the header and were skipped."
+      },
+      {
+        "severity": "warning",
+        "code": "COMPOUND_EXTENSION",
+        "recording_id": "rec_013",
+        "message": "Compound extension '.m4a.wav'; real container is wav."
+      },
+      {
+        "severity": "warning",
+        "code": "COMPOUND_EXTENSION",
+        "recording_id": "rec_014",
+        "message": "Compound extension '.m4a.wav'; real container is wav."
+      },
+      {
+        "severity": "warning",
+        "code": "COMPOUND_EXTENSION",
+        "recording_id": "rec_015",
+        "message": "Compound extension '.m4a.wav'; real container is wav."
+      },
+      {
+        "severity": "error",
+        "code": "DURATION_MISMATCH",
+        "recording_id": "rec_015",
+        "message": "Declared 9.47s vs actual 15.87s."
+      },
+      {
+        "severity": "warning",
+        "code": "COMPOUND_EXTENSION",
+        "recording_id": "rec_016",
+        "message": "Compound extension '.m4a.wav'; real container is wav."
+      },
+      {
+        "severity": "error",
+        "code": "DURATION_MISMATCH",
+        "recording_id": "rec_016",
+        "message": "Declared 15.87s vs actual 9.47s."
+      }
+    ],
+    "notes": [
+      "Consent is recorded as a yes/no CSV flag only. Consent documentation and permitted uses (including third-party AI processing) are NOT established by this data.",
+      "Single speaker; reviewer names exist but independent adjudication records do not."
+    ]
+  },
+  "glossary": {
+    "summary": {
+      "entries_loaded": 120,
+      "unique_ids": 120,
+      "unique_expressions": 120,
+      "dialects": {
+        "sylheti": 120
+      },
+      "categories": {
+        "common_medical": 24,
+        "pain_description": 9,
+        "symptom": 43,
+        "fever": 7,
+        "time_expression": 18,
+        "severity": 5,
+        "body_part": 14
+      },
+      "verification_status": {
+        "verified": 120
+      },
+      "verifiers": {
+        "Noyon": 65,
+        "Fahim": 55
+      },
+      "invalid_entries": 0,
+      "errors": 0,
+      "warnings": 1
     },
-    {
-      "id": "rec_002",
-      "file": "New Recording 2.wav",
-      "scenario": "A1",
-      "duration_csv": 9.22,
-      "duration_measured": 9.216,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 76,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_003",
-      "file": "New Recording 3.wav",
-      "scenario": "A2",
-      "duration_csv": 8.7,
-      "duration_measured": 8.704,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 107,
-      "reviewer": "Fahim"
-    },
-    {
-      "id": "rec_004",
-      "file": "New Recording 4.wav",
-      "scenario": "A2",
-      "duration_csv": 6.83,
-      "duration_measured": 6.827,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 98,
-      "reviewer": "Fahim"
-    },
-    {
-      "id": "rec_005",
-      "file": "New Recording 5.wav",
-      "scenario": "A3",
-      "duration_csv": 7.85,
-      "duration_measured": 7.851,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 86,
-      "reviewer": "Fahim"
-    },
-    {
-      "id": "rec_006",
-      "file": "New Recording 6.wav",
-      "scenario": "A3",
-      "duration_csv": 7.85,
-      "duration_measured": 7.851,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 88,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_007",
-      "file": "New Recording 7.wav",
-      "scenario": "B1",
-      "duration_csv": 12.29,
-      "duration_measured": 12.288,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 84,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_008",
-      "file": "New Recording 8.wav",
-      "scenario": "B1",
-      "duration_csv": 9.3,
-      "duration_measured": 9.301,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 97,
-      "reviewer": "Fahim"
-    },
-    {
-      "id": "rec_009",
-      "file": "New Recording 9.wav",
-      "scenario": "B2",
-      "duration_csv": 8.87,
-      "duration_measured": 8.875,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 106,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_010",
-      "file": "New Recording 10.wav",
-      "scenario": "B2",
-      "duration_csv": 11.95,
-      "duration_measured": 11.947,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 103,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_011",
-      "file": "New Recording 11.wav",
-      "scenario": "B3",
-      "duration_csv": 8.45,
-      "duration_measured": 8.448,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 81,
-      "reviewer": "Fahim"
-    },
-    {
-      "id": "rec_012",
-      "file": "New Recording 12.wav",
-      "scenario": "C1",
-      "duration_csv": 13.99,
-      "duration_measured": 13.995,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 129,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_013",
-      "file": "New Recording 13.m4a.wav",
-      "scenario": "C1",
-      "duration_csv": 9.05,
-      "duration_measured": 9.045,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 82,
-      "reviewer": "Fahim"
-    },
-    {
-      "id": "rec_014",
-      "file": "New Recording 14.m4a.wav",
-      "scenario": "C1",
-      "duration_csv": 13.31,
-      "duration_measured": 13.312,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 122,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_015",
-      "file": "New Recording 15.m4a.wav",
-      "scenario": "C2",
-      "duration_csv": 9.47,
-      "duration_measured": 15.872,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 97,
-      "reviewer": "Noyon"
-    },
-    {
-      "id": "rec_016",
-      "file": "New Recording 16.m4a.wav",
-      "scenario": "C2",
-      "duration_csv": 15.87,
-      "duration_measured": 9.472,
-      "sample_rate": 48000,
-      "channels": 2,
-      "transcript_length": 108,
-      "reviewer": "Fahim"
-    }
-  ]
+    "issues": [
+      {
+        "severity": "warning",
+        "code": "GLOSSARY_NOT_NFC",
+        "recording_id": "syl_088",
+        "message": "Expression is not NFC-normalised."
+      }
+    ],
+    "runtime_drift_issues": [],
+    "runtime_matches_csv": true
+  }
 }
