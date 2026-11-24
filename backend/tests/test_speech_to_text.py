@@ -536,8 +536,9 @@ def test_audio_upload_rejected_for_non_audio_renamed_to_opus():
 
 
 @requires_ffmpeg
-def test_audio_upload_rejected_for_over_90_seconds():
+def test_audio_upload_rejected_for_over_90_seconds(monkeypatch):
     """Audio exceeding 90 seconds is rejected with 413 AUDIO_TOO_LONG and temp files cleaned up."""
+    monkeypatch.setattr("app.api.routes.transcription.get_stt", lambda s: FakeSTT("test"))
     temp_dir = tempfile.gettempdir()
     before_files = set(os.listdir(temp_dir))
 
