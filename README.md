@@ -161,7 +161,7 @@ flowchart TD
 │   │   └── data/
 │   │       ├── dialects/            # sylheti.json (120 entries) + standard_bangla.json (reference list)
 │   │       └── safety_rules/        # red_flags.json (10 emergency/urgent rules)
-│   └── tests/                       # unit/integration tests (460 passing in Docker)
+│   └── tests/                       # unit/integration tests (573 passing in Docker)
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/                   # Landing, Intake, Confirm, Summary, About
@@ -169,7 +169,7 @@ flowchart TD
 │   │   ├── hooks/                   # useRecorder (MediaRecorder + Web Audio VU meter)
 │   │   ├── state/                   # FlowContext (in-memory React session state)
 │   │   ├── services/                # Typed fetch API client
-│   │   └── test/                    # Vitest unit and component tests (33 tests)
+│   │   └── test/                    # Vitest unit and component tests (58 tests)
 │   └── e2e/                         # Playwright E2E workflows (desktop & mobile)
 ├── demo_assets/                     # Fictional scenario audio clips & transcripts
 ├── docs/                            # ARCHITECTURE.md, Kotha.pdf
@@ -267,6 +267,7 @@ All backend configurations are managed via `backend/.env` (read by `app/config.p
 | `SPEECH_PROVIDER` | `string` | `none` | Speech-to-text adapter: `none`, `local_transformers`, `hf_inference`, or `openai_compatible`. |
 | `SPEECH_MODEL` | `string` | *(empty = provider default)* | Model id. Empty uses the provider's own default: Groq `whisper-large-v3`, OpenAI `whisper-1`, Hugging Face `openai/whisper-large-v3`. Never reuse one provider's id on another (HTTP 400). |
 | `SPEECH_API_KEY` | `string` | `""` | API key for cloud STT endpoints (HF Inference or OpenAI-compatible). **Not required** for local Hugging Face model (`local_transformers`), which needs only a model download. |
+| `SPEECH_PROMPT` | `string` | *(empty)* | Optional Whisper decoding prompt. Keep empty: a Bangla prompt caused empty transcripts on 3 of 16 Sylheti clips. |
 | `SPEECH_BASE_URL` | `string` | `""` | Optional endpoint override (e.g. custom Groq/vLLM URL). |
 | `LLM_PROVIDER` | `string` | `none` | Configurable LLM adapter: `none`, `anthropic`, or `openai_compatible` (e.g. OpenAI, Groq, Ollama, vLLM). |
 | `LLM_MODEL` | `string` | `""` | Model identifier configurable via environment (e.g. any Claude, GPT, or Llama model). |
@@ -274,8 +275,8 @@ All backend configurations are managed via `backend/.env` (read by `app/config.p
 | `LLM_BASE_URL` | `string` | `""` | Optional base URL override (for Groq, Ollama, vLLM, or custom proxies). |
 | `TTS_PROVIDER` | `string` | `gtts` | Bangla speech synthesis adapter: `gtts` (in-memory, no API key required) or `none`. |
 | `MAX_AUDIO_SECONDS` | `int` | `90` | Hard cap on audio recording duration. |
-| `MAX_UPLOAD_MB` | `int` | `10` | Maximum uploaded audio payload size in megabytes. |
-| `MAX_AUDIO_BYTES` | `int` | `10485760` | Maximum raw audio payload in bytes (10 MB). |
+| `MAX_UPLOAD_MB` | `int` | `25` | Maximum uploaded audio payload size in megabytes. |
+| `MAX_AUDIO_BYTES` | `int` | `26214400` | Maximum raw audio payload in bytes (25 MB). |
 | `PROVIDER_TIMEOUT_SECONDS` | `int` | `60` | Timeout for third-party HTTP API calls. |
 | `CORS_ORIGINS` | `string` | `http://localhost:5173,...` | Comma-separated list of allowed frontend origins. |
 
@@ -519,11 +520,11 @@ Test status (measured 2026-11-24). Without ffmpeg on the host, run the backend s
 ```powershell
 # Backend test suite, inside Docker (includes the ffmpeg-dependent tests)
 docker compose --profile test run --rm backend-test
-# Result: 460 passed in ~11 s (TTS is mocked, so no internet is needed)
+# Result: 573 passed in ~36 s (TTS is mocked, so no internet is needed)
 
-# Frontend Unit & Component Tests (49 tests)
+# Frontend Unit & Component Tests (58 tests)
 cd frontend; npm test
-# Result: 49 passed
+# Result: 58 passed
 
 # Frontend Production Build
 cd frontend; npm run build

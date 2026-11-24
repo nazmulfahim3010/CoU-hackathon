@@ -332,6 +332,20 @@ describe('Confirm page', () => {
     expect(screen.getByText(/unverified glossary/)).toBeInTheDocument()
   })
 
+  it('lists glossary evidence with ids, and hides the panel when there is none', () => {
+    const withEvidence = {
+      ...normalization,
+      glossary_evidence: [
+        { glossary_id: 'syl_001', regional_expression: 'মাতাত', standard_bangla: 'মাথায়', category: 'body_part', verification_status: 'verified', matching_method: 'exact_word', applied: true },
+      ],
+    }
+    const { unmount } = renderAt('/confirm', <Confirm />, { ...seed, normalization: withEvidence })
+    expect(screen.getByTestId('glossary-evidence')).toHaveTextContent('syl_001')
+    unmount()
+    renderAt('/confirm', <Confirm />, seed)
+    expect(screen.queryByTestId('glossary-evidence')).toBeNull()
+  })
+
   it('sends the EDITED text on confirm', async () => {
     vi.mocked(api.confirm).mockResolvedValue({ session_id: 's1', stage: 'confirmed', edited_by_patient: true })
     renderAt('/confirm', <Confirm />, seed)

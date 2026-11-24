@@ -167,6 +167,28 @@ export default function Confirm() {
         </div>
       )}
 
+      {/* Glossary evidence: which verified dictionary rows were used (lexical evidence, not a meaning guarantee) */}
+      {normalization.glossary_evidence && normalization.glossary_evidence.length > 0 && (
+        <details className="rounded-xl border border-deep/15 bg-white p-4 text-sm" data-testid="glossary-evidence">
+          <summary className="cursor-pointer font-semibold text-deep">
+            <span className="font-bangla" lang="bn">অভিধান প্রমাণ</span> / Glossary evidence ({normalization.glossary_evidence.length})
+          </summary>
+          <p className="mt-2 text-xs text-ink/60">
+            Lexical matches from the team-reviewed Sylheti glossary. They show which words were suggested, not proof that the whole sentence keeps its meaning. Please check the text yourself.
+          </p>
+          <ul className="mt-2 space-y-1">
+            {normalization.glossary_evidence.map((e, i) => (
+              <li key={`${e.glossary_id ?? 'x'}-${i}`} className="font-bangla" lang="bn">
+                <span className="font-semibold">{e.regional_expression}</span> → {e.standard_bangla}{' '}
+                <span className="font-sans text-xs text-ink/50">
+                  ({e.glossary_id ?? 'no id'}, {e.matching_method}{e.applied ? '' : ', not used'})
+                </span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       {/* Side-by-Side (Stacked on Mobile) Comparison */}
       <div className="grid gap-6 md:grid-cols-2 items-stretch">
         {/* Original Dialect / Typed Transcript */}

@@ -68,6 +68,16 @@ export interface GlossaryMatch {
   verification: string
 }
 
+export interface GlossaryEvidence {
+  glossary_id: string | null
+  regional_expression: string
+  standard_bangla: string
+  category: string
+  verification_status: string
+  matching_method: string
+  applied: boolean
+}
+
 export interface NormalizationResponse {
   session_id: string
   original: string
@@ -77,6 +87,8 @@ export interface NormalizationResponse {
   normalized: string
   source: 'llm_with_glossary' | 'glossary_only' | 'demo_prepared' | 'cached_demo_output'
   glossary_matches: GlossaryMatch[]
+  glossary_evidence?: GlossaryEvidence[]
+  normalization_status?: string
   uncertain_spans: string[]
   warnings: string[]
   provider: string
