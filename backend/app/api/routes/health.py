@@ -8,7 +8,7 @@ from app.core.session_manager import SessionManager
 from app.schemas.transcription import DemoScenario
 from app.services import demo_data
 from app.services.llm_provider import llm_configured
-from app.services.speech_to_text import stt_configured
+from app.services.speech_to_text import effective_speech_model, stt_configured
 
 router = APIRouter(prefix="/api", tags=["health"])
 
@@ -27,7 +27,7 @@ def health(s: Settings = Depends(get_settings), sessions: SessionManager = Depen
             "speech": {
                 "configured": stt_configured(s),
                 "provider": s.speech_provider,
-                "model": s.speech_model,
+                "model": effective_speech_model(s),
             },
             "llm": {
                 "configured": llm_configured(s),

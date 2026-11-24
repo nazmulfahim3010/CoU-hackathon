@@ -25,6 +25,48 @@ from app.core.security import validate_audio
 
 log = get_logger("stt")
 
+# Defaults per provider. hf-inference answers "Model not supported by provider hf-inference" (HTTP 400) for
+# BanglaASR, whisper-small/base/tiny; whisper-large-v3 IS served but the HF account needs pre-paid credits (402).
+HF_DEFAULT_MODEL = "openai/whisper-large-v3"
+LOCAL_DEFAULT_MODEL = "openai/whisper-tiny"
+
+_SECRET_RE = re.compile(r"(?:gsk_|sk-[A-Za-z0-9]*-?|hf_|AQ\.|Bearer\s+)[A-Za-z0-9_\-\.]{8,}")
+
+
+def effective_speech_model(s: Settings) -> str:
+    """The model id actually sent. An explicit SPEECH_MODEL always wins; otherwise a default that exists on the
+    configured provider (Groq: whisper-large-v3, OpenAI: whisper-1, Hugging Face: openai/whisper-large-v3)."""
+    if s.speech_model:
+        return s.speech_model
+    if s.speech_provider == "hf_inference":
+        return HF_DEFAULT_MODEL
+    if s.speech_provider == "openai_compatible":
+        return "whisper-large-v3" if "groq.com" in (s.speech_base_url or "").lower() else "whisper-1"
+    return LOCAL_DEFAULT_MODEL
+
+
+def safe_provider_hint(resp: httpx.Response, limit: int = 160) -> str:
+    """A short, sanitized reason taken from a provider error body (e.g. 'Model not supported by provider
+    hf-inference'). Never contains keys, auth headers or audio: only the provider's own error text, with any
+    key-looking token redacted, control characters removed and length capped."""
+    msg = ""
+    try:
+        data = resp.json()
+    except ValueError:
+        data = None
+    if isinstance(data, dict):
+        err = data.get("error", data.get("message"))
+        if isinstance(err, dict):
+            err = err.get("message") or err.get("code") or err.get("type")
+        if isinstance(err, str):
+            msg = err
+    elif data is None and "text" in resp.headers.get("content-type", ""):
+        msg = resp.text[: limit * 2]
+    msg = _SECRET_RE.sub("<redacted>", msg)
+    msg = re.sub(r"[^\S ]+|[\x00-\x1f]", " ", msg)
+    msg = re.sub(r"\s+", " ", msg).strip()
+    return msg[:limit]
+
 
 @dataclass
 class STTResult:
@@ -190,31 +232,25 @@ def raise_for_stt(exc: Exception, provider: str) -> None:
         ) from exc
     if isinstance(exc, httpx.HTTPStatusError):
         status = exc.response.status_code
-        error_type = "unknown_error"
-        safe_reason = f"HTTP {status}"
+        # Provider's own error text, with keys redacted and non-text bodies (e.g. audio) ignored...
+        hint = safe_provider_hint(exc.response)
+        # Provider error type/code (e.g. invalid_request_error) when the body has one
+        error_type = ""
         try:
             body = exc.response.json()
-            if isinstance(body, dict):
-                err = body.get("error")
-                if isinstance(err, dict):
-                    error_type = str(err.get("type") or err.get("code") or "error")
-                    raw_msg = str(err.get("message") or "")
-                    # Sanitize: strip any potential user text / transcripts, keep short parameter/type description
-                    safe_msg = re.sub(r"[^a-zA-Z0-9_\-\.\:\s`]", "", raw_msg)[:100].strip()
-                    safe_reason = f"{error_type}: {safe_msg}" if safe_msg else error_type
-                elif isinstance(err, str):
-                    error_type = "error"
-                    safe_reason = re.sub(r"[^a-zA-Z0-9_\-\.\:\s`]", "", err)[:100].strip()
-        except Exception:
+            err = body.get("error") if isinstance(body, dict) else None
+            if isinstance(err, dict):
+                error_type = str(err.get("type") or err.get("code") or "")
+        except ValueError:
             pass
+        # ...then restricted to a conservative character set so no user text can ride along in the reason.
+        keep = r"[^a-zA-Z0-9_\-\.\:\s`]"
+        error_type = re.sub(keep, "", error_type)[:40].strip()
+        hint = re.sub(keep, "", hint)[:100].strip()
+        detail = ": ".join(p for p in (error_type, hint) if p)
+        safe_reason = f"HTTP {status}: {detail}" if detail else f"HTTP {status}"
 
-        log.warning(
-            "stt_upstream_error provider=%s status=%s error_type=%s reason=%s",
-            provider,
-            status,
-            error_type,
-            safe_reason,
-        )
+        log.warning("stt_upstream_error provider=%s status=%s reason=%s", provider, status, safe_reason)
 
         if 400 <= status < 500:
             raise KothaError(
@@ -241,7 +277,7 @@ class LocalTransformersSTT:
     name = "local_transformers"
 
     def __init__(self, s: Settings):
-        self._model = s.speech_model or "openai/whisper-tiny"
+        self._model = effective_speech_model(s)
         self._pipeline = None
 
     def _get_pipeline(self):
@@ -279,7 +315,7 @@ class HFInferenceSTT:
     name = "hf_inference"
 
     def __init__(self, s: Settings):
-        self._model = s.speech_model or "bangla-speech-processing/BanglaASR"
+        self._model = effective_speech_model(s)
         self._key = s.speech_api_key
         self._timeout = s.provider_timeout_seconds
         self._base = (s.speech_base_url or "https://router.huggingface.co/hf-inference/models").rstrip("/")
@@ -312,7 +348,7 @@ class OpenAICompatSTT:
     name = "openai_compatible"
 
     def __init__(self, s: Settings):
-        self._model = s.speech_model or "whisper-1"
+        self._model = effective_speech_model(s)
         self._key = s.speech_api_key
         self._timeout = s.provider_timeout_seconds
         self._base = (s.speech_base_url or "https://api.openai.com/v1").rstrip("/")
@@ -342,9 +378,9 @@ class OpenAICompatSTT:
 
 def stt_configured(s: Settings) -> bool:
     if s.speech_provider in ("hf_inference", "openai_compatible"):
-        return bool(s.speech_api_key and s.speech_model)
+        return bool(s.speech_api_key)  # the model has a per-provider default
     if s.speech_provider == "local_transformers":
-        return bool(s.speech_model)
+        return True
     return False
 
 

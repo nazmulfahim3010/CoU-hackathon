@@ -40,7 +40,7 @@ def _field(key: str, en: str, bn: str, f: BilingualField, evidence: str | None =
         status=f.status,
         en=[pre_en + val_en],
         bn=[pre_bn + val_bn],
-        evidence=evidence or val_bn,
+        evidence=evidence or f.evidence,
     )
 
 
@@ -62,7 +62,7 @@ def _list(key: str, en: str, bn: str, items: list[Item], empty_label: tuple[str,
         en=[i.en for i in items],
         bn=[i.bn for i in items],
         status="list",
-        evidence=", ".join(i.bn for i in items),
+        evidence=" · ".join(i.evidence for i in items if i.evidence) or None,
     )
 
 
@@ -102,6 +102,9 @@ def generate(
         original_statement=original,
         normalized_statement=normalized,
         confirmed_statement=confirmed,
+        removed_ungrounded=[
+            {"bn": i.bn, "en": i.en, "evidence": i.evidence or ""} for i in ext.removed_ungrounded
+        ],
         provenance=provenance,
         label_en=LABEL_EN,
         label_bn=LABEL_BN,

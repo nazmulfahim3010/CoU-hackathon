@@ -161,7 +161,7 @@ flowchart TD
 │   │   └── data/
 │   │       ├── dialects/            # sylheti.json (120 entries) + standard_bangla.json (reference list)
 │   │       └── safety_rules/        # red_flags.json (10 emergency/urgent rules)
-│   └── tests/                       # unit/integration tests (305 passing in Docker)
+│   └── tests/                       # unit/integration tests (460 passing in Docker)
 ├── frontend/
 │   ├── src/
 │   │   ├── pages/                   # Landing, Intake, Confirm, Summary, About
@@ -259,11 +259,13 @@ All backend configurations are managed via `backend/.env` (read by `app/config.p
 
 | Variable | Type | Default | Description |
 |---|---|---|---|
+| `SHARE_TTL_MINUTES` | `int` | `30` | How long a shared summary (and voice clip) stays in memory before it is deleted. |
+| `PUBLIC_BASE_URL` | `string` | *(empty)* | Address a phone can reach (e.g. `http://192.168.1.20:8080`) so share links and QR codes work. |
 | `APP_MODE` | `string` | `demo` | Application mode: `demo` (prepared scenarios) or `live` (calls real APIs). |
 | `SESSION_TTL_MINUTES` | `int` | `30` | In-memory session time-to-live before automatic garbage collection. |
 | `SESSION_TTL_SECONDS` | `int` | `1800` | In-memory session TTL in seconds. |
 | `SPEECH_PROVIDER` | `string` | `none` | Speech-to-text adapter: `none`, `local_transformers`, `hf_inference`, or `openai_compatible`. |
-| `SPEECH_MODEL` | `string` | `bangla-speech-processing/BanglaASR` | Model identifier (HF repo or OpenAI model name e.g. `whisper-1`). |
+| `SPEECH_MODEL` | `string` | *(empty = provider default)* | Model id. Empty uses the provider's own default: Groq `whisper-large-v3`, OpenAI `whisper-1`, Hugging Face `openai/whisper-large-v3`. Never reuse one provider's id on another (HTTP 400). |
 | `SPEECH_API_KEY` | `string` | `""` | API key for cloud STT endpoints (HF Inference or OpenAI-compatible). **Not required** for local Hugging Face model (`local_transformers`), which needs only a model download. |
 | `SPEECH_BASE_URL` | `string` | `""` | Optional endpoint override (e.g. custom Groq/vLLM URL). |
 | `LLM_PROVIDER` | `string` | `none` | Configurable LLM adapter: `none`, `anthropic`, or `openai_compatible` (e.g. OpenAI, Groq, Ollama, vLLM). |
@@ -357,8 +359,9 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 
 ### Models Actually Integrated in Code
 1. **Speech-to-Text (STT)**:
-   - `bangla-speech-processing/BanglaASR` (Whisper fine-tune via Hugging Face Inference or local `transformers` pipeline; local pipeline requires only downloading model weights, no API key).
-   - `whisper-1` (or equivalent) via any OpenAI-compatible `/audio/transcriptions` endpoint.
+   - **Groq `whisper-large-v3` / `whisper-large-v3-turbo`** via the OpenAI-compatible `/audio/transcriptions` endpoint (`https://api.groq.com/openai/v1`): verified working with a real call on 2026-11-24 (all browser formats after ffmpeg conversion).
+   - `whisper-1` (or equivalent) via any OpenAI-compatible endpoint (OpenAI key tested: provider returned 429 `credit_balance_exhausted`, so not verified).
+   - Hugging Face Inference: `bangla-speech-processing/BanglaASR` and `openai/whisper-small/base/tiny` return **HTTP 400 "Model not supported by provider hf-inference"**; `openai/whisper-large-v3` is served but returned 402 (needs pre-paid HF credits). Not verified. `bangla-speech-processing/BanglaASR` remains usable only through the local `transformers` pipeline (no API key, untested here).
    - *Manual Fallback*: `POST /api/transcription/typed` (tagged `source: "typed_by_helper"`).
 2. **Configurable Large Language Models (LLM)**:
    - Configurable via `LLM_PROVIDER`, `LLM_MODEL`, and `LLM_BASE_URL`.
@@ -389,6 +392,42 @@ All requests and responses use JSON (except multipart audio uploads and audio by
 - **SHRUTI Speech Corpus** (Academic Non-Commercial): Reviewed for regional acoustic benchmarks; not bundled.
 - **Bengali.AI Speech & Dialect Dataset** (CC-BY-NC-SA 4.0): Reviewed for regional pronunciation variants; not bundled.
 - **RegSpeech12 / Ben-10**: Named in initial hackathon concept paper; licences unverified, not used.
+
+---
+
+## 11b. Sharing with a health worker, and never inventing a symptom
+
+**Share a summary (and optionally the voice clip) with a health worker's phone.** On the summary page the
+patient or helper ticks an explicit consent box and presses *Create share link*. Kotha returns a short code
+(`ABCD-EFGH-JKMN`), a link and a QR code. The health worker opens it on their phone (or types the code at `/s`)
+and sees the **same summary card**, read-only, with a countdown.
+
+- **Consent first:** the API returns `400 CONSENT_REQUIRED` without it. The voice clip is only kept if the patient
+  also ticks *Also share my voice recording*; otherwise an uploaded clip is discarded immediately.
+- **Memory only:** shares live in server memory (never on disk or in logs), expire after `SHARE_TTL_MINUTES`
+  (default 30), and can be revoked at any time (*Stop sharing & delete*, or ending the consultation).
+- **Unguessable:** 12-character code (about 60 bits), uniform `404` for unknown/expired codes, per-client rate limit
+  on failed guesses, `Cache-Control: no-store`.
+- **Phones:** the link must use an address the phone can reach. Open Kotha via your computer's Wi-Fi address or set
+  `PUBLIC_BASE_URL`; the UI warns when the link only says `localhost`.
+- Endpoints: `POST /api/share`, `GET /api/share/{code}`, `GET /api/share/{code}/audio`, `DELETE /api/share/{code}`.
+
+**Never turning a dialect phrase into a symptom the patient did not say.** Defence in depth, all deterministic:
+
+1. *Normalization guards* reject LLM rewrites that drop a negation, lose a number/duration, or add a symptom that no
+   verified glossary entry maps to (`dialect_normalizer.py`).
+2. *Confirmation screen:* every dialect word that was changed into a **symptom term** is highlighted with an **Undo**
+   button, and the patient must confirm the final text.
+3. *Evidence grounding* (`grounding.py`): the LLM must attach a **verbatim quote** from the confirmed text to every
+   symptom and field. A claim with no real quote, or one that names a symptom (head/chest/stomach pain, vomiting,
+   cough, fever, breathing, bleeding, ...) that the patient never mentioned, is **removed**, retried with feedback, and
+   shown to the clinician under *Removed: not said by the patient*. Fields without a real quote are demoted to
+   *uncertain*, never shown as reported facts.
+4. A test checks that glossary normalization of every one of the 120 verified Sylheti examples never introduces a
+   symptom absent from the patient's original words.
+
+Limits: grounding covers the symptom groups listed in `grounding.py` and verbatim quoting; it cannot judge subtler
+meaning changes. The live LLM path is tested with scripted fake models only. It has not been run against a real model.
 
 ---
 
@@ -456,11 +495,11 @@ Test status (measured 2026-11-24). Without ffmpeg on the host, run the backend s
 ```powershell
 # Backend test suite, inside Docker (includes the ffmpeg-dependent tests)
 docker compose --profile test run --rm backend-test
-# Result: 305 passed in ~31 s
+# Result: 460 passed in ~11 s (TTS is mocked, so no internet is needed)
 
-# Frontend Unit & Component Tests (33 tests)
+# Frontend Unit & Component Tests (49 tests)
 cd frontend; npm test
-# Result: 33 passed
+# Result: 49 passed
 
 # Frontend Production Build
 cd frontend; npm run build

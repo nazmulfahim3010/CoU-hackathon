@@ -11,6 +11,8 @@ class BilingualField(BaseModel):
     status: Status
     bn: str | None = None
     en: str | None = None
+    # Verbatim quote from the patient's confirmed text that supports this value (checked by grounding.py)
+    evidence: str | None = None
 
     @model_validator(mode="after")
     def _consistent(self):
@@ -25,6 +27,8 @@ class BilingualField(BaseModel):
 class Item(BaseModel):
     bn: str = Field(min_length=1)
     en: str = Field(min_length=1)
+    # Verbatim quote from the patient's confirmed text; items without a real quote are removed
+    evidence: str | None = None
 
 
 class ClinicalExtraction(BaseModel):
@@ -39,6 +43,8 @@ class ClinicalExtraction(BaseModel):
     negative_symptoms: list[Item] = Field(default_factory=list)
     uncertain_or_missing: list[Item] = Field(default_factory=list)
     model_noted_red_flag_indicators: list[Item] = Field(default_factory=list)
+    # What the model proposed but the patient never said (removed; shown to the clinician for transparency)
+    removed_ungrounded: list[Item] = Field(default_factory=list)
 
 
 class ExtractionRequest(BaseModel):

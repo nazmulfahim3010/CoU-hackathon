@@ -6,6 +6,8 @@ import type {
   Health,
   NormalizationResponse,
   SafetyResponse,
+  ShareCreated,
+  SharedSummary,
   SpeechResponse,
   SummaryCard,
   TranscriptionResponse,
@@ -132,6 +134,23 @@ export const api = {
   summary: (sessionId: string) => request<SummaryCard>('/summary/generate', json({ session_id: sessionId })),
   speech: (sessionId: string) => request<SpeechResponse>('/speech/generate', json({ session_id: sessionId })),
   spokenText: (sessionId: string) => request<{ text_bn: string }>(`/speech/text/${sessionId}`),
+  /** Share the finished summary (and, only if the patient chose, the voice clip) with a health worker. */
+  createShare: (sessionId: string, consent: boolean, audio?: Blob | null) => {
+    const fd = new FormData()
+    fd.append('session_id', sessionId)
+    fd.append('consent', consent ? 'true' : 'false')
+    if (audio) {
+      fd.append('include_audio', 'true')
+      fd.append('audio', audio, 'recording.webm')
+    } else {
+      fd.append('include_audio', 'false')
+    }
+    return request<ShareCreated>('/share', { method: 'POST', body: fd })
+  },
+  getShare: (code: string) => request<SharedSummary>(`/share/${encodeURIComponent(code)}`),
+  shareAudioUrl: (code: string) => `${BASE_URL}/share/${encodeURIComponent(code)}/audio`,
+  revokeShare: (code: string) =>
+    fetch(`${BASE_URL}/share/${encodeURIComponent(code)}`, { method: 'DELETE' }).catch(() => undefined),
   endSession: (sessionId: string) => {
     const url = `${BASE_URL}/session/${sessionId}`
     return fetch(url, { method: 'DELETE' }).catch(() => undefined)
