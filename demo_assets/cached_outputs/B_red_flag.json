@@ -3,7 +3,7 @@
   "title": "Scenario B — Red-flag symptoms",
   "purpose": "Chest pain with a feeling of suffocation; deterministic rules should trigger.",
   "dialect_label": "Sylheti — sentences copied from the team-verified glossary; standard-Bangla rendering prepared by the project team (not independently verified)",
-  "timestamp": "2026-11-23T18:49:31+00:00",
+  "timestamp": "2026-11-24T03:44:37+00:00",
   "provider": "cached_demo_output",
   "model": "pre-saved-demo-fallback",
   "transcript": {
@@ -56,22 +56,26 @@
     "chief_complaint": {
       "status": "reported",
       "bn": "বুকে ব্যথা",
-      "en": "Chest pain"
+      "en": "Chest pain",
+      "evidence": "বুকে ব্যথা"
     },
     "symptoms": [
       {
         "bn": "বুকে ব্যথা",
-        "en": "Chest pain"
+        "en": "Chest pain",
+        "evidence": "বুকে ব্যথা"
       },
       {
         "bn": "দম বন্ধ হয়ে আসার অনুভূতি",
-        "en": "Feeling of suffocation / difficulty breathing"
+        "en": "Feeling of suffocation / difficulty breathing",
+        "evidence": "দম বন্ধ হয়ে আসছে"
       }
     ],
     "duration": {
       "status": "reported",
       "bn": "গত রাত থেকে",
-      "en": "Since last night"
+      "en": "Since last night",
+      "evidence": "গত রাত থেকে"
     },
     "severity": {
       "status": "not_reported"
@@ -88,7 +92,8 @@
     "associated_symptoms": [
       {
         "bn": "শুয়ে থাকলে দম বন্ধ লাগে (রোগী বলেছেন 'মনে হয়')",
-        "en": "Suffocation feeling when lying down (patient says 'I feel')"
+        "en": "Suffocation feeling when lying down (patient says 'I feel')",
+        "evidence": "শুয়ে থাকলে মনে হয় আমার দম বন্ধ হয়ে আসছে"
       }
     ],
     "negative_symptoms": [],
@@ -105,7 +110,8 @@
     "model_noted_red_flag_indicators": [
       {
         "bn": "বুকে ব্যথা ও দম বন্ধ হওয়া",
-        "en": "Chest pain and suffocation feeling mentioned"
+        "en": "Chest pain and suffocation feeling mentioned",
+        "evidence": "বুকে ব্যথা"
       }
     ]
   },

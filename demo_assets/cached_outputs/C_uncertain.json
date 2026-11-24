@@ -3,7 +3,7 @@
   "title": "Scenario C — Uncertain / incomplete information",
   "purpose": "Patient cannot remember a test name and gives no duration; unknowns must stay 'uncertain' or 'not reported', never 'absent'.",
   "dialect_label": "Sylheti — sentences copied from the team-verified glossary; standard-Bangla rendering prepared by the project team (not independently verified)",
-  "timestamp": "2026-11-23T18:49:31+00:00",
+  "timestamp": "2026-11-24T03:44:37+00:00",
   "provider": "cached_demo_output",
   "model": "pre-saved-demo-fallback",
   "transcript": {
@@ -66,18 +66,21 @@
     "chief_complaint": {
       "status": "reported",
       "bn": "পেট ব্যথা",
-      "en": "Stomach pain"
+      "en": "Stomach pain",
+      "evidence": "পেট ব্যথা শুরু হয়েছে"
     },
     "symptoms": [
       {
         "bn": "পেট ব্যথা",
-        "en": "Stomach pain"
+        "en": "Stomach pain",
+        "evidence": "পেট ব্যথা"
       }
     ],
     "duration": {
       "status": "uncertain",
       "bn": "বাইরের খাবার খাওয়ার পর শুরু হয়েছে; কত দিন আগে তা বলা হয়নি",
-      "en": "Started after eating outside food; how long ago was not stated"
+      "en": "Started after eating outside food; how long ago was not stated",
+      "evidence": "বাইরের খাবার খাওয়ার পরে আমার পেট ব্যথা শুরু হয়েছে"
     },
     "severity": {
       "status": "not_reported"
@@ -85,7 +88,8 @@
     "relevant_history": {
       "status": "uncertain",
       "bn": "ডাক্তার একটি টেস্টের কথা বলেছেন, নাম মনে নেই",
-      "en": "A doctor mentioned a test; the patient does not remember its name"
+      "en": "A doctor mentioned a test; the patient does not remember its name",
+      "evidence": "ডাক্তার কী যেন একটা টেস্টের নাম বলেছেন, আমার মনে নেই"
     },
     "current_medications": {
       "status": "not_reported"

@@ -13,26 +13,31 @@
         "chief_complaint": {
           "status": "reported",
           "bn": "জ্বর ও সর্দি, কমছে না",
-          "en": "Fever and cold that are not improving"
+          "en": "Fever and cold that are not improving",
+          "evidence": "জ্বর আর সর্দি কমছে না"
         },
         "symptoms": [
           {
             "bn": "জ্বর",
-            "en": "Fever"
+            "en": "Fever",
+            "evidence": "জ্বর"
           },
           {
             "bn": "সর্দি",
-            "en": "Cold / runny nose"
+            "en": "Cold / runny nose",
+            "evidence": "সর্দি"
           },
           {
             "bn": "মাথাব্যথা",
-            "en": "Headache"
+            "en": "Headache",
+            "evidence": "মাথাব্যথা"
           }
         ],
         "duration": {
           "status": "reported",
           "bn": "জ্বর ও সর্দি তিন দিন ধরে; মাথাব্যথা সকাল থেকে",
-          "en": "Fever and cold for three days; headache since this morning"
+          "en": "Fever and cold for three days; headache since this morning",
+          "evidence": "তিন দিন ধরে"
         },
         "severity": {
           "status": "not_reported"
@@ -73,22 +78,26 @@
         "chief_complaint": {
           "status": "reported",
           "bn": "বুকে ব্যথা",
-          "en": "Chest pain"
+          "en": "Chest pain",
+          "evidence": "বুকে ব্যথা"
         },
         "symptoms": [
           {
             "bn": "বুকে ব্যথা",
-            "en": "Chest pain"
+            "en": "Chest pain",
+            "evidence": "বুকে ব্যথা"
           },
           {
             "bn": "দম বন্ধ হয়ে আসার অনুভূতি",
-            "en": "Feeling of suffocation / difficulty breathing"
+            "en": "Feeling of suffocation / difficulty breathing",
+            "evidence": "দম বন্ধ হয়ে আসছে"
           }
         ],
         "duration": {
           "status": "reported",
           "bn": "গত রাত থেকে",
-          "en": "Since last night"
+          "en": "Since last night",
+          "evidence": "গত রাত থেকে"
         },
         "severity": {
           "status": "not_reported"
@@ -105,7 +114,8 @@
         "associated_symptoms": [
           {
             "bn": "শুয়ে থাকলে দম বন্ধ লাগে (রোগী বলেছেন 'মনে হয়')",
-            "en": "Suffocation feeling when lying down (patient says 'I feel')"
+            "en": "Suffocation feeling when lying down (patient says 'I feel')",
+            "evidence": "শুয়ে থাকলে মনে হয় আমার দম বন্ধ হয়ে আসছে"
           }
         ],
         "negative_symptoms": [],
@@ -122,7 +132,8 @@
         "model_noted_red_flag_indicators": [
           {
             "bn": "বুকে ব্যথা ও দম বন্ধ হওয়া",
-            "en": "Chest pain and suffocation feeling mentioned"
+            "en": "Chest pain and suffocation feeling mentioned",
+            "evidence": "বুকে ব্যথা"
           }
         ]
       }
@@ -139,18 +150,21 @@
         "chief_complaint": {
           "status": "reported",
           "bn": "পেট ব্যথা",
-          "en": "Stomach pain"
+          "en": "Stomach pain",
+          "evidence": "পেট ব্যথা শুরু হয়েছে"
         },
         "symptoms": [
           {
             "bn": "পেট ব্যথা",
-            "en": "Stomach pain"
+            "en": "Stomach pain",
+            "evidence": "পেট ব্যথা"
           }
         ],
         "duration": {
           "status": "uncertain",
           "bn": "বাইরের খাবার খাওয়ার পর শুরু হয়েছে; কত দিন আগে তা বলা হয়নি",
-          "en": "Started after eating outside food; how long ago was not stated"
+          "en": "Started after eating outside food; how long ago was not stated",
+          "evidence": "বাইরের খাবার খাওয়ার পরে আমার পেট ব্যথা শুরু হয়েছে"
         },
         "severity": {
           "status": "not_reported"
@@ -158,7 +172,8 @@
         "relevant_history": {
           "status": "uncertain",
           "bn": "ডাক্তার একটি টেস্টের কথা বলেছেন, নাম মনে নেই",
-          "en": "A doctor mentioned a test; the patient does not remember its name"
+          "en": "A doctor mentioned a test; the patient does not remember its name",
+          "evidence": "ডাক্তার কী যেন একটা টেস্টের নাম বলেছেন, আমার মনে নেই"
         },
         "current_medications": {
           "status": "not_reported"

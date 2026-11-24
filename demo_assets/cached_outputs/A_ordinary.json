@@ -3,7 +3,7 @@
   "title": "Scenario A — Ordinary symptoms",
   "purpose": "Fever, cold and headache; no red-flag rule should trigger.",
   "dialect_label": "Sylheti — sentences copied from the team-verified glossary; standard-Bangla rendering prepared by the project team (not independently verified)",
-  "timestamp": "2026-11-23T18:49:31+00:00",
+  "timestamp": "2026-11-24T03:44:37+00:00",
   "provider": "cached_demo_output",
   "model": "pre-saved-demo-fallback",
   "transcript": {
@@ -46,26 +46,31 @@
     "chief_complaint": {
       "status": "reported",
       "bn": "জ্বর ও সর্দি, কমছে না",
-      "en": "Fever and cold that are not improving"
+      "en": "Fever and cold that are not improving",
+      "evidence": "জ্বর আর সর্দি কমছে না"
     },
     "symptoms": [
       {
         "bn": "জ্বর",
-        "en": "Fever"
+        "en": "Fever",
+        "evidence": "জ্বর"
       },
       {
         "bn": "সর্দি",
-        "en": "Cold / runny nose"
+        "en": "Cold / runny nose",
+        "evidence": "সর্দি"
       },
       {
         "bn": "মাথাব্যথা",
-        "en": "Headache"
+        "en": "Headache",
+        "evidence": "মাথাব্যথা"
       }
     ],
     "duration": {
       "status": "reported",
       "bn": "জ্বর ও সর্দি তিন দিন ধরে; মাথাব্যথা সকাল থেকে",
-      "en": "Fever and cold for three days; headache since this morning"
+      "en": "Fever and cold for three days; headache since this morning",
+      "evidence": "তিন দিন ধরে"
     },
     "severity": {
       "status": "not_reported"

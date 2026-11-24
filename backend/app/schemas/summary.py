@@ -29,6 +29,8 @@ class SummaryCard(BaseModel):
     original_statement: str = ""
     normalized_statement: str = ""
     confirmed_statement: str = ""
+    # Model proposals removed because the patient never said them (clinician transparency)
+    removed_ungrounded: list[dict[str, str]] = Field(default_factory=list)
     provenance: dict[str, str] = Field(default_factory=dict)
     label_en: str = "AI-assisted patient intake summary — clinician verification required."
     label_bn: str = "এআই-সহায়তায় তৈরি রোগীর প্রাথমিক তথ্যের সারসংক্ষেপ — চিকিৎসকের যাচাই আবশ্যক।"

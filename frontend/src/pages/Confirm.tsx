@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, HelpCircle, Info, Mic, Pencil, RotateCcw, UserCheck } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, HelpCircle, Info, Mic, Pencil, RotateCcw, Undo2, UserCheck } from 'lucide-react'
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { Button, ErrorBox, ModeBadge, Spinner, StepDots } from '../components/ui'
@@ -34,6 +34,14 @@ export default function Confirm() {
   }
 
   const unverified = normalization.glossary_matches.filter((m) => m.verification !== 'verified')
+
+  // Dialect words that Kotha turned into a SYMPTOM term: the riskiest substitutions, so the patient must be able
+  // to see and undo each one ("that is not what I meant").
+  const SYMPTOM_CATEGORIES = ['symptom', 'pain_description', 'fever']
+  const isSymptom = (category: string) => SYMPTOM_CATEGORIES.includes(category)
+  const symptomChanges = normalization.glossary_matches.filter((m) => isSymptom(m.category))
+  const undoChange = (regional: string, replacement: string) =>
+    setStandard((cur) => (cur.includes(replacement) ? cur.replace(replacement, regional) : cur))
 
   const sourceDisplayMap: Record<string, { label: string; badge: string }> = {
     speech_recognition: { label: 'Speech recognition (কথা বলা থেকে লেখা)', badge: 'bg-emerald-100 text-emerald-900 border-emerald-300' },
@@ -150,6 +158,20 @@ export default function Confirm() {
               </span>
             )}
           </div>
+          {symptomChanges.length > 0 && (
+            <div
+              className="mt-2 rounded-xl border border-amber-400 bg-amber-50 p-3 text-sm text-amber-950"
+              data-testid="symptom-change-warning"
+            >
+              <p className="font-bold font-bangla" lang="bn">
+                {symptomChanges.length}টি লক্ষণের শব্দ বদলানো হয়েছে। প্রতিটি আপনার বলা কথার সঙ্গে মিলছে কি না দেখুন।
+              </p>
+              <p className="text-xs">
+                {symptomChanges.length} symptom word{symptomChanges.length > 1 ? 's were' : ' was'} changed. Check each one is
+                what you meant; press <strong>Undo</strong> on any that is not.
+              </p>
+            </div>
+          )}
           <p className="mt-1 text-xs text-ink/70">
             নিচের যে কোনো শব্দে ট্যাপ করে তার সাধারণ অর্থ ও তথ্য জানুন (Tap to inspect dialect meaning):
           </p>
@@ -157,7 +179,7 @@ export default function Confirm() {
             {normalization.glossary_matches.map((m, i) => {
               const isOpen = activeTooltip === `${m.regional}-${i}`
               return (
-                <div key={i} className="relative">
+                <div key={i} className="relative flex items-center gap-1">
                   <button
                     type="button"
                     onClick={() => setActiveTooltip(isOpen ? null : `${m.regional}-${i}`)}
@@ -168,6 +190,17 @@ export default function Confirm() {
                     <strong className="text-brand">{m.standard}</strong>
                     <HelpCircle className="h-3 w-3 text-ink/40" />
                   </button>
+                  {isSymptom(m.category) && (
+                    <button
+                      type="button"
+                      onClick={() => undoChange(m.regional, m.standard)}
+                      aria-label={`Undo: keep "${m.regional}" instead of "${m.standard}"`}
+                      data-testid="undo-change"
+                      className="inline-flex items-center gap-1 rounded-lg border border-amber-500 bg-amber-100 px-2 py-1.5 text-xs font-semibold text-amber-950 hover:bg-amber-200"
+                    >
+                      <Undo2 className="h-3 w-3" aria-hidden /> Undo
+                    </button>
+                  )}
                   {isOpen && (
                     <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-xl border border-deep/20 bg-deep p-3 text-xs text-white shadow-xl">
                       <p className="font-semibold text-emerald-300 font-bangla">{m.regional} → {m.standard}</p>
