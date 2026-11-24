@@ -1,0 +1,71 @@
+name: Docker
+
+# On every push to main: run the backend tests inside the image, then publish both images to
+# GitHub Container Registry (ghcr.io) using the built-in GITHUB_TOKEN. No personal token needed.
+# Pull requests only build and test; they never publish.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Backend tests inside the image (ffmpeg included, no provider keys)
+        run: docker compose --profile test run --rm --build backend-test
+
+  publish:
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      REGISTRY: ghcr.io
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lowercase image prefix
+        run: echo "IMAGE_PREFIX=${REGISTRY}/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/kotha-backend:latest
+            ${{ env.IMAGE_PREFIX }}/kotha-backend:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=Kotha backend (FastAPI + ffmpeg). Hackathon prototype, not a medical device.
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          file: frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE_PREFIX }}/kotha-frontend:latest
+            ${{ env.IMAGE_PREFIX }}/kotha-frontend:${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.description=Kotha frontend (nginx). Hackathon prototype, not a medical device.
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
