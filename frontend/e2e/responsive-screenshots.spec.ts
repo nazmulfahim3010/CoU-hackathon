@@ -216,7 +216,7 @@ async function setupMocks(page: Page) {
     }),
   )
 
-  await page.route('**/api/clinical/summary/**', (route) =>
+  await page.route('**/api/summary/generate', (route) =>
     route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -252,10 +252,21 @@ async function setupMocks(page: Page) {
 
 // Helper to assert no horizontal overflow
 async function assertNoHorizontalOverflow(page: Page) {
-  const overflow = await page.evaluate(() => {
-    return document.documentElement.scrollWidth > window.innerWidth + 2
+  const offenders = await page.evaluate(() => {
+    const list: string[] = []
+    const docW = document.documentElement.clientWidth
+    document.querySelectorAll('*').forEach((el) => {
+      const rect = el.getBoundingClientRect()
+      if (rect.right > docW + 2) {
+        list.push(`${el.tagName}.${el.className} [right=${rect.right}, clientW=${docW}, text=${el.textContent?.slice(0, 30)}]`)
+      }
+    })
+    return list
   })
-  expect(overflow).toBe(false)
+  if (offenders.length > 0) {
+    console.log('Horizontal overflow offenders:', offenders.slice(0, 5))
+  }
+  expect(offenders.length).toBe(0)
 }
 
 test.describe('Responsive Multi-Viewport Verification & Screenshot Capture', () => {
@@ -292,7 +303,7 @@ test.describe('Responsive Multi-Viewport Verification & Screenshot Capture', () 
       await useSampleBtn.click()
 
       // 3. Confirm Page
-      await expect(page).toHaveURL(/.*\/confirm/)
+      await expect(page).toHaveURL(/.*\/(review|confirm)/)
       await page.waitForLoadState('networkidle')
       await assertNoHorizontalOverflow(page)
       await page.screenshot({
@@ -301,6 +312,10 @@ test.describe('Responsive Multi-Viewport Verification & Screenshot Capture', () 
       })
 
       // Confirm and go to summary
+      const ackCheckbox = page.getByTestId('ack-warning-checkbox')
+      if (await ackCheckbox.isVisible()) {
+        await ackCheckbox.check()
+      }
       const checkbox = page.getByRole('checkbox', { name: /আমি পড়েছি এবং এটি সঠিক/ })
       await checkbox.check()
       const confirmBtn = page.getByRole('button', { name: /ঠিক আছে, নিশ্চিত করছি/ })

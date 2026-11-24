@@ -27,7 +27,7 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-screen flex-col bg-bg text-ink selection:bg-brand/20">
       <header className="no-print sticky top-0 z-20 border-b border-deep/10 bg-white/95 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 py-3">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-2 sm:gap-4 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3">
           <Logo />
 
           <nav className="hidden md:flex items-center gap-1.5 lg:gap-4 text-sm" aria-label="Main navigation">
@@ -45,7 +45,7 @@ export default function AppLayout() {
             </NavLink>
           </nav>
 
-          <div className="flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             {/* Live / Demo Mode Switch */}
             <div
               className="inline-flex rounded-xl border border-deep/20 bg-soft p-0.5 text-xs font-semibold"
@@ -56,36 +56,36 @@ export default function AppLayout() {
                 type="button"
                 onClick={() => setMode('live')}
                 aria-pressed={mode === 'live'}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-all ${
+                className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 transition-all ${
                   mode === 'live'
                     ? 'bg-ok text-white shadow-sm font-bold'
                     : 'text-ink/70 hover:text-deep'
                 }`}
               >
-                <Radio className="h-3.5 w-3.5" aria-hidden />
+                <Radio className="h-3 sm:h-3.5 w-3 sm:w-3.5" aria-hidden />
                 <span>Live</span>
               </button>
               <button
                 type="button"
                 onClick={() => setMode('demo')}
                 aria-pressed={mode === 'demo'}
-                className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 transition-all ${
+                className={`flex items-center gap-1 rounded-lg px-2 sm:px-2.5 py-1 sm:py-1.5 transition-all ${
                   mode === 'demo'
                     ? 'bg-amber-600 text-white shadow-sm font-bold'
                     : 'text-ink/70 hover:text-deep'
                 }`}
               >
-                <FlaskConical className="h-3.5 w-3.5" aria-hidden />
+                <FlaskConical className="h-3 sm:h-3.5 w-3 sm:w-3.5" aria-hidden />
                 <span>Demo</span>
               </button>
             </div>
 
             <Link
               to="/intake"
-              className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-deep transition-colors"
+              className="inline-flex min-h-8 sm:min-h-10 items-center justify-center rounded-xl bg-brand px-2.5 sm:px-4 py-1 sm:py-2 text-xs sm:text-sm font-semibold text-white shadow-sm hover:bg-deep transition-colors"
             >
-              <span className="sm:hidden">Start</span>
-              <span className="hidden sm:inline">Start / শুরু করুন</span>
+              <span className="lg:hidden">Start</span>
+              <span className="hidden lg:inline">Start / শুরু করুন</span>
             </Link>
           </div>
         </div>
