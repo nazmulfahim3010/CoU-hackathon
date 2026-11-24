@@ -26,6 +26,12 @@ interface Flow {
   setNormalization: (n: NormalizationResponse | null) => void
   summary: SummaryCard | null
   setSummary: (s: SummaryCard | null) => void
+  /** The patient's recording, kept ONLY in browser memory so they can choose to share it. Never persisted. */
+  recording: Blob | null
+  setRecording: (b: Blob | null) => void
+  /** Active share code (so ending the consultation can revoke it). */
+  shareCode: string | null
+  setShareCode: (c: string | null) => void
   reset: () => void
 }
 
@@ -41,6 +47,7 @@ export interface FlowInitial {
   transcription?: TranscriptionResponse | null
   normalization?: NormalizationResponse | null
   summary?: SummaryCard | null
+  recording?: Blob | null
 }
 
 export function FlowProvider({ children, initial = {} }: { children: ReactNode; initial?: FlowInitial }) {
@@ -52,6 +59,8 @@ export function FlowProvider({ children, initial = {} }: { children: ReactNode; 
   const [transcription, setTranscription] = useState<TranscriptionResponse | null>(initial.transcription ?? null)
   const [normalization, setNormalization] = useState<NormalizationResponse | null>(initial.normalization ?? null)
   const [summary, setSummary] = useState<SummaryCard | null>(initial.summary ?? null)
+  const [recording, setRecording] = useState<Blob | null>(initial.recording ?? null)
+  const [shareCode, setShareCode] = useState<string | null>(null)
 
   const reset = useCallback(() => {
     setPending(null)
@@ -59,6 +68,8 @@ export function FlowProvider({ children, initial = {} }: { children: ReactNode; 
     setTranscription(null)
     setNormalization(null)
     setSummary(null)
+    setRecording(null)
+    setShareCode(null)
     setAgeGroup('not_stated')
     setDialectHint('not_sure')
   }, [])
@@ -81,9 +92,13 @@ export function FlowProvider({ children, initial = {} }: { children: ReactNode; 
       setNormalization,
       summary,
       setSummary,
+      recording,
+      setRecording,
+      shareCode,
+      setShareCode,
       reset,
     }),
-    [mode, pending, ageGroup, dialectHint, sessionId, transcription, normalization, summary, reset],
+    [mode, pending, ageGroup, dialectHint, sessionId, transcription, normalization, summary, recording, shareCode, reset],
   )
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

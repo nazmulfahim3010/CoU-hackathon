@@ -50,7 +50,8 @@ export default function Transcribe() {
       setStage(1)
       const n = await api.normalize(t.session_id)
       flow.setNormalization(n)
-      // The raw recording is no longer needed once transcribed
+      // Keep the recording in browser memory only, so the patient can later CHOOSE to share it with a health worker
+      flow.setRecording(p.kind === 'audio' ? p.blob : null)
       flow.setPending(null)
       setStage(2)
       nav('/review', { replace: true })

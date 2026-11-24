@@ -129,11 +129,36 @@ export interface SummaryCard {
   original_statement: string
   normalized_statement: string
   confirmed_statement: string
+  /** Model proposals removed because the patient never said them (shown to the clinician). */
+  removed_ungrounded?: { bn: string; en: string; evidence: string }[]
   provenance: Record<string, string>
   label_en: string
   label_bn: string
   disclaimer_en: string
   disclaimer_bn: string
+}
+
+export interface ShareCreated {
+  code: string
+  display_code: string
+  share_path: string
+  share_url: string
+  expires_at: number
+  ttl_seconds: number
+  has_audio: boolean
+  notice: string
+}
+
+export interface SharedSummary {
+  code: string
+  summary: SummaryCard
+  has_audio: boolean
+  mode: Mode
+  created_at: number
+  expires_at: number
+  seconds_left: number
+  views: number
+  notice: string
 }
 
 export interface SpeechResponse {

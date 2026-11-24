@@ -5,6 +5,7 @@ import Confirm from './pages/Confirm'
 import Intake from './pages/Intake'
 import Landing from './pages/Landing'
 import Processing from './pages/Processing'
+import ShareView, { ShareEntry } from './pages/ShareView'
 import Summary from './pages/Summary'
 import Transcribe from './pages/Transcribe'
 import { FlowProvider } from './state/FlowContext'
@@ -23,6 +24,8 @@ export default function App() {
             <Route path="/processing" element={<Processing />} />
             <Route path="/summary" element={<Summary />} />
             <Route path="/about" element={<About />} />
+            <Route path="/s" element={<ShareEntry />} />
+            <Route path="/s/:code" element={<ShareView />} />
           </Route>
         </Routes>
       </BrowserRouter>

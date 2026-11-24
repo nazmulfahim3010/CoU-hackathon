@@ -30,6 +30,11 @@ class Settings(BaseSettings):
     tts_provider: str = "gtts"
     tts_api_key: str = ""
 
+    # Sharing a summary card with a health worker (in-memory only, consent required)
+    share_ttl_minutes: int = 30
+    # e.g. http://192.168.1.20:8080 so share links/QR codes work from a phone on the same Wi-Fi
+    public_base_url: str = ""
+
     # Limits and uploads
     max_audio_seconds: int = 90
     max_upload_mb: int = 10
